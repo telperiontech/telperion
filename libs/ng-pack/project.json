@@ -28,7 +28,8 @@
         "commands": [
           "nx run ng-pack:publish/prepare",
           "nx run ng-pack:publish/to-npm"
-        ]
+        ],
+        "parallel": false
       }
     },
     "publish/prepare": {
