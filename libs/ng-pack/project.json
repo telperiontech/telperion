@@ -29,12 +29,21 @@
       },
       "defaultConfiguration": "production"
     },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx run ng-pack:publish/prepare",
+          "nx-release-publish --project=ng-pack"
+        ]
+      }
+    },
     "publish/prepare": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
           "nx run ng-pack:publish/prepare/copy",
-          "nx run ng-pack:publish/prepare/fill-package-json",
+          "nx run ng-pack:publish/prepare/fill-package-json --packageVersion=$PACKAGE_VERSION",
           "nx run ng-pack:publish/prepare/install-deps",
           "nx run ng-pack:publish/prepare/build"
         ],
