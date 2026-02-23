@@ -2,7 +2,7 @@
   "name": "@telperion/ng-pack",
   "version": "0.0.0",
   "scripts": {
-    "nx": "nx"
+    "ng": "ng"
   },
   "peerDependencies": {
     "@angular/common": "*",
@@ -14,8 +14,7 @@
     "@thalesrc/reactive-storage": "^1.0.5"
   },
   "devDependencies": {
-    "nx": "*",
-    "@nx/angular": "*"
+    "@angular/cli": "*"
   },
   "sideEffects": false
 }

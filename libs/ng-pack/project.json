@@ -44,16 +44,8 @@
     "publish/prepare/build": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["pnpm nx run ng-pack:publish/prepare/build/app"],
+        "commands": ["pnpm ng build"],
         "cwd": "libs/ng-pack/.tmp"
-      }
-    },
-    "publish/prepare/build/app": {
-      "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist"],
-      "options": {
-        "project": "ng-package.json",
-        "tsConfig": "tsconfig.lib.prod.json"
       }
     },
     "publish/prepare/install-deps": {
