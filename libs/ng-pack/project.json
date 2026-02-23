@@ -69,6 +69,12 @@
             "replace": {
               "../../tsconfig.base.json": "./tsconfig.base.json"
             }
+          },
+          {
+            "path": "libs/ng-pack/README.md",
+            "replace": {
+              "./storage-signals/README.md": "https://github.com/telperiontech/telperion/tree/main/libs/ng-pack/storage-signals"
+            }
           }
         ],
         "output": ".tmp/"
