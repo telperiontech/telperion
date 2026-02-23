@@ -4,13 +4,6 @@
   "sourceRoot": "libs/ng-pack/src",
   "prefix": "tng",
   "projectType": "library",
-  "release": {
-    "version": {
-      "manifestRootsToUpdate": ["dist/{projectRoot}"],
-      "currentVersionResolver": "git-tag",
-      "fallbackCurrentVersionResolver": "disk"
-    }
-  },
   "tags": [],
   "targets": {
     "build": {
@@ -33,8 +26,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx run ng-pack:publish/prepare",
-          "nx-release-publish --project=ng-pack"
+          "nx run ng-pack:publish/prepare"
         ]
       }
     },
