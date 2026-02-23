@@ -26,7 +26,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx run ng-pack:publish/prepare"
+          "nx run ng-pack:publish/prepare",
+          "nx run ng-pack:publish/to-npm"
         ]
       }
     },
@@ -79,9 +80,11 @@
         "populateExports": false
       }
     },
-    "nx-release-publish": {
+    "publish/to-npm": {
+      "executor": "nx:run-commands",
       "options": {
-        "packageRoot": "dist/{projectRoot}"
+        "command": "npm publish --access public",
+        "cwd": "libs/ng-pack/.tmp/dist"
       }
     },
     "lint": {

@@ -16,8 +16,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "project": "ng-package.json",
-            "outputPath": "dist/ng-pack"
+            "project": "ng-package.json"
           },
           "configurations": {
             "production": {
