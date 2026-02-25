@@ -74,9 +74,57 @@ Signal-based forms utilities for Angular template-driven forms.
 
 **Import:** `@telperion/ng-pack/utils`
 
-🚧 **Under Construction**
+Angular utility functions and plugins for enhanced development experience.
 
-Common Angular utilities and helpers.
+#### Key Features
+
+- 🎯 Event modifier syntax for templates (`.pd`, `.sp`)
+- 🔗 Directive-as-service provider utility
+- 📦 Tree-shakeable and type-safe
+- ⚡ Zero dependencies
+
+#### Quick Start
+
+**Event Modifiers Plugin**
+
+```typescript
+import { provideEventModifiersPlugin } from '@telperion/ng-pack/utils';
+
+bootstrapApplication(AppComponent, {
+  providers: [provideEventModifiersPlugin()]
+});
+```
+
+```html
+<!-- Prevent default and stop propagation with modifiers -->
+<form (submit.pd)="onSubmit()">...</form>
+<div (click.sp)="handleClick()">...</div>
+<button (click.pd.sp)="handleButtonClick()">Click me</button>
+```
+
+**Provide Service Directive**
+
+```typescript
+import { provideServiceDirective } from '@telperion/ng-pack/utils';
+
+// Create an injection token
+export const ParentService = new InjectionToken<ParentDirective>("ParentService");
+
+// Provide directive as service
+@Directive({
+  selector: '[parent]',
+  providers: [provideServiceDirective(ParentService, ParentDirective)],
+})
+export class ParentDirective { }
+
+// Inject in child
+@Directive({ selector: '[child]' })
+export class ChildDirective {
+  private parent = inject(ParentService);
+}
+```
+
+[Full documentation →](./utils/README.md)
 
 ---
 

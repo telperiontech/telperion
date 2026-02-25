@@ -1,2 +1,2 @@
-export * from './lib/utils-module';
-export * from './lib/provide-service-directive';
+export * from './provide-service-directive';
+export * from './event-modifiers.plugin';
