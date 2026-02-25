@@ -10,7 +10,7 @@
  */
 
 import { DOCUMENT } from '@angular/common';
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, Provider } from '@angular/core';
 import { EVENT_MANAGER_PLUGINS, EventManagerPlugin } from '@angular/platform-browser';
 
 /**
@@ -18,7 +18,7 @@ import { EVENT_MANAGER_PLUGINS, EventManagerPlugin } from '@angular/platform-bro
  * @internal
  */
 @Injectable()
-class EventModifiersPlugin extends EventManagerPlugin {
+export class EventModifiersPlugin extends EventManagerPlugin {
   /**
    * Supported modifiers: `pd` (preventDefault), `sp` (stopPropagation)
    */
@@ -63,7 +63,7 @@ class EventModifiersPlugin extends EventManagerPlugin {
  * });
  * ```
  */
-export function provideEventModifiersPlugin() {
+export function provideEventModifiersPlugin(): Provider {
   return {
     provide: EVENT_MANAGER_PLUGINS,
     useClass: EventModifiersPlugin,

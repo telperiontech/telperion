@@ -1,2 +1,2 @@
 export * from './provide-service-directive';
-export * from './event-modifiers.plugin';
+export { provideEventModifiersPlugin } from './event-modifiers.plugin';
