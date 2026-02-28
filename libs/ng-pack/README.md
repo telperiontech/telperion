@@ -80,6 +80,7 @@ Angular utility functions and plugins for enhanced development experience.
 
 - 🎯 Event modifier syntax for templates (`.pd`, `.sp`)
 - 🔗 Directive-as-service provider utility
+- 🌐 Promise-based HTTP client with tuple error handling
 - 📦 Tree-shakeable and type-safe
 - ⚡ Zero dependencies
 
@@ -100,6 +101,32 @@ bootstrapApplication(AppComponent, {
 <form (submit.pd)="onSubmit()">...</form>
 <div (click.sp)="handleClick()">...</div>
 <button (click.pd.sp)="handleButtonClick()">Click me</button>
+```
+
+**Construct Fetcher**
+
+```typescript
+import { Component } from '@angular/core';
+import { constructFetcher } from '@telperion/ng-pack/utils';
+
+@Component({
+  selector: 'app-example',
+  template: `<button (click)="fetchData()">Fetch Data</button>`
+})
+export class ExampleComponent {
+  private fetcher = constructFetcher();
+
+  async fetchData() {
+    const [error, response] = await this.fetcher.get('/api/data');
+    
+    if (error) {
+      console.error('Error:', error);
+      return;
+    }
+    
+    console.log('Data:', response);
+  }
+}
 ```
 
 **Provide Service Directive**

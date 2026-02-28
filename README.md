@@ -107,9 +107,9 @@ Collection of Angular utilities and libraries organized as secondary entry point
 **Sub-modules:**
 - **storage-signals**: Signal-based localStorage/sessionStorage with reactive updates and nested property access
 - **template-signal-forms**: Signal-based forms for template-driven forms _(under construction)_
-- **utils**: Common Angular utilities and helpers _(under construction)_
+- **utils**: Angular utilities including event modifiers, directive-as-service provider, and Promise-based HTTP client with tuple error handling
 
-**Highlights**: Angular signals, Reactive storage, Nested property access, Template forms, Type-safe
+**Highlights**: Angular signals, Reactive storage, Nested property access, Template forms, Event modifiers, HTTP utilities, Type-safe
 
 #### [@thalesrc/react-utils](libs/react-utils)
 

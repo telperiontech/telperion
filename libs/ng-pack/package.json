@@ -11,7 +11,8 @@
     "rxjs": "*"
   },
   "dependencies": {
-    "@thalesrc/reactive-storage": "^1.0.5"
+    "@thalesrc/reactive-storage": "^1.0.5",
+    "@thalesrc/js-utils": "^3.4.0"
   },
   "devDependencies": {
     "@angular/cli": "*"

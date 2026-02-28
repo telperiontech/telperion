@@ -123,6 +123,125 @@ export class ChildDirective {
 </div>
 ```
 
+### Construct Fetcher
+
+A utility function that creates a proxy wrapper around Angular's `HttpClient` to convert Observable-based HTTP methods into Promise-based methods with automatic error handling. Returns a tuple of `[error, response]` instead of throwing, following the Go-style error handling pattern.
+
+#### Features
+
+- 🎯 Converts all HttpClient methods to Promise-based API
+- ✅ Returns `[error, response]` tuple for predictable error handling
+- 🔄 Automatically uses `firstValueFrom` to convert Observables
+- 🛡️ No try-catch blocks needed in your code
+- 💉 Uses Angular's dependency injection
+
+#### Usage
+
+**Basic example:**
+
+```typescript
+import { Component } from '@angular/core';
+import { constructFetcher } from '@telperion/ng-pack/utils';
+
+@Component({
+  selector: 'app-example',
+  template: `
+    <button (click)="fetchData()">Fetch Data</button>
+    <div *ngIf="loading">Loading...</div>
+    <div *ngIf="error">Error: {{ error }}</div>
+    <div *ngIf="data">{{ data | json }}</div>
+  `
+})
+export class ExampleComponent {
+  private fetcher = constructFetcher();
+  
+  loading = false;
+  error: any = null;
+  data: any = null;
+
+  async fetchData() {
+    this.loading = true;
+    const [error, response] = await this.fetcher.get<{ items: string[] }>('/api/data');
+    this.loading = false;
+    
+    if (error) {
+      this.error = error;
+      console.error('Error fetching data:', error);
+      return;
+    }
+    
+    this.data = response;
+    console.log('Fetched data:', response);
+  }
+}
+```
+
+**POST request with body:**
+
+```typescript
+async createUser() {
+  const [error, response] = await this.fetcher.post<User>(
+    '/api/users',
+    { name: 'John', email: 'john@example.com' }
+  );
+  
+  if (error) {
+    console.error('Failed to create user:', error);
+    return;
+  }
+  
+  console.log('User created:', response);
+}
+```
+
+**With request options:**
+
+```typescript
+async fetchWithHeaders() {
+  const [error, response] = await this.fetcher.get<Data>(
+    '/api/data',
+    {
+      headers: { 'Authorization': 'Bearer token' },
+      params: { page: '1', limit: '10' }
+    }
+  );
+  
+  if (error) {
+    // Handle error
+    return;
+  }
+  
+  // Use response
+}
+```
+
+#### API
+
+The fetcher provides the same methods as `HttpClient` but with Promise-based signatures:
+
+- `get<T>(url, options?)` → `Promise<[error, T]>`
+- `post<T>(url, body, options?)` → `Promise<[error, T]>`
+- `put<T>(url, body, options?)` → `Promise<[error, T]>`
+- `patch<T>(url, body, options?)` → `Promise<[error, T]>`
+- `delete<T>(url, options?)` → `Promise<[error, T]>`
+- `head<T>(url, options?)` → `Promise<[error, T]>`
+- `options<T>(url, options?)` → `Promise<[error, T]>`
+- `request<T>(method, url, options?)` → `Promise<[error, T]>`
+
+#### Return Value
+
+All methods return a Promise that resolves to a tuple:
+- **Success**: `[null, response]` - Error is null, response contains the data
+- **Failure**: `[error, null]` - Error contains the error object, response is null
+
+#### Benefits
+
+1. **No try-catch needed**: Error handling is explicit and predictable
+2. **Type-safe**: Full TypeScript support with generic types
+3. **Consistent pattern**: Same error handling pattern across all HTTP methods
+4. **DI integration**: Works seamlessly with Angular's dependency injection
+5. **Clean code**: Reduces boilerplate and improves readability
+
 ## License
 
 MIT
