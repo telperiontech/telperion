@@ -2,7 +2,8 @@
   "extends": "./tsconfig.lib.json",
   "compilerOptions": {
     "declarationMap": false,
-    "paths": {}
+    "paths": {},
+    "rootDir": "."
   },
   "angularCompilerOptions": {
     "compilationMode": "partial"
