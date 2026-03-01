@@ -41,9 +41,9 @@ import { forwardRef, InjectionToken, Provider, Type } from "@angular/core";
  * @param directive - The directive/component class that will be provided.
  * @returns A provider object that can be used in the providers array of an Angular module or component.
  */
-export function provideServiceDirective<T extends Type<unknown>>(
+export function provideServiceDirective<T>(
   token: InjectionToken<T>,
-  directive: T
+  directive: Type<NoInfer<T>>
 ): Provider {
   return {
     provide: token,
