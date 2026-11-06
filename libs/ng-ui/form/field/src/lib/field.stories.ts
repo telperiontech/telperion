@@ -112,6 +112,22 @@ export const Textarea: Story = {
   }),
 };
 
+export const WithoutNgModel: Story = {
+  args: {
+    label: 'Search',
+    hint: 'Plain input without ngModel, styled via the tui-field-input attribute.',
+  },
+  render: (args) => ({
+    props: { ...args, query: '' },
+    template: `
+      <tui-field [label]="label" [hint]="hint">
+        <input tui-field-input type="search" [value]="query" (input)="query = $any($event.target).value" placeholder="Type to search" />
+      </tui-field>
+      <p class="mt-2 text-sm">Query: {{ query }}</p>
+    `,
+  }),
+};
+
 export const MultipleFields: Story = {
   render: () => ({
     template: `

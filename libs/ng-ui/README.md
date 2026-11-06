@@ -29,7 +29,14 @@ export class AppModule {}
 ```
 
 ```html
-<tui-field>...</tui-field>
+<tui-field label="Email">
+  <input type="email" name="email" ngModel required email />
+</tui-field>
+
+<!-- Inputs without ngModel opt in to field styling with tui-field-input -->
+<tui-field label="Search">
+  <input tui-field-input type="search" />
+</tui-field>
 ```
 
 `FieldComponent` is **not** standalone and must be used through `FieldModule`.
