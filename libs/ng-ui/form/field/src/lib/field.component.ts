@@ -21,7 +21,7 @@ import { FieldInfoComponent } from "./info.component";
         flex bg-white rounded-md border border-neutral outline outline-transparent transition
         group-[.focused]:outline-secondary group-[.focused]:border-secondary
         group-[.invalid]:border-danger group-[.invalid]:text-danger group-[.invalid.focused]:outline-danger
-        *:[[ngModel]]:border-none *:[[ngModel]]:outline-none *:[[ngModel]]:w-full *:[[ngModel]]:py-2 *:[[ngModel]]:flex-1
+        *:[[class*='ng-']]:border-none *:[[class*='ng-']]:outline-none *:[[class*='ng-']]:w-full *:[[class*='ng-']]:py-2 *:[[class*='ng-']]:flex-1
         ">
         <ng-content></ng-content>
       </div>
