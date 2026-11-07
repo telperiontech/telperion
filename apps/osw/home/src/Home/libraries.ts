@@ -7,11 +7,13 @@ export interface Library {
 	hoverGradient: string;
 	packageName: string;
 	type: 'npm' | 'docker';
+	/** GHCR image path (`owner/name`), required for docker libraries */
+	image?: string;
 }
 
 export const libraries: Library[] = [
 	{
-		name: '@thalesrc/js-utils',
+		name: '@telperion/js-utils',
 		description: 'Comprehensive JavaScript utility functions for web development. Tree-shakeable, zero dependencies, high performance utilities with full TypeScript support.',
 		category: 'JavaScript',
 		emoji: '✨',
@@ -70,6 +72,36 @@ export const libraries: Library[] = [
 		packageName: 'dom-utils',
 		type: 'npm'
 	},
+	{
+		name: '@telperion/elements',
+		description: 'Framework-agnostic web components built with Lit. Declarative router, CSS-anchored popover, form-associated select and button, drag-and-drop primitives, and icon sets.',
+		category: 'Web Components',
+		emoji: '🧩',
+		gradient: 'from-primary-500 via-quaternary-500 to-warning-500',
+		hoverGradient: 'hover:from-primary-600 hover:via-quaternary-600 hover:to-warning-600',
+		packageName: 'elements',
+		type: 'npm'
+	},
+	{
+		name: '@telperion/ng-pack',
+		description: 'Angular utilities organized as secondary entry points. Signal-based storage, SSE client with interceptors, event modifier plugins, and more for modern Angular apps.',
+		category: 'Angular',
+		emoji: '🅰️',
+		gradient: 'from-danger-400 via-secondary-500 to-primary-600',
+		hoverGradient: 'hover:from-danger-500 hover:via-secondary-600 hover:to-primary-700',
+		packageName: 'ng-pack',
+		type: 'npm'
+	},
+	{
+		name: '@telperion/ng-ui',
+		description: 'Angular UI element library with form, field, and other reusable building blocks. Organized as secondary entry points and Tailwind v4 friendly.',
+		category: 'Angular',
+		emoji: '🧱',
+		gradient: 'from-secondary-400 via-danger-500 to-warning-500',
+		hoverGradient: 'hover:from-secondary-500 hover:via-danger-600 hover:to-warning-600',
+		packageName: 'ng-ui',
+		type: 'npm'
+	},
 
 	{
 		name: '@thalesrc/node-utils',
@@ -82,17 +114,17 @@ export const libraries: Library[] = [
 		type: 'npm'
 	},
 	{
-		name: '@thalesrc/hermes',
-		description: 'JavaScript messaging library for cross-context communication. Enable seamless message passing between iframes, workers, and windows.',
+		name: '@telperion/messenger',
+		description: 'JavaScript messaging library for cross-context communication. Enable seamless message passing between iframes, workers, windows, and browser extensions.',
 		category: 'Communication',
 		emoji: '📡',
 		gradient: 'from-primary-500 via-secondary-500 to-tertiary-500',
 		hoverGradient: 'hover:from-primary-600 hover:via-secondary-600 hover:to-tertiary-600',
-		packageName: 'hermes',
+		packageName: 'messenger',
 		type: 'npm'
 	},
 	{
-		name: '@thalesrc/reactive-storage',
+		name: '@telperion/reactive-storage',
 		description: 'Reactive storage solutions for modern applications. Build reactive data persistence layers with observable storage patterns.',
 		category: 'Storage',
 		emoji: '💾',
@@ -102,7 +134,7 @@ export const libraries: Library[] = [
 		type: 'npm'
 	},
 	{
-		name: '@thalesrc/paintlet',
+		name: '@telperion/paintlet',
 		description: 'CSS Paint API utilities for creating custom paint worklets. Unlock the power of CSS Houdini for dynamic, performant graphics.',
 		category: 'Browser',
 		emoji: '🖌️',
@@ -122,14 +154,15 @@ export const libraries: Library[] = [
 		type: 'npm'
 	},
 	{
-		name: '@thalesrc/auto-proxy',
+		name: '@telperion/auto-proxy',
 		description: 'Docker-aware nginx reverse proxy with automatic SSL and service discovery. Perfect for development environments with gRPC and database support.',
 		category: 'DevOps',
 		emoji: '🔌',
 		gradient: 'from-primary-500 via-tertiary-500 to-success-500',
 		hoverGradient: 'hover:from-primary-600 hover:via-tertiary-600 hover:to-success-600',
 		packageName: 'auto-proxy',
-		type: 'docker'
+		type: 'docker',
+		image: 'telperiontech/auto-proxy'
 	},
 	{
 		name: '@thalesrc/docker-frp',
@@ -139,6 +172,7 @@ export const libraries: Library[] = [
 		gradient: 'from-tertiary-500 via-success-500 to-primary-500',
 		hoverGradient: 'hover:from-tertiary-600 hover:via-success-600 hover:to-primary-600',
 		packageName: 'docker-frp',
-		type: 'docker'
+		type: 'docker',
+		image: 'thalesrc/docker-frp'
 	}
 ];

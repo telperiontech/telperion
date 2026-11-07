@@ -5,7 +5,7 @@ This file explains the small local developer setup for environment variables use
 Place a `.env` file in the app root: `apps/osw/shell/.env` and include the following variables:
 
 ```
-OSW_HOME_URL=https://home.open-source.thalesrc.local
+OSW_HOME_URL=https://home.open-source.telperion.local
 GOOGLE_ANALYTICS_ID=**********
 ```
 

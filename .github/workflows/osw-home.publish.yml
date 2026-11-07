@@ -37,7 +37,7 @@ jobs:
       - name: Build
         run: pnpm nx run osw/home:build:production
         env:
-          OSW_HOME_URL: https://home.open-source.thalesrc.com
+          OSW_HOME_URL: https://home.open-source.telperion.tr
 
       - name: Create firebase.json
         run: |
@@ -59,7 +59,7 @@ jobs:
                   "headers": [
                     {
                       "key": "Access-Control-Allow-Origin",
-                      "value": "https://open-source.thalesrc.com"
+                      "value": "https://open-source.telperion.tr"
                     },
                     {
                       "key": "Access-Control-Allow-Methods",

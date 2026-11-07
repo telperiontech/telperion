@@ -8,17 +8,17 @@ export function Footer() {
 					</p>
 					<div className="flex gap-6 items-center flex-wrap justify-center">
 						<a
-							href="https://www.npmjs.com/org/thalesrc"
+							href="https://www.npmjs.com/org/telperion"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors font-medium"
 						>
 							<span className="text-xl">📦</span>
-							<span>npm @thalesrc</span>
+							<span>npm @telperion</span>
 						</a>
 						<span className="text-neutral-300">•</span>
 						<a
-							href="https://github.com/thalesrc/thalesrc"
+							href="https://github.com/telperiontech/telperion"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="flex items-center gap-2 text-neutral-700 hover:text-primary-600 transition-colors font-medium"

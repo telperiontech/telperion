@@ -7,7 +7,7 @@ export function Header() {
 						className="text-8xl font-black mb-4 bg-gradient-to-r from-primary-600 via-secondary-600 to-tertiary-600 bg-clip-text text-transparent animate-pulse"
 						style={{ animationDuration: '3s' }}
 					>
-						Thalesrc
+						Telperion
 					</div>
 					<div className="h-2 bg-gradient-to-r from-primary-500 via-secondary-500 to-tertiary-500 rounded-full" />
 				</div>

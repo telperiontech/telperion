@@ -1,3 +1,5 @@
+import { libraries } from './libraries';
+
 export function StatsSection() {
 	return (
 		<section className="relative py-16 px-6">
@@ -5,7 +7,7 @@ export function StatsSection() {
 				<div className="grid grid-cols-3 gap-8 text-center">
 					<div className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-lg">
 						<div className="text-4xl font-black bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-							14+
+							{libraries.length}+
 						</div>
 						<div className="text-sm font-semibold text-neutral-600 mt-2">Libraries</div>
 					</div>

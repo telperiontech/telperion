@@ -21,7 +21,7 @@
       "options": {
         "buildTarget": "osw/home:build/app",
         "host": "0.0.0.0",
-        "publicHost": "https://home.open-source.thalesrc.local",
+        "publicHost": "https://home.open-source.telperion.local",
         "port": 4201
       },
       "configurations": {

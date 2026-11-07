@@ -1,4 +1,13 @@
 import type { Library } from './libraries';
+import {
+	ghcrBadge,
+	ghcrUrl,
+	npmDownloadsBadge,
+	npmUrl,
+	npmVersionBadge,
+	registryUrl,
+	sourceUrl,
+} from './library-urls';
 
 interface LibraryCardProps {
 	library: Library;
@@ -28,25 +37,25 @@ export function LibraryCard({ library, index }: LibraryCardProps) {
 					{library.type === 'npm' ? (
 						<>
 							<a
-								href={`https://www.npmjs.com/package/@thalesrc/${library.packageName}`}
+								href={npmUrl(library)}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="hover:opacity-80 transition-opacity"
 							>
 								<img
-									src={`https://img.shields.io/npm/v/@thalesrc/${library.packageName}.svg?style=flat-square`}
+									src={npmVersionBadge(library)}
 									alt="npm version"
 									className="h-5"
 								/>
 							</a>
 							<a
-								href={`https://www.npmjs.com/package/@thalesrc/${library.packageName}`}
+								href={npmUrl(library)}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="hover:opacity-80 transition-opacity"
 							>
 								<img
-									src={`https://img.shields.io/npm/dm/@thalesrc/${library.packageName}.svg?style=flat-square`}
+									src={npmDownloadsBadge(library)}
 									alt="npm downloads"
 									className="h-5"
 								/>
@@ -55,19 +64,19 @@ export function LibraryCard({ library, index }: LibraryCardProps) {
 					) : (
 						<>
 							<a
-								href={`https://github.com/thalesrc/thalesrc/pkgs/container/${library.packageName}`}
+								href={ghcrUrl(library)}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="hover:opacity-80 transition-opacity"
 							>
 								<img
-									src={`https://img.shields.io/badge/ghcr.io-thalesrc%2F${library.packageName}-blue?style=flat-square&logo=docker`}
+									src={ghcrBadge(library)}
 									alt="docker image"
 									className="h-5"
 								/>
 							</a>
 							<a
-								href={`https://github.com/thalesrc/thalesrc/tree/master/libs/${library.packageName}`}
+								href={sourceUrl(library)}
 								target="_blank"
 								rel="noopener noreferrer"
 								className="hover:opacity-80 transition-opacity"
@@ -88,11 +97,7 @@ export function LibraryCard({ library, index }: LibraryCardProps) {
 
 				<div className="flex gap-3 text-sm mt-auto">
 					<a
-						href={
-							library.type === 'npm'
-								? `https://www.npmjs.com/package/@thalesrc/${library.packageName}`
-								: `https://github.com/thalesrc/thalesrc/pkgs/container/${library.packageName}`
-						}
+						href={registryUrl(library)}
 						target="_blank"
 						rel="noopener noreferrer"
 						className={`flex items-center gap-1 font-semibold bg-gradient-to-r ${library.gradient} bg-clip-text text-transparent hover:opacity-70 transition-opacity`}
@@ -100,7 +105,7 @@ export function LibraryCard({ library, index }: LibraryCardProps) {
 						<span>{library.type === 'npm' ? '📦' : '🐳'}</span> {library.type === 'npm' ? 'npm' : 'GHCR'}
 					</a>
 					<a
-						href={`https://github.com/thalesrc/thalesrc/tree/master/libs/${library.packageName}`}
+						href={sourceUrl(library)}
 						target="_blank"
 						rel="noopener noreferrer"
 						className={`flex items-center gap-1 font-semibold bg-gradient-to-r ${library.gradient} bg-clip-text text-transparent hover:opacity-70 transition-opacity`}
