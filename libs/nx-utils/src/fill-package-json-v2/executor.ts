@@ -9,7 +9,7 @@ import {
   type ManifestEntry,
   type ManifestFormatKey,
 } from '../utils/build-manifest';
-import { findExportsOrderViolations, orderConditions } from '../utils/export-conditions';
+import { findExportsOrderViolations, orderConditions } from './export-conditions';
 
 import type {
   ExportCondition,

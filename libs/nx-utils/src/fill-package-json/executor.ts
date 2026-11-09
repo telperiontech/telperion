@@ -3,7 +3,7 @@ import { FillPackageJsonExecutorSchema } from './schema';
 import { tryCatch } from '@thalesrc/js-utils/promise/try-catch';
 import { ensureDirectory } from '@thalesrc/node-utils';
 import { writeFile } from 'fs/promises';
-import { orderConditions } from '../utils/export-conditions';
+import { orderConditions } from '../fill-package-json-v2/export-conditions';
 
 const runExecutor: PromiseExecutor<FillPackageJsonExecutorSchema> = async (
   { outputPath, packageVersion, populateExports },
