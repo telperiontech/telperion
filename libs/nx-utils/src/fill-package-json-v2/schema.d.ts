@@ -43,9 +43,10 @@ export interface PopulateExportsOptions {
 
   /**
    * Conditional export keys to emit. The executor reorders to spec order
-   * (`types` first, `default` last) regardless of input.
+   * (`types`, `import`, `require`, `browser`, `node`, `script`, `default`)
+   * regardless of input, and fails if the final exports map violates it.
    *
-   * @default ['types', 'node', 'import', 'require', 'default']
+   * @default ['types', 'import', 'require', 'node', 'default']
    */
   exports?: ExportCondition[];
 

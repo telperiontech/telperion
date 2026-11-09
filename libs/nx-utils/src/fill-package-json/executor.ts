@@ -3,6 +3,7 @@ import { FillPackageJsonExecutorSchema } from './schema';
 import { tryCatch } from '@thalesrc/js-utils/promise/try-catch';
 import { ensureDirectory } from '@thalesrc/node-utils';
 import { writeFile } from 'fs/promises';
+import { orderConditions } from '../utils/export-conditions';
 
 const runExecutor: PromiseExecutor<FillPackageJsonExecutorSchema> = async (
   { outputPath, packageVersion, populateExports },
@@ -56,11 +57,13 @@ const runExecutor: PromiseExecutor<FillPackageJsonExecutorSchema> = async (
 
   if (populateExports) {
     const {
-      exports = ['default', 'import', 'node', 'require', 'types'],
+      exports: requestedExports = ['types', 'import', 'require', 'node', 'default'],
       exportsTemplateProperty = '_exports',
       barrelFileName = 'index',
       templates: configTemplates = {}
     } = populateExports;
+    // Resolvers pick the first matching key, so emit in spec order regardless of input order.
+    const exports = orderConditions(requestedExports);
     const templates = Object.assign({
       require: '<path>.cjs',
       default: '<path>.cjs',

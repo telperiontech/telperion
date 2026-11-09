@@ -17,7 +17,9 @@ export interface FillPackageJsonExecutorSchema {
    */
   populateExports?: false | {
     /**
-     * @default ['require', 'default', 'import', 'node', 'types']
+     * Always emitted in spec order (`types`, `import`, `require`, `node`, `default`).
+     *
+     * @default ['types', 'import', 'require', 'node', 'default']
      */
     exports: ExportType[];
 

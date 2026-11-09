@@ -85,7 +85,7 @@
         "cdn": "iife/elements.js",
         "sideEffects": ["**/*-element.js", "**/*-element.cjs", "**/*.css"],
         "populateExports": {
-          "exports": ["types", "node", "import", "require", "script", "default"]
+          "exports": ["types", "import", "require", "node", "script", "default"]
         }
       }
     },
