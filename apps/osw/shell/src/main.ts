@@ -18,6 +18,8 @@ fetch('/assets/module-federation.manifest.json')
     document.head.appendChild(gtagScript);
   })
   .then(() => Promise.all([
-    import('@telperion/elements/router')
+    import('@telperion/elements/router'),
+    // Registers <tp-icon>, used by the home remote (which compiles with Babel and can't parse Lit decorators)
+    import('@telperion/elements/icon'),
   ]))
   .then(() => import('./bootstrap').catch((err) => console.error(err)));

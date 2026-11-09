@@ -2,14 +2,14 @@
 
 This file explains the small local developer setup for environment variables used by the `osw/shell` app.
 
-Place a `.env` file in the app root: `apps/osw/shell/.env` and include the following variables:
+Copy the template and fill in the values (each variable is documented inside it):
 
-```
-OSW_HOME_URL=https://home.open-source.telperion.local
-GOOGLE_ANALYTICS_ID=**********
+```bash
+cp apps/osw/shell/.env.template apps/osw/shell/.env
 ```
 
-- Replace `**********` with your real Google Analytics measurement ID (for example `G-XXXXXXXXXX`).
+- `OSW_HOME_URL`: base URL of the `osw/home` remote (`https://home.open-source.telperion.local` locally).
+- `GOOGLE_ANALYTICS_ID`: your Google Analytics measurement ID (for example `G-XXXXXXXXXX`); optional locally.
 - Do NOT commit your local `.env` to git. Add `apps/osw/shell/.env` to your `.gitignore` if it is not already ignored.
 
 How the app reads these values
@@ -20,7 +20,7 @@ const home = import.meta.env.OSW_HOME_URL;
 const ga = import.meta.env.GOOGLE_ANALYTICS_ID;
 ```
 
-- If your editor/TypeScript doesn't pick up `import.meta.env` types, restart the TypeScript server (VS Code: "TypeScript: Restart TS Server"). A project declaration file exists at `apps/osw/shell/src/import-meta.d.ts` that declares the available keys.
+- If your editor/TypeScript doesn't pick up `import.meta.env` types, restart the TypeScript server (VS Code: "TypeScript: Restart TS Server"). The available keys are declared in `apps/osw/shell/src/global.d.ts`.
 
 Running the app
 - Start the app in development with Nx (use pnpm):
