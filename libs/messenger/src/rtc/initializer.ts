@@ -20,6 +20,8 @@ interface InitializerConfig {
   channelName: string;
   channelId?: number;
   messageFilterType: 'request' | 'response';
+  /** Called when the data channel fires `close`. */
+  onClose?: () => void;
 }
 
 const INITIALIZATION_ERROR_TUPLE = [undefined, Promise.resolve(null)] as const;
@@ -30,7 +32,8 @@ export function initialize({
   connection,
   channelName,
   channelId,
-  messageFilterType
+  messageFilterType,
+  onClose = noop
 }: InitializerConfig): void {
   const channelWithOpen = Promise.race([
     context[deinit],
@@ -67,9 +70,11 @@ export function initialize({
     };
 
     channel.addEventListener('message', listener);
+    channel.addEventListener('close', onClose);
 
     return () => {
       channel.removeEventListener('message', listener);
+      channel.removeEventListener('close', onClose);
       CHANNEL_CONTROLLER.close(channel);
     };
   });

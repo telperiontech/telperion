@@ -116,6 +116,13 @@ export class RTCMessageHost extends MessageHost {
   protected async [RESPONSE](message: MessageResponse) {
     const dataChannel = await this[CHANNEL_OPEN];
 
-    dataChannel.send(JSON.stringify({...message, type: 'response' }));
+    // If the channel closed, the requester is gone, so the response is dropped.
+    if (dataChannel.readyState !== 'open') return;
+
+    try {
+      dataChannel.send(JSON.stringify({...message, type: 'response' }));
+    } catch {
+      // The channel closed while sending. The requester is gone, so drop it.
+    }
   }
 }

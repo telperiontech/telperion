@@ -18,7 +18,7 @@ export abstract class MessageClient {
    *
    * @param message Message payload to send
    */
-  protected abstract [SEND](message: Message): void;
+  protected abstract [SEND](message: Message): void | Promise<void>;
 
   /**
    * Request decorators use this method to get unique message id all accross the platform

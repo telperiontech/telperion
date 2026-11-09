@@ -15,6 +15,8 @@ const CHANNEL_NAME = Symbol('RTCMessageClient Channel Name');
 const CHANNEL = Symbol('RTCMessageClient Channel');
 const CHANNEL_OPEN = Symbol('RTCMessageClient Channel Open');
 const DEINITIALIZE = Symbol('RTCMessageClient Deinitialize');
+const PENDING = Symbol('RTCMessageClient Pending Requests');
+const FAIL_PENDING = Symbol('RTCMessageClient Fail Pending Requests');
 export const READY = Symbol('RTCMessageClient Ready');
 export const CREATED = Symbol('RTCMessageClient Created');
 
@@ -48,6 +50,8 @@ export class RTCMessageClient extends MessageClient {
   private [CHANNEL]: Promise<RTCDataChannel> = NEVER;
   private [CHANNEL_OPEN]: Promise<RTCDataChannel> = NEVER;
   private [DEINITIALIZE]: Promise<() => void> = Promise.resolve(noop);
+  /** IDs of requests sent (or waiting to send) that have not completed yet. */
+  private [PENDING] = new Set<string>();
 
   private get [CREATED]() {
     return this[CHANNEL];
@@ -80,6 +84,9 @@ export class RTCMessageClient extends MessageClient {
     super();
 
     this[CHANNEL_NAME] = channelName;
+    this[RESPONSES$].subscribe(({ id, completed }) => {
+      if (completed) this[PENDING].delete(id);
+    });
     RTCMessageClient.prototype.initialize.call(this, connection, channelId);
   }
 
@@ -103,14 +110,38 @@ export class RTCMessageClient extends MessageClient {
       connection,
       channelName: this[CHANNEL_NAME],
       channelId,
-      messageFilterType: 'response'
+      messageFilterType: 'response',
+      onClose: () => this[FAIL_PENDING]()
     });
   }
 
   public async [SEND]<T>(message: Message<T>) {
-    const dataChannel = await this[CHANNEL_OPEN];
+    this[PENDING].add(message.id);
 
-    dataChannel.send(JSON.stringify({...message, type: 'request' }));
+    try {
+      const dataChannel = await this[CHANNEL_OPEN];
+
+      if (dataChannel.readyState !== 'open') {
+        throw new Error(`RTCMessageClient: data channel is ${dataChannel.readyState}`);
+      }
+
+      dataChannel.send(JSON.stringify({...message, type: 'request' }));
+    } catch (error) {
+      this[PENDING].delete(message.id);
+      throw error;
+    }
+  }
+
+  /** Errors every in-flight request, since no response can arrive on a closed channel. */
+  private [FAIL_PENDING](): void {
+    const error = new Error('RTCMessageClient: data channel closed');
+    const ids = [...this[PENDING]];
+
+    this[PENDING].clear();
+
+    for (const id of ids) {
+      this[RESPONSES$].next({ id, completed: true, error });
+    }
   }
 
   protected [GET_NEW_ID](): string {

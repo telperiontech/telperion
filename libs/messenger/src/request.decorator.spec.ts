@@ -1,5 +1,5 @@
 import { TestScheduler } from 'rxjs/testing';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, lastValueFrom, NEVER, Observable } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Message } from './message.interface';
@@ -80,6 +80,34 @@ describe('Request Decorator', () => {
         b: 'telperion',
         c: 'rocks',
       });
+    });
+  });
+
+  describe('when send fails', () => {
+    function createFailingInstance() {
+      const instance = new Foo();
+      const error = new Error('send failed');
+
+      (instance as any)[GET_NEW_ID] = vi.fn().mockReturnValue('1');
+      (instance as any)[SEND] = vi.fn().mockRejectedValue(error);
+      (instance as any)[RESPONSES$] = NEVER;
+
+      return { instance, error };
+    }
+
+    it('should error the returned stream', async () => {
+      const { instance, error } = createFailingInstance();
+
+      await expect(lastValueFrom(instance.baz('test message')!)).rejects.toBe(error);
+    });
+
+    it('should deliver the error to a late subscriber', async () => {
+      const { instance, error } = createFailingInstance();
+      const res = instance.baz('test message')!;
+
+      await new Promise(resolve => setTimeout(resolve));
+
+      await expect(lastValueFrom(res)).rejects.toBe(error);
     });
   });
 });
