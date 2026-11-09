@@ -1,8 +1,9 @@
 name: Docker FRP / Publish
 
 on:
-  repository_dispatch:
-    types: [publish-docker-frp]
+  push:
+    tags:
+      - 'docker-frp-v[0-9]+.[0-9]+.[0-9]+'
 
 env:
   REGISTRY: ghcr.io
@@ -17,10 +18,7 @@ jobs:
 
     steps:
       - name: Set package version env variable
-        run: |
-          TAG_NAME="${{ github.event.client_payload.tag }}"
-          echo "PACKAGE_VERSION=${TAG_NAME#docker-frp-v}" >> $GITHUB_ENV
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        run: echo "PACKAGE_VERSION=${GITHUB_REF_NAME#docker-frp-v}" >> $GITHUB_ENV
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -178,7 +176,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Package:** \`docker-frp\`" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** \`${PACKAGE_VERSION}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tag:** \`${TAG_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** \`${GITHUB_REF_NAME}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Registry:** \`${{ env.REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Platforms:** \`linux/amd64\`, \`linux/arm64\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

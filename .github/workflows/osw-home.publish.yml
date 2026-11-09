@@ -1,8 +1,10 @@
 name: OSW / Home / Publish
 
 on:
-  repository_dispatch:
-    types: [publish-osw-home]
+  push:
+    tags:
+      - 'osw-home-v[0-9]+.[0-9]+.[0-9]+'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -10,12 +12,9 @@ jobs:
       contents: read
       deployments: write
 
-    env:
-      TAG_NAME: ${{ github.event.client_payload.tag }}
-
     steps:
       - name: Set version env variable
-        run: echo "VERSION=${TAG_NAME#osw-home-v}" >> $GITHUB_ENV
+        run: echo "VERSION=${GITHUB_REF_NAME#osw-home-v}" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v4
