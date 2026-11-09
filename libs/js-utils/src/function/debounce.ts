@@ -77,7 +77,7 @@ export function debounceWithKey<T>(
  *
  * Static usage example:
  * ```typescript
- * import "@telperion/js-utils/dist/as-proto/debounce";
+ * import "@telperion/js-utils/function/proto/debounce";
  *
  * function foo() {
  *   console.log("hello");

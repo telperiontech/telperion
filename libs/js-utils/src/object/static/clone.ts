@@ -29,7 +29,7 @@ declare global {
      *
      * Static usage example:
      * ```typescript
-     * import "@telperion/js-utils/dist/as-static/clone";
+     * import "@telperion/js-utils/object/static/clone";
      *
      * const object = {a: 1, b: 2};
      * const clonedObject = Object.clone(object); // {a: 1, b: 2}

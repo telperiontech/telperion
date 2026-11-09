@@ -1,0 +1,88 @@
+{
+  "name": "osw/js-utils",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/osw/js-utils/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["js-utils"],
+  "targets": {
+    "serve": {
+      "executor": "@thalesrc/nx-utils:run-parallel",
+      "dependsOn": ["osw:mediator", "generate-model"],
+      "options": {
+        "commands": [
+          {"command": "nx run osw/js-utils:build/tailwind-config -- --watch", "readyWhen": "Sass is watching for changes"},
+          "nx run osw/js-utils:serve/app"
+        ]
+      }
+    },
+    "serve/app": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "osw/js-utils:build/app",
+        "host": "0.0.0.0",
+        "publicHost": "https://js-utils.open-source.telperion.local",
+        "port": 4202
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "osw/js-utils:build/app:development"
+        },
+        "production": {
+          "buildTarget": "osw/js-utils:build/app:production"
+        }
+      }
+    },
+    "build": {
+      "dependsOn": ["osw/js-utils:generate-model", "osw/js-utils:build/tailwind-config", "osw/js-utils:build/app"]
+    },
+    "build/app": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["generate-model", "build/tailwind-config"],
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/osw/js-utils",
+        "baseHref": "/",
+        "main": "apps/osw/js-utils/src/main.tsx",
+        "tsConfig": "apps/osw/js-utils/tsconfig.app.json",
+        "assets": ["apps/osw/js-utils/src/assets"],
+        "postcssConfig": "apps/osw/js-utils/postcss.config.cjs",
+        "webpackConfig": "apps/osw/js-utils/webpack.config.ts"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "build/tailwind-config": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sass apps/osw/styles/tailwind.config.scss apps/osw/js-utils/src/styles/tailwind.config.css"
+      }
+    },
+    "generate-model": {
+      "executor": "nx:run-commands",
+      "inputs": ["{workspaceRoot}/libs/js-utils/src/**/*.ts", "{projectRoot}/scripts/**/*.ts", { "env": "PACKAGE_VERSION" }],
+      "outputs": ["{projectRoot}/src/generated"],
+      "options": {
+        "command": "node -r @swc-node/register apps/osw/js-utils/scripts/generate-docs-model/main.ts --strict"
+      }
+    }
+  }
+}

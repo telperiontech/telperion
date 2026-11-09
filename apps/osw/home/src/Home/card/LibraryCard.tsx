@@ -1,5 +1,5 @@
 import { registryUrl, sourceUrl, type Library } from '../data';
-import { ecosystemTones, ExternalLink, Icon } from '../ui';
+import { AppLink, ecosystemTones, ExternalLink, Icon } from '../ui';
 import { InstallLine } from './InstallLine';
 import { LibraryMeta } from './LibraryMeta';
 
@@ -45,6 +45,12 @@ export function LibraryCard({ library }: LibraryCardProps) {
 			<InstallLine library={library} />
 
 			<div className="flex gap-4 text-xs font-medium">
+				{library.docsPath && (
+					<AppLink href={library.docsPath} className={secondaryLink}>
+						<Icon name="menu_book" size={14} />
+						Docs
+					</AppLink>
+				)}
 				<ExternalLink href={registryUrl(library)} className={secondaryLink}>
 					{isNpm ? <Icon brand="npm" size={14} /> : <Icon brand="docker" size={14} />}
 					{isNpm ? 'npm' : 'GHCR'}

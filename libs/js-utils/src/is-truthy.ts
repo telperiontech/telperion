@@ -14,7 +14,7 @@
  * ```
  * Static usage example:
  * ```typescript
- * import "@telperion/js-utils/dist/as-static/is-truthy";
+ * import "@telperion/js-utils/boolean/static/is-truthy";
  *
  * Boolean.isTruthy(undefined); // false
  * Boolean.isTruthy(true); // true

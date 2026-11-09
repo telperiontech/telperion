@@ -1,5 +1,2 @@
-export { Icon } from './Icon';
-export { ExternalLink } from './ExternalLink';
-export { CopyButton } from './CopyButton';
-export { TreeMark } from './TreeMark';
+export { Icon, ExternalLink, CopyButton, TreeMark, AppLink } from '../../../../ui';
 export { ecosystemTones, type EcosystemTone } from './ecosystem-tones';

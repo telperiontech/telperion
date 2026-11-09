@@ -9,6 +9,7 @@ cp apps/osw/shell/.env.template apps/osw/shell/.env
 ```
 
 - `OSW_HOME_URL`: base URL of the `osw/home` remote (`https://home.open-source.telperion.local` locally).
+- `OSW_JS_UTILS_URL`: base URL of the `osw/js-utils` docs remote (`https://js-utils.open-source.telperion.local` locally).
 - `GOOGLE_ANALYTICS_ID`: your Google Analytics measurement ID (for example `G-XXXXXXXXXX`); optional locally.
 - Do NOT commit your local `.env` to git. Add `apps/osw/shell/.env` to your `.gitignore` if it is not already ignored.
 

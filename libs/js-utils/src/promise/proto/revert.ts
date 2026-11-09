@@ -10,7 +10,7 @@ declare global {
      * * * *
      * Example usage:
      * ```typescript
-     * import "@telperion/js-utils/dist/as-proto/promise-revert";
+     * import "@telperion/js-utils/promise/proto/revert";
      *
      * Promise.reject(new Error('foo'))
      *  .revert()

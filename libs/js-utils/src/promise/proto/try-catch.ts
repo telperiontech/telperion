@@ -10,7 +10,7 @@ declare global {
      * * * *
      * Example:
      * ```typescript
-     * import "@telperion/js-utils/as-proto/promise-try-catch";
+     * import "@telperion/js-utils/promise/proto/try-catch";
      *
      * async function fooFunction() {
      *   const [error, result] = await anAsyncCall().tryCatch();

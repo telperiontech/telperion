@@ -7,8 +7,7 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["nx run osw/shell:serve", "nx run osw/home:serve"],
-        "parallel": true
+        "command": "nx run-many -t serve -p osw/shell osw/home osw/js-utils --parallel=5"
       }
     },
     "mediator": {

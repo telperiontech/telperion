@@ -66,7 +66,8 @@
       "executor": "@thalesrc/nx-utils:fill-package-json-v2",
       "options": {
         "outputPath": "dist/libs/js-utils",
-        "populateExports": {}
+        "populateExports": {},
+        "sideEffects": ["./**/proto/*", "./**/static/*"]
       }
     },
     "publish/to-npm": {

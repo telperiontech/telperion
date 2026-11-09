@@ -35,7 +35,7 @@ export type Substraction<T = any> = T[] | Set<T>;
  *
  * const base = new Set(["a", "b", "c", "d"]);
  *
- * base.difference(["a", "b"]); // Set(["c", "d"])
+ * base.getDifference(["a", "b"]); // Set(["c", "d"])
  * ```
  * * * *
  * @param base Base Set or Array

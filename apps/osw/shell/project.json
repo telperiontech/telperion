@@ -7,7 +7,7 @@
   "targets": {
     "serve": {
       "executor": "@thalesrc/nx-utils:run-parallel",
-      "dependsOn": ["osw:mediator"],
+      "dependsOn": [],
       "options": {
         "commands": [
           { "command": "nx run osw/shell:build/tailwind-config -- --watch", "readyWhen": "Sass is watching for changes" },
@@ -109,7 +109,8 @@
           "path": "apps/osw/shell/config/module-federation.manifest.json",
           "output": "apps/osw/shell/src/assets",
           "replace": {
-            "OSW_HOME_URL": "#{OSW_HOME_URL}"
+            "OSW_HOME_URL": "#{OSW_HOME_URL}",
+            "OSW_JS_UTILS_URL": "#{OSW_JS_UTILS_URL}"
           }
         }
       },

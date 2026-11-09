@@ -108,7 +108,7 @@ export function replace<T>(array: T[], itemToRemove: T, itemToReplace: T): T[];
  * ```
  * Array Prototype Example:
  * ```typescript
- * import "@telperion/js-utils/dist/as-proto/array-replace";
+ * import "@telperion/js-utils/array/proto/replace";
  *
  * const array = ["a", "b", "c", "a", "b", "c"];
  *
@@ -141,7 +141,7 @@ export function replace<T>(array: T[], replaceOptions: ReplaceItemsOptions<T>): 
  * ```
  * Array Prototype Example:
  * ```typescript
- * import "@telperion/js-utils/dist/as-proto/array-replace";
+ * import "@telperion/js-utils/array/proto/replace";
  *
  * const array = ["a", "b", "c", "a", "b", "c"];
  * const map = new Map();

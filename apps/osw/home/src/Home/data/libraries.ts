@@ -13,6 +13,8 @@ export interface Library {
 	type: 'npm' | 'docker';
 	/** GHCR image path (`owner/name`), required for docker libraries */
 	image?: string;
+	/** Path of the library's docs remote in the shell, when it has one */
+	docsPath?: string;
 }
 
 export const libraries: Library[] = [
@@ -24,6 +26,7 @@ export const libraries: Library[] = [
 		ecosystem: 'core',
 		icon: 'function',
 		type: 'npm',
+		docsPath: '/js-utils',
 	},
 	{
 		name: '@thalesrc/ts-utils',

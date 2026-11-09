@@ -34,7 +34,7 @@ export type Inclusion = any[] | Set<any>;
  *
  * const base = new Set(["a", "b", "c", "d"]);
  *
- * base.intersection(["a", "b"]); // Set(["a", "b"])
+ * base.getIntersection(["a", "b"]); // Set(["a", "b"])
  * ```
  * * * *
  * @param base Base Set or Array

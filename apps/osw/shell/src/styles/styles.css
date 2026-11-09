@@ -2,5 +2,7 @@
 
 @source "..";
 @source "../../../home/src";
+/* React components shared by the remotes */
+@source "../../../ui";
 /* <tp-icon> applies Tailwind utilities to its host from inside the package */
 @source "../../../../../libs/elements/src/icon";

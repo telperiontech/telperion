@@ -1,13 +1,6 @@
-import { loadRemote } from '@module-federation/enhanced/runtime';
+import { defineRemoteElement } from './remote-element';
 
-class OswHome extends HTMLElement {
-	connectedCallback() {
-		loadRemote('osw/home/Home').then((module: any) => module.bootstrap(this)).catch((err) => {
-			console.error('Error loading remote Home module:', err);
-		});
-	}
-}
-
-customElements.define('osw-home', OswHome);
+defineRemoteElement('osw-home', 'osw/home/Home');
+defineRemoteElement('osw-js-utils', 'osw/js-utils/Docs');
 
 export {};
