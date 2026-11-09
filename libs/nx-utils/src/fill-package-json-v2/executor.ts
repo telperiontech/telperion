@@ -9,6 +9,7 @@ import {
   type ManifestEntry,
   type ManifestFormatKey,
 } from '../utils/build-manifest';
+import { findExportsOrderViolations, orderConditions } from './export-conditions';
 
 import type {
   ExportCondition,
@@ -16,10 +17,6 @@ import type {
   PopulateExportsOptions,
   PopulateExportsTemplates,
 } from './schema';
-
-// Spec-correct condition ordering. Node resolves the first matching condition,
-// `types` must come first for TypeScript, `default` must come last as the fallback.
-const CONDITION_ORDER: ExportCondition[] = ['types', 'node', 'browser', 'import', 'require', 'script', 'default'];
 
 const DEFAULT_TEMPLATES: Required<PopulateExportsTemplates> = {
   types: '<path>.d.ts',
@@ -32,7 +29,7 @@ const DEFAULT_TEMPLATES: Required<PopulateExportsTemplates> = {
   script: 'iife/<path>.js',
 };
 
-const DEFAULT_EXPORTS: ExportCondition[] = ['types', 'node', 'import', 'require', 'default'];
+const DEFAULT_EXPORTS: ExportCondition[] = ['types', 'import', 'require', 'node', 'default'];
 
 interface PackageJson {
   [key: string]: unknown;
@@ -62,7 +59,7 @@ function buildExportEntry(
   const result: Record<string, string | Record<string, string>> = {};
 
   // Re-order conditions to spec order.
-  const ordered = CONDITION_ORDER.filter((c) => conditions.includes(c));
+  const ordered = orderConditions(conditions);
 
   for (const cond of ordered) {
     if (cond === 'types' && options.dcts) {
@@ -137,7 +134,7 @@ function buildExportsFromManifest(
   conditions: ExportCondition[],
   options: { useFesm: boolean; barrelFileName: string },
 ): Record<string, Record<string, unknown>> {
-  const ordered = CONDITION_ORDER.filter((c) => conditions.includes(c));
+  const ordered = orderConditions(conditions);
   const map: Record<string, Record<string, unknown>> = {};
 
   // Find the index entry (root export `.`) heuristically.
@@ -355,6 +352,15 @@ const runExecutor: PromiseExecutor<FillPackageJsonV2ExecutorSchema> = async (
   if (cdn.unpkg) projectPkg.unpkg = cdn.unpkg;
   if (cdn.jsdelivr) projectPkg.jsdelivr = cdn.jsdelivr;
   if (cdn.browser && projectPkg.browser == null) projectPkg.browser = cdn.browser;
+
+  // Guard: refuse to write an exports map whose condition order would make
+  // resolvers pick the wrong file (e.g. CJS for ESM consumers).
+  const violations = findExportsOrderViolations(projectPkg.exports);
+  if (violations.length > 0) {
+    console.error('[fill-package-json-v2] invalid exports condition order:');
+    for (const v of violations) console.error(`  - ${v}`);
+    return { success: false };
+  }
 
   // Write output.
   try {

@@ -64,12 +64,12 @@
             },
             "exports": {
               "type": "array",
-              "description": "Conditional export keys to emit, in spec order. 'types' must be first, 'default' must be last; the executor enforces this regardless of input order.",
+              "description": "Conditional export keys to emit. They are always written in spec order (types, import, require, browser, node, script, default) regardless of input order, and the executor fails if the final exports map violates it.",
               "items": {
                 "type": "string",
-                "enum": ["types", "node", "import", "require", "default", "browser", "script"]
+                "enum": ["types", "import", "require", "browser", "node", "script", "default"]
               },
-              "default": ["types", "node", "import", "require", "default"]
+              "default": ["types", "import", "require", "node", "default"]
             },
             "entries": {
               "type": "array",

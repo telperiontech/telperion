@@ -25,9 +25,10 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["require", "default", "import", "node", "types"]
+                "enum": ["types", "import", "require", "node", "default"]
               },
-              "default": ["require", "default", "import", "node", "types"]
+              "description": "Conditional export keys to emit. Always written in spec order (types, import, require, node, default) regardless of input order.",
+              "default": ["types", "import", "require", "node", "default"]
             },
             "exportsTemplateProperty": {
               "type": "string",
