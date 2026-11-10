@@ -1,5 +1,5 @@
 import { registryUrl, sourceUrl, type Library } from '../data';
-import { AppLink, ecosystemTones, ExternalLink, Icon } from '../ui';
+import { ecosystemTones, ExternalLink, Icon } from '../ui';
 import { InstallLine } from './InstallLine';
 import { LibraryMeta } from './LibraryMeta';
 
@@ -8,6 +8,9 @@ interface LibraryCardProps {
 }
 
 const secondaryLink = 'relative z-10 inline-flex items-center gap-1.5 text-neutral-920 hover:text-secondary-800 transition-colors';
+
+const titleLink =
+	'block truncate font-mono text-sm font-semibold text-neutral-990 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:outline-2 focus-visible:after:outline-secondary-600';
 
 export function LibraryCard({ library }: LibraryCardProps) {
 	const isNpm = library.type === 'npm';
@@ -28,13 +31,16 @@ export function LibraryCard({ library }: LibraryCardProps) {
 					<Icon name={library.icon} size={22} />
 				</div>
 				<div className="min-w-0 flex-1">
-					{/* Stretched link: the whole card opens the library's README/source */}
-					<ExternalLink
-						href={sourceUrl(library)}
-						className="block truncate font-mono text-sm font-semibold text-neutral-990 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:outline-2 focus-visible:after:outline-secondary-600"
-					>
-						{library.name}
-					</ExternalLink>
+					{/* Stretched link: the whole card opens the library's docs remote, or its README/source when it has none */}
+					{library.docsPath ? (
+						<a href={library.docsPath} className={titleLink}>
+							{library.name}
+						</a>
+					) : (
+						<ExternalLink href={sourceUrl(library)} className={titleLink}>
+							{library.name}
+						</ExternalLink>
+					)}
 					<p className="mt-0.5 text-sm text-neutral-920">{library.tagline}</p>
 				</div>
 			</div>
@@ -46,10 +52,10 @@ export function LibraryCard({ library }: LibraryCardProps) {
 
 			<div className="flex gap-4 text-xs font-medium">
 				{library.docsPath && (
-					<AppLink href={library.docsPath} className={secondaryLink}>
+					<a href={library.docsPath} className={secondaryLink}>
 						<Icon name="menu_book" size={14} />
 						Docs
-					</AppLink>
+					</a>
 				)}
 				<ExternalLink href={registryUrl(library)} className={secondaryLink}>
 					{isNpm ? <Icon brand="npm" size={14} /> : <Icon brand="docker" size={14} />}

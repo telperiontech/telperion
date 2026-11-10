@@ -3,7 +3,8 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/osw/home/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["scope:osw", "type:remote", "framework:react"],
+  "implicitDependencies": ["osw/kit/tokens"],
   "targets": {
     "serve": {
       "executor": "@thalesrc/nx-utils:run-parallel",
@@ -71,7 +72,7 @@
     "build/tailwind-config": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sass apps/osw/styles/tailwind.config.scss apps/osw/home/src/styles/tailwind.config.css"
+        "command": "sass apps/osw/kit/tokens/tailwind.config.scss apps/osw/home/src/styles/tailwind.config.css"
       }
     }
   }

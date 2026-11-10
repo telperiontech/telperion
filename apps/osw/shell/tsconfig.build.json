@@ -6,5 +6,5 @@
 		"module": "preserve",
 		"moduleResolution": "node"
 	},
-	"include": ["webpack.config.ts", "../utils/webpack-utils.ts"]
+	"include": ["webpack.config.ts", "../kit/build/src/**/*.ts"]
 }

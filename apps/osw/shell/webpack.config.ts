@@ -1,7 +1,7 @@
 import { composePlugins, withNx, withWeb } from '@nx/webpack';
 import { withModuleFederation } from '@nx/module-federation/webpack';
 import * as Dotenv from 'dotenv-webpack';
-import { configureWarnings, overrideTsCompilerOptions } from '../utils/webpack-utils';
+import { configureWarnings, overrideTsCompilerOptions } from '@osw/build';
 
 const config = composePlugins(
   withNx({}),

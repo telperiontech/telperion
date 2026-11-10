@@ -1,0 +1,8 @@
+{
+  "name": "osw/kit/build",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/osw/kit/build/src",
+  "projectType": "library",
+  "tags": ["scope:osw", "type:kit", "type:build"],
+  "targets": {}
+}

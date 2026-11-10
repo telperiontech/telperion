@@ -2,7 +2,7 @@
 
 @source "..";
 @source "../../../home/src";
-/* React components shared by the remotes */
-@source "../../../ui";
+/* Custom elements shared by the remotes (<osw-copy-button>, <osw-tree-mark>, …) */
+@source "../../../kit/core/src";
 /* <tp-icon> applies Tailwind utilities to its host from inside the package */
 @source "../../../../../libs/elements/src/icon";

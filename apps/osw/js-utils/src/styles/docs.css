@@ -1,8 +1,0 @@
-/*
- * The docs remote ships its own utilities so it can be redeployed on every js-utils
- * release without rebuilding the shell. Preflight and theme duplicate the shell's, harmlessly.
- */
-@import './tailwind.config.css';
-
-@source "..";
-@source "../../../ui";

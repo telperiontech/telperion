@@ -1,8 +1,5 @@
 import { loadRemote } from '@module-federation/enhanced/runtime';
-
-interface RemoteModule {
-	bootstrap(element: HTMLElement): Promise<() => void> | (() => void);
-}
+import type { OswRemote } from '@osw/core';
 
 /**
  * Defines a custom element that mounts a federated module's `bootstrap` export on connect
@@ -17,7 +14,7 @@ export function defineRemoteElement(tagName: string, remoteModule: string): void
 		connectedCallback() {
 			const generation = ++this.#generation;
 
-			loadRemote<RemoteModule>(remoteModule)
+			loadRemote<OswRemote>(remoteModule)
 				.then((module) => module?.bootstrap(this))
 				.then((unmount) => {
 					if (generation === this.#generation) this.#unmount = unmount;
