@@ -1,5 +1,5 @@
 ﻿import { CSSPropertyDefinition, PaintRenderingContext2D, PaintSize } from '../paint.type';
-import { registerPaintlet } from '../register-paintlet';
+import { registerPaintlet } from '../register';
 
 /**
  * Represents a single raindrop
@@ -244,6 +244,8 @@ export class RainPaintlet {
 }
 
 // Auto-register the paintlet when module loads
-registerPaintlet('tp-rain', RainPaintlet, RainPaintlet.PROPERTIES, [], {
-  'tp-rain-animation': '--tp-rain-frame',
+registerPaintlet({
+  name: 'tp-rain',
+  worklet: RainPaintlet,
+  animations: { 'tp-rain-animation': '--tp-rain-frame' },
 });

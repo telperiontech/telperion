@@ -1,6 +1,6 @@
 ﻿import type { Meta, StoryObj } from '@storybook/web-components';
 import { css, html } from 'lit';
-import './pal-gradient.paintlet';
+import { PalGradientPaintlet } from './pal-gradient.paintlet';
 
 /**
  * Story arguments interface for type safety
@@ -16,14 +16,7 @@ interface PalGradientStoryArgs {
   height?: number;
 }
 
-const blendingModes: GlobalCompositeOperation[] = [
-  'source-over', 'source-in', 'source-out', 'source-atop',
-  'destination-over', 'destination-in', 'destination-out', 'destination-atop',
-  'lighter', 'copy', 'xor', 'multiply', 'screen', 'overlay',
-  'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light',
-  'soft-light', 'difference', 'exclusion', 'hue', 'saturation',
-  'color', 'luminosity'
-];
+const blendingModes = [...PalGradientPaintlet.COMPOSITE_OPERATIONS];
 
 const meta: Meta<PalGradientStoryArgs> = {
   title: 'Paintlets/PAL Gradient',
@@ -107,6 +100,37 @@ export default meta;
 type Story = StoryObj<PalGradientStoryArgs>;
 
 /**
+ * Turns a comma-separated color list into `--tp-pal-gradient-color-N` declarations.
+ * Colors go through custom properties rather than `--tp-pal-gradient(...)` arguments,
+ * because `paint()` arguments still need Chrome's experimental web platform flag.
+ */
+const colorProperties = (colors: string) =>
+  splitTopLevelCommas(colors)
+    .slice(0, PalGradientPaintlet.SUPPORTED_COLOR_COUNT)
+    .map((color, i) => `--tp-pal-gradient-color-${i + 1}: ${color};`)
+    .join(' ');
+
+function splitTopLevelCommas(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+
+  for (const char of value) {
+    if (char === ',' && depth === 0) {
+      parts.push(current);
+      current = '';
+      continue;
+    }
+
+    if (char === '(') depth++;
+    if (char === ')') depth--;
+    current += char;
+  }
+
+  return [...parts, current].map(part => part.trim()).filter(Boolean);
+}
+
+/**
  * Render helper function to reduce code duplication
  */
 const renderPalGradient = (args: PalGradientStoryArgs) => html`
@@ -114,7 +138,8 @@ const renderPalGradient = (args: PalGradientStoryArgs) => html`
     style="
       width: ${args.width || 400}px;
       height: ${args.height || 400}px;
-      background-image: --tp-pal-gradient(${args.colors});
+      background-image: --tp-pal-gradient();
+      ${colorProperties(args.colors)}
       animation: --tp-pal-gradient-animation(${args.animationDuration || 5}s);
       --tp-pal-gradient-complexity: ${args.complexity};
       --tp-pal-gradient-seed: ${args.seed};

@@ -1,5 +1,5 @@
 import { PaintRenderingContext2D, PaintSize } from '../paint.type';
-import { registerPaintlet } from '../register-paintlet';
+import { registerPaintlet } from '../register';
 
 /**
  * Configuration for the Low Poly Mesh Paintlet
@@ -217,4 +217,4 @@ export class LowPolyMeshPaintlet {
 }
 
 // Auto-register the paintlet when module loads
-registerPaintlet('tp-low-poly-mesh', LowPolyMeshPaintlet, LowPolyMeshPaintlet.PROPERTIES);
+registerPaintlet({ name: 'tp-low-poly-mesh', worklet: LowPolyMeshPaintlet });

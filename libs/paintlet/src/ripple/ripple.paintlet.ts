@@ -1,5 +1,5 @@
 ﻿import { PaintRenderingContext2D, PaintSize } from "../paint.type";
-import { registerPaintlet } from "../register-paintlet";
+import { registerPaintlet } from "../register";
 
 /**
  * Configuration for the Ripple Paintlet
@@ -116,4 +116,4 @@ export class RipplePaintlet {
 }
 
 // Auto-register the paintlet when module loads
-registerPaintlet('tp-ripple', RipplePaintlet, RipplePaintlet.PROPERTIES);
+registerPaintlet({ name: 'tp-ripple', worklet: RipplePaintlet });

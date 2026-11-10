@@ -1,5 +1,5 @@
 ﻿import { PaintRenderingContext2D, PaintSize } from "../paint.type";
-import { registerPaintlet } from "../register-paintlet";
+import { registerPaintlet } from "../register";
 
 /**
  * Configuration for the Check Paintlet
@@ -246,4 +246,4 @@ export class CheckPaintlet {
 }
 
 // Auto-register the paintlet when module loads
-registerPaintlet('tp-check', CheckPaintlet, CheckPaintlet.PROPERTIES);
+registerPaintlet({ name: 'tp-check', worklet: CheckPaintlet });

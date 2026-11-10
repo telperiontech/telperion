@@ -123,6 +123,10 @@ Creates organic, flowing gradients with multiple colors using a three-layer rend
 
 Pass colors as function arguments (up to 10 colors supported):
 
+> ⚠️ Function arguments rely on `paint()` argument support, which Chrome still ships behind
+> **Experimental Web Platform features** (`chrome://flags`). Without it the arguments are
+> ignored and the default colors are used, so prefer the CSS variables below for production.
+
 ```css
 .pal-gradient {
   background-image: --tp-pal-gradient(#667eea, #764ba2, #f093fb, #4facfe);
@@ -131,9 +135,9 @@ Pass colors as function arguments (up to 10 colors supported):
 }
 ```
 
-**Usage with CSS Variables:**
+**Usage with CSS Variables (recommended):**
 
-Alternatively, use CSS custom properties for more flexibility:
+Use CSS custom properties; this works in every browser with the CSS Paint API:
 
 ```css
 .pal-gradient-vars {
@@ -151,8 +155,12 @@ Alternatively, use CSS custom properties for more flexibility:
 
 ```css
 .animated-pal {
-  background-image: --tp-pal-gradient(#ff006e, #8338ec, #3a86ff, #06ffa5);
+  background-image: --tp-pal-gradient();
   animation: --tp-pal-gradient-animation(10s);
+  --tp-pal-gradient-color-1: #ff006e;
+  --tp-pal-gradient-color-2: #8338ec;
+  --tp-pal-gradient-color-3: #3a86ff;
+  --tp-pal-gradient-color-4: #06ffa5;
   --tp-pal-gradient-complexity: 8;
   --tp-pal-gradient-seed: 15;
   --tp-pal-gradient-composite-points: screen;

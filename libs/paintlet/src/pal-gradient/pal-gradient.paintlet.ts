@@ -1,5 +1,5 @@
 ﻿import { CSSPropertyDefinition, PaintRenderingContext2D, PaintSize } from '../paint.type';
-import { registerPaintlet } from '../register-paintlet';
+import { registerPaintlet } from '../register';
 
 /**
  * Represents a point with color and position
@@ -35,6 +35,11 @@ interface PalGradientConfig {
  * - --tp-pal-gradient-composite-points: Blend mode for points (default: screen)
  * - --tp-pal-gradient-composite-lines: Blend mode for connecting lines (default: lighter)
  * - --tp-pal-gradient-frame: Animation frame from 0 to 100 for circular motion (default: 0)
+ * - --tp-pal-gradient-color-1 … --tp-pal-gradient-color-10: Gradient colors (default: none)
+ *
+ * Colors passed as `--tp-pal-gradient(...)` arguments require `paint()` argument
+ * support (Chrome: "Experimental Web Platform features"). Elsewhere the arguments
+ * are ignored; use the `--tp-pal-gradient-color-N` properties for portable styles.
  *
  * @example
  * ```css
@@ -59,6 +64,18 @@ export class PalGradientPaintlet {
     frame: 0,
   };
 
+  /**
+   * Canvas `globalCompositeOperation` values accepted by the composite properties.
+   */
+  static readonly COMPOSITE_OPERATIONS: readonly GlobalCompositeOperation[] = [
+    'source-over', 'source-in', 'source-out', 'source-atop',
+    'destination-over', 'destination-in', 'destination-out', 'destination-atop',
+    'lighter', 'copy', 'xor', 'multiply', 'screen', 'overlay',
+    'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light',
+    'soft-light', 'difference', 'exclusion', 'hue', 'saturation',
+    'color', 'luminosity',
+  ];
+
   static readonly PROPERTIES: CSSPropertyDefinition[] = [
     {
       name: '--tp-pal-gradient-complexity',
@@ -74,13 +91,13 @@ export class PalGradientPaintlet {
     },
     {
       name: '--tp-pal-gradient-composite-points',
-      syntax: '<mix-blend-mode>',
+      syntax: PalGradientPaintlet.COMPOSITE_OPERATIONS.join(' | '),
       inherits: true,
       initialValue: PalGradientPaintlet.PAL_GRADIENT_DEFAULTS.compositePoints,
     },
     {
       name: '--tp-pal-gradient-composite-lines',
-      syntax: '<mix-blend-mode>',
+      syntax: PalGradientPaintlet.COMPOSITE_OPERATIONS.join(' | '),
       inherits: true,
       initialValue: PalGradientPaintlet.PAL_GRADIENT_DEFAULTS.compositeLines,
     },
@@ -292,16 +309,13 @@ export class PalGradientPaintlet {
 }
 
 // Auto-register the paintlet when module loads
-registerPaintlet(
-  'tp-pal-gradient',
-  PalGradientPaintlet,
-  PalGradientPaintlet.PROPERTIES,
-  Array.from({ length: PalGradientPaintlet.SUPPORTED_COLOR_COUNT }, (_, i) => ({
+registerPaintlet({
+  name: 'tp-pal-gradient',
+  worklet: PalGradientPaintlet,
+  args: Array.from({ length: PalGradientPaintlet.SUPPORTED_COLOR_COUNT }, (_, i) => ({
     name: `color-${i + 1}`,
     syntax: 'none | <color>',
-    default: 'var(--tp-pal-gradient-color-' + (i + 1) + ', none)',
+    default: `var(--tp-pal-gradient-color-${i + 1}, none)`,
   })),
-  {
-    'tp-pal-gradient-animation': '--tp-pal-gradient-frame',
-  }
-);
+  animations: { 'tp-pal-gradient-animation': '--tp-pal-gradient-frame' },
+});
