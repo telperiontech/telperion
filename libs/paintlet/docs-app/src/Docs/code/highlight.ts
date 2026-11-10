@@ -1,0 +1,58 @@
+export type TokenType = 'comment' | 'string' | 'keyword' | 'number' | 'type' | 'property' | 'function' | 'plain';
+export type Language = 'css' | 'ts' | 'shell';
+
+export interface Token {
+	type: TokenType;
+	text: string;
+}
+
+const TS_KEYWORDS = ['import', 'from', 'export', 'const', 'let', 'function', 'return', 'await', 'new', 'if', 'true', 'false', 'null', 'undefined'];
+const GRAMMARS: Record<Language, [TokenType, string][]> = {
+	ts: [
+		['comment', String.raw`\/\/[^\n]*|\/\*[\s\S]*?\*\/`],
+		['string', String.raw`"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|\x60(?:\\.|[^\x60\\])*\x60`],
+		['keyword', String.raw`\b(?:${TS_KEYWORDS.join('|')})\b`],
+		['number', String.raw`\b\d[\d_]*(?:\.\d+)?\b`],
+		['type', String.raw`\b[A-Z][A-Za-z0-9_]*\b`],
+	],
+	css: [
+		['comment', String.raw`\/\*[\s\S]*?\*\/`],
+		['string', String.raw`"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'`],
+		['keyword', String.raw`@[\w-]+`],
+		['property', String.raw`(?<![\w-])-{0,2}[a-zA-Z][\w-]*(?=\s*:(?!:))`],
+		['function', String.raw`-{0,2}[a-zA-Z][\w-]*(?=\()`],
+		['type', String.raw`(?<![\w-])\.[a-zA-Z][\w-]*`],
+		['number', String.raw`#[0-9a-fA-F]{3,8}\b|-?\b\d*\.?\d+(?:px|s|ms|%|deg|em|rem|vh|vw|fr)?\b`],
+	],
+	shell: [
+		['comment', String.raw`#[^\n]*`],
+		['keyword', String.raw`^(?:npm|pnpm|yarn)\b`],
+	],
+};
+const MATCHERS = Object.fromEntries(
+	Object.entries(GRAMMARS).map(([language, patterns]) => [language, new RegExp(patterns.map(([, source]) => `(${source})`).join('|'), 'gm')]),
+) as Record<Language, RegExp>;
+
+/** Tiny tokenizer for doc snippets; no dependencies, good enough for display */
+export function highlight(code: string, language: Language): Token[] {
+	const patterns = GRAMMARS[language];
+	const tokens: Token[] = [];
+	let last = 0;
+
+	for (const match of code.matchAll(MATCHERS[language])) {
+		const index = match.index ?? 0;
+
+		if (index > last) tokens.push({ type: 'plain', text: code.slice(last, index) });
+
+		const group = match.slice(1).findIndex((value) => value !== undefined);
+		tokens.push({ type: patterns[group][0], text: match[0] });
+		last = index + match[0].length;
+	}
+
+	if (last < code.length) tokens.push({ type: 'plain', text: code.slice(last) });
+
+	return tokens;
+}
+
+export const toLanguage = (lang: string): Language =>
+	lang === 'css' ? 'css' : lang === 'bash' || lang === 'sh' || lang === 'shell' ? 'shell' : 'ts';

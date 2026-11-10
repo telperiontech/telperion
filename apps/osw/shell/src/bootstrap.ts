@@ -9,5 +9,6 @@ interceptLinks();
 
 defineRemoteElement('osw-home', 'osw/home/Home');
 defineRemoteElement('osw-js-utils', 'osw/js-utils/Docs');
+defineRemoteElement('osw-paintlet', 'osw/paintlet/Docs');
 
 export {};

@@ -1,0 +1,10 @@
+// .babelrc is parsed as JSON5.
+// Modern targets on purpose: paintlet classes are shipped to the paint worklet via `toString()`,
+// so their static fields must not be downleveled into helper calls the worklet scope cannot see.
+{
+	"presets": [
+		["@babel/preset-env", { "targets": "chrome >= 100, edge >= 100, safari >= 16, firefox >= 115", "bugfixes": true }],
+		["@babel/preset-react", { "runtime": "automatic" }],
+		"@babel/preset-typescript"
+	]
+}

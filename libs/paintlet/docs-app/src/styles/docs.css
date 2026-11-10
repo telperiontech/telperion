@@ -1,0 +1,9 @@
+/*
+ * The paintlet remote ships its own utilities so it can be redeployed on every paintlet
+ * release without rebuilding the shell. Preflight and theme duplicate the shell's, harmlessly.
+ */
+@import './tailwind.config.css';
+
+@source "..";
+/* Classes used by the osw custom elements (e.g. <osw-copy-button>) */
+@source "../../../../../apps/osw/kit/core/src";

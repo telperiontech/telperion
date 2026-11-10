@@ -111,7 +111,8 @@
           "output": "apps/osw/shell/src/assets",
           "replace": {
             "OSW_HOME_URL": "#{OSW_HOME_URL}",
-            "OSW_JS_UTILS_URL": "#{OSW_JS_UTILS_URL}"
+            "OSW_JS_UTILS_URL": "#{OSW_JS_UTILS_URL}",
+            "OSW_PAINTLET_URL": "#{OSW_PAINTLET_URL}"
           }
         }
       },

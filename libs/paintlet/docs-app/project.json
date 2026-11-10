@@ -1,0 +1,81 @@
+{
+  "name": "osw/paintlet",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/paintlet/docs-app/src",
+  "projectType": "application",
+  "tags": ["scope:osw", "type:docs-app", "framework:react"],
+  "implicitDependencies": ["paintlet", "osw/kit/tokens"],
+  "targets": {
+    "serve": {
+      "executor": "@thalesrc/nx-utils:run-parallel",
+      "dependsOn": ["osw:mediator"],
+      "options": {
+        "commands": [
+          {"command": "nx run osw/paintlet:build/tailwind-config -- --watch", "readyWhen": "Sass is watching for changes"},
+          "nx run osw/paintlet:serve/app"
+        ]
+      }
+    },
+    "serve/app": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "osw/paintlet:build/app",
+        "host": "0.0.0.0",
+        "publicHost": "https://paintlet.open-source.telperion.local",
+        "port": 4203
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "osw/paintlet:build/app:development"
+        },
+        "production": {
+          "buildTarget": "osw/paintlet:build/app:production"
+        }
+      }
+    },
+    "build": {
+      "dependsOn": ["osw/paintlet:build/tailwind-config", "osw/paintlet:build/app"]
+    },
+    "build/app": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["build/tailwind-config"],
+      "inputs": ["default", "^default", { "env": "PACKAGE_VERSION" }],
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/osw/paintlet",
+        "baseHref": "/",
+        "main": "libs/paintlet/docs-app/src/main.tsx",
+        "tsConfig": "libs/paintlet/docs-app/tsconfig.app.json",
+        "assets": ["libs/paintlet/docs-app/src/assets"],
+        "postcssConfig": "libs/paintlet/docs-app/postcss.config.cjs",
+        "webpackConfig": "libs/paintlet/docs-app/webpack.config.ts"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "build/tailwind-config": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sass apps/osw/kit/tokens/tailwind.config.scss libs/paintlet/docs-app/src/styles/tailwind.config.css"
+      }
+    }
+  }
+}

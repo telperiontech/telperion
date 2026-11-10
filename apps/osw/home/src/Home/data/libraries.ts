@@ -99,6 +99,7 @@ export const libraries: Library[] = [
 		ecosystem: 'browser',
 		icon: 'brush',
 		type: 'npm',
+		docsPath: '/paintlet',
 	},
 	{
 		name: '@thalesrc/react-utils',
