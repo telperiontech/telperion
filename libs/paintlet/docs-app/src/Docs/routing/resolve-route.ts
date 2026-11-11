@@ -1,20 +1,20 @@
-import { getPaintlet, getStory, type PaintletDoc, type StoryDoc } from '../stories';
+import { pathSegments } from '@osw/docs';
+import type { ComponentDoc, StoryDoc } from '@osw/stories';
+import { getPaintlet, getStory } from '../stories';
 import { BASE_PATH } from './paths';
 
 export type Route =
 	| { type: 'home' }
-	| { type: 'playground'; paintlet: PaintletDoc; story: StoryDoc }
+	| { type: 'playground'; paintlet: ComponentDoc; story: StoryDoc }
 	| { type: 'not-found' };
 
 /** `/paintlet` → home, `/paintlet/<paintlet>[/<story>]` → playground (first story by default) */
 export function resolveRoute(pathname: string): Route {
-	if (!pathname.startsWith(BASE_PATH)) return { type: 'not-found' };
+	const segments = pathSegments(pathname, BASE_PATH);
 
-	const segments = pathname.slice(BASE_PATH.length).split('/').filter(Boolean);
+	if (!segments || segments.length > 2) return { type: 'not-found' };
 
 	if (!segments.length) return { type: 'home' };
-
-	if (segments.length > 2) return { type: 'not-found' };
 
 	const paintlet = getPaintlet(segments[0]);
 

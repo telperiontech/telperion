@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { navigate } from '@osw/core';
+import { usePageMeta } from '@osw/docs';
 import { usePathname } from '@osw/react';
 import { DocsLayout } from './layout';
 import { CategoryPage, EntryPage, NotFoundPage, OverviewPage } from './pages';
@@ -38,10 +39,7 @@ export default function Docs() {
 		if (route.type === 'redirect') navigate(route.to, { replace: true });
 	}, [route]);
 
-	useEffect(() => {
-		document.title = pageTitle(route);
-		if (!window.location.hash) window.scrollTo({ top: 0 });
-	}, [route]);
+	usePageMeta(pageTitle(route), route);
 
 	if (route.type === 'redirect') return null;
 

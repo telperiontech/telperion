@@ -5,5 +5,7 @@
 @import './tailwind.config.css';
 
 @source "..";
-/* Classes used by the osw custom elements (e.g. <osw-copy-button>) */
+/* Classes used by the osw custom elements (e.g. <osw-copy-button>) and the shared docs kit */
 @source "../../../../../apps/osw/kit/core/src";
+@source "../../../../../apps/osw/kit/docs/src";
+@source "../../../../../apps/osw/kit/stories/src";

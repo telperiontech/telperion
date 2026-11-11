@@ -1,0 +1,6 @@
+{
+  "name": "@osw/elements-docs",
+  "private": true,
+  "description": "osw docs remote for @telperion/elements. Resets the library's \"type\": \"module\" so the CommonJS webpack config and scripts load.",
+  "type": "commonjs"
+}

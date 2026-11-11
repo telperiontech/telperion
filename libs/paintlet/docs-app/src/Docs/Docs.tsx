@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
+import { usePageMeta } from '@osw/docs';
 import { usePathname } from '@osw/react';
 import { HomePage } from './home';
 import { DocsLayout } from './layout';
@@ -28,11 +29,7 @@ export default function Docs() {
 	const pathname = usePathname();
 	const route = useMemo(() => resolveRoute(pathname), [pathname]);
 
-	useEffect(() => {
-		document.title = pageTitle(route);
-
-		if (!window.location.hash) window.scrollTo({ top: 0 });
-	}, [route]);
+	usePageMeta(pageTitle(route), route);
 
 	return (
 		<DocsLayout>

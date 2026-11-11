@@ -1,0 +1,124 @@
+{
+  "name": "osw/elements",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/elements/docs-app/src",
+  "projectType": "application",
+  "tags": ["scope:osw", "type:docs-app", "framework:react"],
+  "implicitDependencies": ["elements", "osw/kit/tokens"],
+  "targets": {
+    "serve": {
+      "executor": "@thalesrc/nx-utils:run-parallel",
+      "dependsOn": ["osw:mediator", "generate-model", "build/preview"],
+      "options": {
+        "commands": [
+          {"command": "nx run osw/elements:build/tailwind-config -- --watch", "readyWhen": "Sass is watching for changes"},
+          "nx run osw/elements:build/preview:development --watch",
+          "nx run osw/elements:serve/app"
+        ]
+      }
+    },
+    "serve/app": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "osw/elements:build/app",
+        "host": "0.0.0.0",
+        "publicHost": "https://elements.open-source.telperion.local",
+        "port": 4204
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "osw/elements:build/app:development"
+        },
+        "production": {
+          "buildTarget": "osw/elements:build/app:production"
+        }
+      }
+    },
+    "build": {
+      "dependsOn": ["osw/elements:generate-model", "osw/elements:build/tailwind-config", "osw/elements:build/preview", "osw/elements:build/app"]
+    },
+    "build/app": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["generate-model", "build/tailwind-config", "build/preview"],
+      "options": {
+        "compiler": "swc",
+        "outputPath": "dist/osw/elements",
+        "baseHref": "/",
+        "main": "libs/elements/docs-app/src/main.tsx",
+        "tsConfig": "libs/elements/docs-app/tsconfig.app.json",
+        "assets": [
+          "libs/elements/docs-app/src/assets",
+          { "input": "dist/osw/elements-preview", "glob": "**/*", "output": "preview" }
+        ],
+        "postcssConfig": "libs/elements/docs-app/postcss.config.cjs",
+        "webpackConfig": "libs/elements/docs-app/webpack.config.ts"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "build/preview": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "swc",
+        "outputPath": "dist/osw/elements-preview",
+        "index": "libs/elements/docs-app/src/preview/index.html",
+        "baseHref": "./",
+        "main": "libs/elements/docs-app/src/preview/main.ts",
+        "tsConfig": "libs/elements/docs-app/tsconfig.preview.json",
+        "postcssConfig": "libs/elements/docs-app/postcss.config.cjs",
+        "webpackConfig": "libs/elements/docs-app/webpack.preview.config.ts"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "build/tailwind-config": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sass apps/osw/kit/tokens/tailwind.config.scss libs/elements/docs-app/src/styles/tailwind.config.css"
+      }
+    },
+    "generate-model": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["elements:analyze"],
+      "inputs": ["{projectRoot}/../custom-elements.json", "{projectRoot}/../src/**/README.md", "{projectRoot}/../project.json", "{projectRoot}/scripts/**/*.ts", { "env": "PACKAGE_VERSION" }],
+      "outputs": ["{projectRoot}/src/generated"],
+      "options": {
+        "command": "node -r @swc-node/register libs/elements/docs-app/scripts/generate-docs-model/main.ts"
+      }
+    }
+  }
+}

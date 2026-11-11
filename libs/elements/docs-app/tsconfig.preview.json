@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "rootDir": "../../..",
+    "types": ["node", "webpack/module"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  },
+  "include": ["src/preview/**/*.ts", "src/protocol/**/*.ts", "src/global.d.ts"]
+}

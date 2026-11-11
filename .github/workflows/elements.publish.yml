@@ -8,13 +8,18 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    outputs:
+      package-version: ${{ steps.version.outputs.package-version }}
 
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
       - name: Set package version env variable
-        run: echo "PACKAGE_VERSION=${GITHUB_REF_NAME#elements-v}" >> $GITHUB_ENV
+        id: version
+        run: |
+          echo "PACKAGE_VERSION=${GITHUB_REF_NAME#elements-v}" >> $GITHUB_ENV
+          echo "package-version=${GITHUB_REF_NAME#elements-v}" >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,3 +41,13 @@ jobs:
 
       - name: Publish
         run: pnpm nx run elements:publish
+
+  deploy-docs:
+    needs: publish
+    uses: ./.github/workflows/osw-elements.publish.yml
+    permissions:
+      contents: read
+      deployments: write
+    with:
+      package-version: ${{ needs.publish.outputs.package-version }}
+    secrets: inherit

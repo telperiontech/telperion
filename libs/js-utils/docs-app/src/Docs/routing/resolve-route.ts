@@ -1,3 +1,4 @@
+import { pathSegments } from '@osw/docs';
 import { getCategory, getEntry, model, type DocsCategory, type DocsEntry } from '../model';
 import { resolveLegacyPath } from './legacy-path';
 import { BASE_PATH, docsPath, overviewPath } from './paths';
@@ -11,9 +12,10 @@ export type Route =
 
 /** Resolves a pathname under `BASE_PATH`; entry ids win over category ids */
 export function resolveRoute(pathname: string): Route {
-	if (!pathname.startsWith(BASE_PATH)) return { type: 'not-found' };
+	const segments = pathSegments(pathname, BASE_PATH);
+	if (!segments) return { type: 'not-found' };
 
-	const rest = pathname.slice(BASE_PATH.length).replace(/^\/+|\/+$/g, '');
+	const rest = segments.join('/');
 	if (!rest) return { type: 'overview' };
 
 	if (rest.endsWith('.html')) {

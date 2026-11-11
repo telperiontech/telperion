@@ -1,8 +1,7 @@
 import { ExternalLink } from '@osw/react';
-import { CodeBlock, Markdown } from '../markdown';
+import { CodeBlock, ImportLine, Markdown, sideEffectImport } from '@osw/docs';
 import type { DocsExtension } from '../model';
 import { sourceUrl } from '../routing';
-import { ImportLine, sideEffectImport } from './ImportLine';
 import { KindBadge } from './KindBadge';
 
 const usageName = (extension: DocsExtension, member: string) =>
@@ -28,7 +27,7 @@ export function ExtensionSection({ extension }: { extension: DocsExtension }) {
 			<CodeBlock code={extension.signature} copyable={false} className="mt-3" />
 			{extension.description && (
 				<div className="mt-2">
-					<Markdown source={extension.description} />
+					<Markdown source={extension.description} labels headingTag="h4" />
 				</div>
 			)}
 		</article>

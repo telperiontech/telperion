@@ -1,6 +1,6 @@
-import { Icon } from '@osw/react';
+import { FeatureGrid, type Feature } from '@osw/docs';
 
-const FEATURES = [
+const FEATURES: Feature[] = [
 	{
 		icon: 'brush',
 		title: 'A canvas behind any element',
@@ -24,20 +24,5 @@ const FEATURES = [
 ];
 
 export function Features() {
-	return (
-		<section aria-labelledby="features-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-			<h2 id="features-title" className="text-2xl font-semibold tracking-tight">What a paintlet is</h2>
-			<div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-				{FEATURES.map((feature) => (
-					<div key={feature.title}>
-						<span className="grid size-10 place-items-center rounded-lg bg-secondary-100 text-secondary-800">
-							<Icon name={feature.icon} size={22} />
-						</span>
-						<h3 className="mt-4 text-sm font-semibold">{feature.title}</h3>
-						<p className="mt-1.5 text-sm leading-relaxed text-neutral-920">{feature.text}</p>
-					</div>
-				))}
-			</div>
-		</section>
-	);
+	return <FeatureGrid title="What a paintlet is" features={FEATURES} />;
 }

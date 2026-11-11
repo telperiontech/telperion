@@ -1,4 +1,5 @@
-import { CopyButton, ExternalLink, Icon } from '@osw/react';
+import { InstallCommand, primaryButtonClass, secondaryButtonClass } from '@osw/docs';
+import { ExternalLink, Icon } from '@osw/react';
 import { INSTALL_COMMAND, PACKAGE_NAME } from '../meta';
 import { paintletPath, SOURCE_URL } from '../routing';
 import { paintlets } from '../stories';
@@ -21,26 +22,16 @@ export function Hero() {
 						tune everything with custom properties.
 					</p>
 
-					<div className="mt-8 flex max-w-md items-center gap-2 rounded-lg border border-neutral-100 bg-white/90 py-1 pr-1 pl-3 backdrop-blur">
-						<span aria-hidden="true" className="font-mono text-xs font-semibold text-tertiary-800 select-none">$</span>
-						<code className="min-w-0 flex-1 truncate font-mono text-xs">{INSTALL_COMMAND}</code>
-						<CopyButton text={INSTALL_COMMAND} />
-					</div>
+					<InstallCommand command={INSTALL_COMMAND} className="mt-8 bg-white/90 backdrop-blur" />
 
 					<div className="mt-6 flex flex-wrap gap-3">
 						{firstPaintlet && (
-							<a
-								href={paintletPath(firstPaintlet.id)}
-								className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-							>
+							<a href={paintletPath(firstPaintlet.id)} className={primaryButtonClass}>
 								<Icon name="palette" size={18} />
 								Open the playground
 							</a>
 						)}
-						<ExternalLink
-							href={SOURCE_URL}
-							className="inline-flex items-center gap-2 rounded-lg border border-neutral-100 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-990 transition-colors hover:border-neutral-250"
-						>
+						<ExternalLink href={SOURCE_URL} className={secondaryButtonClass}>
 							<Icon brand="github" size={16} />
 							Source
 						</ExternalLink>

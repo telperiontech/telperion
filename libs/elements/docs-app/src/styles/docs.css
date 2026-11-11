@@ -1,0 +1,12 @@
+/*
+ * The elements remote ships its own utilities so it can be redeployed on every elements
+ * release without rebuilding the shell. Preflight and theme duplicate the shell's, harmlessly.
+ * Stories never see these styles: they run in the preview iframe (src/preview/preview.css).
+ */
+@import './tailwind.config.css';
+
+@source "../Docs";
+/* Classes used by the osw custom elements (e.g. <osw-copy-button>) and the shared docs kit */
+@source "../../../../../apps/osw/kit/core/src";
+@source "../../../../../apps/osw/kit/docs/src";
+@source "../../../../../apps/osw/kit/stories/src";

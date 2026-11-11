@@ -38,6 +38,7 @@ jobs:
           OSW_HOME_URL: https://home.open-source.telperion.tr
           OSW_JS_UTILS_URL: https://js-utils.open-source.telperion.tr
           OSW_PAINTLET_URL: https://paintlet.open-source.telperion.tr
+          OSW_ELEMENTS_URL: https://elements.open-source.telperion.tr
 
       - name: Create firebase.json
         run: |

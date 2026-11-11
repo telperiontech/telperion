@@ -17,7 +17,10 @@
     "paths": {
       "@osw/build": ["apps/osw/kit/build/src/index.ts"],
       "@osw/core": ["apps/osw/kit/core/src/index.ts"],
+      "@osw/docs": ["apps/osw/kit/docs/src/index.ts"],
       "@osw/react": ["apps/osw/kit/react/src/index.ts"],
+      "@osw/stories": ["apps/osw/kit/stories/src/index.ts"],
+      "@osw/stories/core": ["apps/osw/kit/stories/src/core/index.ts"],
       "@telperion/ng-pack": ["libs/ng-pack/src/index.ts"],
       "@telperion/ng-pack/common": ["libs/ng-pack/common/src/index.ts"],
       "@telperion/ng-pack/tsf": ["libs/ng-pack/tsf/src/index.ts"],

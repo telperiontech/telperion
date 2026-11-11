@@ -1,5 +1,6 @@
 import { ExternalLink, Icon } from '@osw/react';
-import { DeclarationDetails, ExtensionSection, extensionKinds, ImportLine, KindBadge, namedImport } from '../entry';
+import { ImportLine, namedImport } from '@osw/docs';
+import { DeclarationDetails, ExtensionSection, extensionKinds, KindBadge } from '../entry';
 import { getCategory, type DocsEntry } from '../model';
 import { docsPath, overviewPath, sourceUrl } from '../routing';
 

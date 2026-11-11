@@ -7,3 +7,5 @@
 @source "..";
 /* Classes used by the osw custom elements (e.g. <osw-copy-button>) */
 @source "../../../../../apps/osw/kit/core/src";
+/* Classes used by the shared docs kit */
+@source "../../../../../apps/osw/kit/docs/src";

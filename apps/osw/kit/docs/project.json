@@ -1,0 +1,8 @@
+{
+  "name": "osw/kit/docs",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/osw/kit/docs/src",
+  "projectType": "library",
+  "tags": ["scope:osw", "type:kit", "framework:react"],
+  "targets": {}
+}

@@ -1,4 +1,4 @@
-import { CodeBlock, Inline, Markdown } from '../markdown';
+import { CodeBlock, Inline, Markdown } from '@osw/docs';
 import type { DocsDeclaration } from '../model';
 import { TagTable } from './TagTable';
 
@@ -30,7 +30,7 @@ export function DeclarationDetails({ declaration, summaryShown = false }: Declar
 
 			{declaration.description && (
 				<div className="mt-6">
-					<Markdown source={declaration.description} skipLeading={summaryShown ? declaration.summary : undefined} />
+					<Markdown source={declaration.description} labels headingTag="h4" skipLeading={summaryShown ? declaration.summary : undefined} />
 				</div>
 			)}
 		</>

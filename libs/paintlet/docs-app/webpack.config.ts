@@ -1,37 +1,6 @@
 import { DefinePlugin } from 'webpack';
-import { composePlugins, withNx } from '@nx/webpack';
-import { withReact } from '@nx/react';
-import { withModuleFederation } from '@nx/module-federation/webpack';
-import { configureExtensions, configureWarnings, overrideMiniCssPluginOptions, overrideTsCompilerOptions } from '@osw/build';
-import { resolveVersion } from './scripts/resolve-version';
+import { docsRemoteConfig, resolveVersion } from '@osw/build';
 
-export default composePlugins(
-  withNx({ extractCss: false }),
-  withReact({ generateIndexHtml: false }),
-  withModuleFederation({
-    name: 'osw/paintlet',
-    exposes: {
-      './Docs': './src/Docs/index.tsx',
-    },
-  }, {
-    dts: false,
-    library: { type: 'module' }
-  }),
-  (config) => {
-    // Ignore source map warnings from 3rd party libraries
-    configureWarnings(config);
-
-    // Resolve react and typescript extensions
-    configureExtensions(config, ['.ts', '.tsx', '.js', '.jsx', '.json']);
-
-    // CSS is injected via JS at runtime, so the remote ships its own styles with it
-    overrideMiniCssPluginOptions(config, { runtime: false });
-
-    // Override TypeScript compiler options for modern JavaScript output
-    overrideTsCompilerOptions(config);
-
-    config.plugins?.push(new DefinePlugin({ __PAINTLET_VERSION__: JSON.stringify(resolveVersion()) }));
-
-    return config;
-  }
-);
+export default docsRemoteConfig('osw/paintlet', (config) => {
+  config.plugins?.push(new DefinePlugin({ __PAINTLET_VERSION__: JSON.stringify(resolveVersion('paintlet-v')) }));
+});

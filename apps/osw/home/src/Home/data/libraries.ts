@@ -72,6 +72,7 @@ export const libraries: Library[] = [
 		ecosystem: 'browser',
 		icon: 'widgets',
 		type: 'npm',
+		docsPath: '/elements',
 	},
 	{
 		name: '@telperion/dom-utils',

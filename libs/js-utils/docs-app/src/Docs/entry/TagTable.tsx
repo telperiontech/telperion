@@ -1,4 +1,4 @@
-import { Inline } from '../markdown';
+import { Inline } from '@osw/docs';
 import type { DocsTag } from '../model';
 
 interface TagTableProps {

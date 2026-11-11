@@ -1,5 +1,6 @@
 {
   "osw/home": "OSW_HOME_URL/mf-manifest.json",
   "osw/js-utils": "OSW_JS_UTILS_URL/mf-manifest.json",
-  "osw/paintlet": "OSW_PAINTLET_URL/mf-manifest.json"
+  "osw/paintlet": "OSW_PAINTLET_URL/mf-manifest.json",
+  "osw/elements": "OSW_ELEMENTS_URL/mf-manifest.json"
 }

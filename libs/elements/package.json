@@ -47,6 +47,7 @@
     "lit": "*",
     "tslib": "*"
   },
+  "customElements": "custom-elements.json",
   "exports": {
     "./icon/material-symbols.css": "./icon/material-symbols.css"
   }

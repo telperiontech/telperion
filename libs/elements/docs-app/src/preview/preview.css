@@ -1,0 +1,46 @@
+/*
+ * Stylesheet of the story iframe; mirrors the Storybook preview (libs/elements/.storybook/preview.css)
+ * so stories look the same in both places.
+ */
+@import "tailwindcss";
+
+/* Utilities used by the elements (e.g. `<tp-icon>` host classes) and their stories */
+@source "../../../src/**/*.{ts,html}";
+@source "../../../.storybook/**/*.ts";
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #0a0a0a;
+  background: transparent;
+}
+
+/* Storybook's `parameters.layout` */
+body[data-layout="padded"] #root {
+  padding: 1rem;
+}
+
+body[data-layout="centered"] #root {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 100vh;
+  padding: 1rem;
+  place-items: center;
+}
+
+#story {
+  min-width: 0;
+}
+
+body[data-layout="centered"] #story {
+  max-width: 100%;
+}
+
+/* Same tweak as the Storybook preview */
+div[scale="1"] {
+  transform: initial;
+}

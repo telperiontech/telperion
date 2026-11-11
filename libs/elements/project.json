@@ -43,6 +43,16 @@
         }
       }
     },
+    "analyze": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["{projectRoot}/src/**/*.ts", "{projectRoot}/cem/**/*", "{projectRoot}/custom-elements-manifest.config.mjs"],
+      "outputs": ["{projectRoot}/custom-elements.json"],
+      "options": {
+        "command": "cem analyze --config custom-elements-manifest.config.mjs",
+        "cwd": "libs/elements"
+      }
+    },
     "publish": {
       "executor": "nx:run-commands",
       "options": {
@@ -58,6 +68,7 @@
       "options": {
         "commands": [
           "nx run elements:build",
+          "nx run elements:analyze",
           "nx run elements:publish/prepare/copy",
           "nx run elements:publish/prepare/fill-package-json --packageVersion=$PACKAGE_VERSION"
         ],
@@ -70,6 +81,7 @@
         "input": [
           "libs/elements/README.md",
           "libs/elements/LICENSE",
+          "libs/elements/custom-elements.json",
           {
             "path": "libs/elements/src/icon/material-symbols.css",
             "output": "dist/libs/elements/icon"
@@ -98,6 +110,7 @@
     },
     "storybook": {
       "executor": "@nx/storybook:storybook",
+      "dependsOn": ["analyze"],
       "options": {
         "configDir": "libs/elements/.storybook",
         "port": 6006,
