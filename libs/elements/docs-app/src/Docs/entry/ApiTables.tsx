@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { CodeBlock, DataTable, Inline } from '@osw/docs';
+import { Code, CodeBlock, DataTable, Inline } from '@osw/docs';
 import type { ApiAttribute, ApiEvent, ApiMethod, ApiNamed, ApiProperty } from '../model';
 
-const Code = ({ children }: { children?: string }) =>
-	children ? <code className="font-mono text-[12px] whitespace-pre-wrap text-neutral-990">{children}</code> : <span className="text-neutral-300">—</span>;
+/** Names render plain; pass `language="ts"` for types and default values */
+const ApiCode = ({ children, language }: { children?: string; language?: string }) =>
+	children ? <Code code={children} language={language} /> : <span className="text-neutral-300">—</span>;
 
 const Text = ({ text }: { text?: string }) => (text ? <Inline text={text.replace(/\s*\n\s*/g, ' ')} /> : <span className="text-neutral-300">—</span>);
 
@@ -24,9 +25,9 @@ export function AttributesTable({ attributes }: { attributes: ApiAttribute[] }) 
 			<DataTable
 				header={['Attribute', 'Type', 'Default', 'Description']}
 				rows={attributes.map((attribute) => [
-					<Code>{attribute.name}</Code>,
-					<Code>{attribute.type}</Code>,
-					<Code>{attribute.default}</Code>,
+					<ApiCode>{attribute.name}</ApiCode>,
+					<ApiCode language="ts">{attribute.type}</ApiCode>,
+					<ApiCode language="ts">{attribute.default}</ApiCode>,
 					<Text text={attribute.description} />,
 				])}
 			/>
@@ -44,10 +45,10 @@ export function PropertiesTable({ properties }: { properties: ApiProperty[] }) {
 				header={['Property', 'Type', 'Description']}
 				rows={jsOnly.map((property) => [
 					<span className="inline-flex flex-wrap items-center gap-1.5">
-						<Code>{property.name}</Code>
+						<ApiCode>{property.name}</ApiCode>
 						{property.readonly && <span className="rounded bg-neutral-50 px-1 text-[10px] text-neutral-850">readonly</span>}
 					</span>,
-					<Code>{property.type}</Code>,
+					<ApiCode language="ts">{property.type}</ApiCode>,
 					<Text text={property.description} />,
 				])}
 			/>
@@ -79,7 +80,7 @@ export function EventsTable({ events }: { events: ApiEvent[] }) {
 		<ApiSection title="Events" count={events.length}>
 			<DataTable
 				header={['Event', 'Type', 'Description']}
-				rows={events.map((event) => [<Code>{event.name}</Code>, <Code>{event.type}</Code>, <Text text={event.description} />])}
+				rows={events.map((event) => [<ApiCode>{event.name}</ApiCode>, <ApiCode language="ts">{event.type}</ApiCode>, <Text text={event.description} />])}
 			/>
 		</ApiSection>
 	);
@@ -94,8 +95,8 @@ export function NamedTable({ title, label, items }: { title: string; label: stri
 			<DataTable
 				header={withDefaults ? [label, 'Default', 'Description'] : [label, 'Description']}
 				rows={items.map((item) => [
-					<Code>{item.name || '(default)'}</Code>,
-					...(withDefaults ? [<Code>{item.default}</Code>] : []),
+					<ApiCode>{item.name || '(default)'}</ApiCode>,
+					...(withDefaults ? [<ApiCode>{item.default}</ApiCode>] : []),
 					<Text text={item.description} />,
 				])}
 			/>

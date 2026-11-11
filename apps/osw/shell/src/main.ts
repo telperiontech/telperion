@@ -23,5 +23,7 @@ fetch('/assets/module-federation.manifest.json')
     import('@telperion/elements/icon'),
     // Registers the header/footer outlets in index.html and the <tp-portal> remotes render into them
     import('@telperion/elements/portal'),
+    // Registers <tp-code> for every remote's code samples; Shiki grammars load lazily per language
+    import('@telperion/elements/code'),
   ]))
   .then(() => import('./bootstrap').catch((err) => console.error(err)));

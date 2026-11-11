@@ -21,6 +21,17 @@ interface TpPortalAttributes extends BaseAttributes {
 	name: string;
 }
 
+/** `<tp-code>` from `@telperion/elements/code` (registered by the shell). Pass the source as text children. */
+interface TpCodeAttributes extends BaseAttributes {
+	variant?: 'inline' | 'block';
+	language?: string;
+	'line-numbers'?: '' | undefined;
+	'line-start'?: number;
+	'highlight-lines'?: string;
+	copyable?: '' | undefined;
+	title?: string;
+}
+
 /** `<osw-copy-button>` from `@osw/core` */
 interface OswCopyButtonAttributes extends BaseAttributes {
 	text: string;
@@ -32,6 +43,7 @@ declare module 'react' {
 		interface IntrinsicElements {
 			'tp-icon': TpIconAttributes;
 			'tp-portal': TpPortalAttributes;
+			'tp-code': TpCodeAttributes;
 			'osw-copy-button': OswCopyButtonAttributes;
 			'osw-tree-mark': BaseAttributes;
 		}

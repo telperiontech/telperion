@@ -1,8 +1,11 @@
 @import './tailwind.config.css';
+@import './code.css';
 
 @source "..";
 @source "../../../home/src";
 /* Custom elements shared by the remotes (<osw-copy-button>, <osw-tree-mark>, …) */
 @source "../../../kit/core/src";
+/* React wrappers shared by the remotes (<CodeLine>, …) */
+@source "../../../kit/react/src";
 /* <tp-icon> applies Tailwind utilities to its host from inside the package */
 @source "../../../../../libs/elements/src/icon";

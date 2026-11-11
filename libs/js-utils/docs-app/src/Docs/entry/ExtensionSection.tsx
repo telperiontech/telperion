@@ -1,5 +1,5 @@
 import { ExternalLink } from '@osw/react';
-import { CodeBlock, ImportLine, Markdown, sideEffectImport } from '@osw/docs';
+import { CodeBlock, CodeLine, Markdown, sideEffectImport } from '@osw/docs';
 import type { DocsExtension } from '../model';
 import { sourceUrl } from '../routing';
 import { KindBadge } from './KindBadge';
@@ -22,7 +22,7 @@ export function ExtensionSection({ extension }: { extension: DocsExtension }) {
 			</header>
 
 			<div className="mt-3">
-				<ImportLine statement={sideEffectImport(extension.importPath)} />
+				<CodeLine code={sideEffectImport(extension.importPath)} language="ts" />
 			</div>
 			<CodeBlock code={extension.signature} copyable={false} className="mt-3" />
 			{extension.description && (

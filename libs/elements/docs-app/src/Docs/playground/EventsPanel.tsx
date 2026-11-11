@@ -1,3 +1,4 @@
+import { Code } from '@osw/react';
 import { Panel, PanelAction } from '@osw/docs';
 import type { LoggedEvent } from './use-event-log';
 
@@ -36,7 +37,7 @@ export function EventsPanel({ events, names, onClear }: EventsPanelProps) {
 				</ol>
 			) : (
 				<p className="px-4 py-6 text-sm text-neutral-850">
-					Interact with the preview to see events. Listening to {names.map((name) => <code key={name} className="mr-1 font-mono text-xs">{name}</code>)}
+					Interact with the preview to see events. Listening to {names.map((name) => <Code key={name} code={name} className="mr-1" />)}
 				</p>
 			)}
 		</Panel>

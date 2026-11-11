@@ -1,12 +1,12 @@
-import { CodeBlock, type Language } from '@osw/docs';
+import { CodeBlock } from '@osw/docs';
 import { INSTALL_COMMAND, model } from '../model';
 
-const OPTIONS: { title: string; text: string; code: string; language: Language }[] = [
+const OPTIONS: { title: string; text: string; code: string; language: string }[] = [
 	{
 		title: 'With a bundler',
 		text: 'Install once, then import only the entry points you use. Each import defines its elements.',
 		code: `${INSTALL_COMMAND}\n\n# in your code\nimport "${model.packageName}/button";\nimport "${model.packageName}/select";`,
-		language: 'shell',
+		language: 'sh',
 	},
 	{
 		title: 'From a CDN',

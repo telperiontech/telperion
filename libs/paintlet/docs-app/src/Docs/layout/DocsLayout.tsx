@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Icon } from '@osw/react';
+import { Code, Icon } from '@osw/react';
 import { DocsShell, navLinkClass } from '@osw/docs';
 import { PACKAGE_NAME, VERSION } from '../meta';
 import { homePath, paintletPath, SOURCE_URL } from '../routing';
@@ -23,7 +23,7 @@ export function DocsLayout({ children }: { children: ReactNode }) {
 			}}
 			footer={
 				<>
-					Live previews rendered from the Storybook stories of <code className="font-mono">{PACKAGE_NAME}@{VERSION}</code>.
+					Live previews rendered from the Storybook stories of <Code code={`${PACKAGE_NAME}@${VERSION}`} />.
 				</>
 			}
 		>

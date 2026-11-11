@@ -1,40 +1,24 @@
-import { useMemo } from 'react';
-import { CopyButton } from '@osw/react';
-import { highlight, type Language, type TokenType } from './highlight';
-
-/** Full class names so Tailwind can scan them */
-const TOKEN_CLASSES: Record<TokenType, string> = {
-	comment: 'text-neutral-550 italic',
-	string: 'text-success-750',
-	keyword: 'text-secondary-700',
-	number: 'text-quaternary-800',
-	type: 'text-tertiary-800',
-	property: 'text-primary-700',
-	function: 'text-secondary-800',
-	plain: '',
-};
+import { Code } from '@osw/react';
 
 interface CodeBlockProps {
 	code: string;
-	language?: Language;
+	/** Any Shiki language id or alias (`ts`, `html`, `css`, `sh`, …); `text` renders plain */
+	language?: string;
 	/** Hides the copy button, e.g. for type signatures */
 	copyable?: boolean;
+	/** Frame overrides and spacing, applied to the `<tp-code>` host */
 	className?: string;
 }
 
+/** A highlighted, framed code block: `<tp-code variant="block">` themed by the shell's `code.css` */
 export function CodeBlock({ code, language = 'ts', copyable = true, className = '' }: CodeBlockProps) {
-	const tokens = useMemo(() => highlight(code, language), [code, language]);
-
 	return (
-		<div className={`relative rounded-lg border border-neutral-100 bg-neutral-20 ${className}`}>
-			{copyable && <CopyButton text={code} className="absolute top-2 right-2 bg-neutral-20" />}
-			<pre className="overflow-x-auto p-4 pr-12 font-mono text-[13px] leading-relaxed text-neutral-990">
-				<code>
-					{tokens.map((token, index) =>
-						token.type === 'plain' ? token.text : <span key={index} className={TOKEN_CLASSES[token.type]}>{token.text}</span>,
-					)}
-				</code>
-			</pre>
-		</div>
+		<Code
+			variant="block"
+			code={code}
+			language={language}
+			copyable={copyable}
+			className={`rounded-lg border border-neutral-100 ${className}`}
+		/>
 	);
 }

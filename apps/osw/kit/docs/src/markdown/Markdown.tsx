@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CodeBlock, toLanguage } from '../code';
+import { CodeBlock } from '../code';
 import { DataTable } from './DataTable';
 import { Inline } from './Inline';
 import { parseBlocks, type Block } from './parse-blocks';
@@ -39,7 +39,7 @@ function renderBlock(block: Block, key: number, previous: Block | undefined, Hea
 				/>
 			);
 		case 'code':
-			return <CodeBlock key={key} code={block.code} language={toLanguage(block.lang)} className={previous?.type === 'label' ? 'mt-2' : 'mt-3'} />;
+			return <CodeBlock key={key} code={block.code} language={block.lang} className={previous?.type === 'label' ? 'mt-2' : 'mt-3'} />;
 		default:
 			return <p key={key} className="mt-3 leading-relaxed text-neutral-920"><Inline text={block.text} /></p>;
 	}

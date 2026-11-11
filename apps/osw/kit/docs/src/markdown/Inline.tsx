@@ -1,16 +1,12 @@
 import { Fragment, type ReactNode } from 'react';
-import { ExternalLink } from '@osw/react';
+import { Code, ExternalLink } from '@osw/react';
 
 /** `code`, **bold** / __bold__ and [links](url); everything else stays plain text */
 const TOKEN = /(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\([^)\s]+\))/g;
 
 function renderToken(token: string, key: number): ReactNode {
 	if (token.startsWith('`')) {
-		return (
-			<code key={key} className="rounded bg-neutral-50 px-1 py-0.5 font-mono text-[0.85em] text-neutral-990">
-				{token.slice(1, -1)}
-			</code>
-		);
+		return <Code key={key} code={token.slice(1, -1)} />;
 	}
 
 	if (token.startsWith('**') || token.startsWith('__')) {

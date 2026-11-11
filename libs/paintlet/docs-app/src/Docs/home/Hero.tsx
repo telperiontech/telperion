@@ -1,5 +1,5 @@
-import { InstallCommand, primaryButtonClass, secondaryButtonClass } from '@osw/docs';
-import { ExternalLink, Icon } from '@osw/react';
+import { CodeLine, primaryButtonClass, secondaryButtonClass } from '@osw/docs';
+import { Code, ExternalLink, Icon } from '@osw/react';
 import { INSTALL_COMMAND, PACKAGE_NAME } from '../meta';
 import { paintletPath, SOURCE_URL } from '../routing';
 import { paintlets } from '../stories';
@@ -18,11 +18,11 @@ export function Hero() {
 					</h1>
 					<p className="mt-5 max-w-xl text-lg leading-relaxed text-neutral-920">
 						Ready-made CSS Paint API worklets: rain, ripples, grids, low-poly meshes and organic gradients.
-						Import once, then write <code className="rounded bg-neutral-50 px-1.5 py-0.5 font-mono text-[0.85em]">background-image: --tp-rain()</code> and
+						Import once, then write <Code code="background-image: --tp-rain()" /> and
 						tune everything with custom properties.
 					</p>
 
-					<InstallCommand command={INSTALL_COMMAND} className="mt-8 bg-white/90 backdrop-blur" />
+					<CodeLine code={INSTALL_COMMAND} language="sh" prompt="$" className="mt-8 max-w-md bg-white/90 backdrop-blur" />
 
 					<div className="mt-6 flex flex-wrap gap-3">
 						{firstPaintlet && (

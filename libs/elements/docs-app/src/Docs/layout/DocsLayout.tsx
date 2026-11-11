@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Icon } from '@osw/react';
+import { Code, Icon } from '@osw/react';
 import { DocsShell, navLinkClass } from '@osw/docs';
 import { model } from '../model';
 import { entryPath, homePath, SOURCE_URL } from '../routing';
@@ -24,7 +24,7 @@ export function DocsLayout({ children }: { children: ReactNode }) {
 			}}
 			footer={
 				<>
-					API generated from the Custom Elements Manifest of <code className="font-mono">{model.packageName}@{model.version}</code>; previews run its Storybook stories.
+					API generated from the Custom Elements Manifest of <Code code={`${model.packageName}@${model.version}`} />; previews run its Storybook stories.
 				</>
 			}
 		>

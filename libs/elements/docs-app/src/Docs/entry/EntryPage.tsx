@@ -1,5 +1,5 @@
 import { ExternalLink, Icon } from '@osw/react';
-import { ImportLine, Inline, Markdown, sideEffectImport, treeUrl } from '@osw/docs';
+import { CodeLine, Inline, Markdown, sideEffectImport, treeUrl } from '@osw/docs';
 import { eventsOf, type EntryDoc } from '../model';
 import { PreviewFrame } from '../preview-frame';
 import { storyPath } from '../routing';
@@ -23,7 +23,7 @@ export function EntryPage({ entry }: { entry: EntryDoc }) {
 					<Inline text={entry.summary} />
 				</p>
 				<div className="mt-4 max-w-xl">
-					<ImportLine statement={sideEffectImport(entry.importPath)} />
+					<CodeLine code={sideEffectImport(entry.importPath)} language="ts" />
 				</div>
 				<p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-850">
 					<span>Defines {entry.elements.map((element) => `<${element.tagName}>`).join(', ')}</span>

@@ -1,3 +1,4 @@
+import { Code } from '@osw/react';
 import { entriesOf, model, type DocsCategory } from '../model';
 import { overviewPath } from '../routing';
 import { EntryList } from './EntryList';
@@ -12,7 +13,7 @@ export function CategoryPage({ category }: { category: DocsCategory }) {
 			{category.description && <p className="mt-3 text-base text-neutral-920">{category.description}</p>}
 			{category.id !== 'core' && (
 				<p className="mt-2 text-sm text-neutral-850">
-					Import all at once from <code className="font-mono text-neutral-990">{model.packageName}/{category.id}</code>, or each from its own path for the smallest bundle.
+					Import all at once from <Code code={`${model.packageName}/${category.id}`} />, or each from its own path for the smallest bundle.
 				</p>
 			)}
 			<div className="mt-8">

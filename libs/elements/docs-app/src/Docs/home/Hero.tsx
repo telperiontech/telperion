@@ -1,5 +1,5 @@
 import { ExternalLink, Icon } from '@osw/react';
-import { CodeBlock, InstallCommand, primaryButtonClass, secondaryButtonClass } from '@osw/docs';
+import { CodeBlock, CodeLine, primaryButtonClass, secondaryButtonClass } from '@osw/docs';
 import { INSTALL_COMMAND, model } from '../model';
 import { entryPath, SOURCE_URL, storyPath } from '../routing';
 import { storiesOf } from '../stories';
@@ -32,7 +32,7 @@ export function Hero() {
 						Plain HTML tags, so they work with any framework or none.
 					</p>
 
-					<InstallCommand command={INSTALL_COMMAND} className="mt-8 bg-white/90 backdrop-blur" />
+					<CodeLine code={INSTALL_COMMAND} language="sh" prompt="$" className="mt-8 max-w-md bg-white/90 backdrop-blur" />
 
 					<div className="mt-6 flex flex-wrap gap-3">
 						{firstEntry && (

@@ -1,12 +1,12 @@
-import { CodeBlock, type Language } from '@osw/docs';
+import { CodeBlock } from '@osw/docs';
 import { INSTALL_COMMAND, PACKAGE_NAME } from '../meta';
 
-const STEPS: { title: string; text: string; code: string; language: Language }[] = [
+const STEPS: { title: string; text: string; code: string; language: string }[] = [
 	{
 		title: 'Install',
 		text: 'One dependency, no runtime framework.',
 		code: INSTALL_COMMAND,
-		language: 'shell',
+		language: 'sh',
 	},
 	{
 		title: 'Register',

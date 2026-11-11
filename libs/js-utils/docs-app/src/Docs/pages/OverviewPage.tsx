@@ -1,4 +1,4 @@
-import { CodeBlock, InstallCommand } from '@osw/docs';
+import { CodeBlock, CodeLine } from '@osw/docs';
 import { model } from '../model';
 import { docsPath } from '../routing';
 
@@ -32,7 +32,7 @@ export function OverviewPage() {
 					Zero-dependency helpers for arrays, objects, promises, functions and more, with full TypeScript types.
 					This reference is generated from the library's source on every release.
 				</p>
-				<InstallCommand command={INSTALL} className="mt-6 bg-neutral-30" />
+				<CodeLine code={INSTALL} language="sh" prompt="$" className="mt-6 max-w-md bg-neutral-30" />
 			</header>
 
 			<section aria-labelledby="usage" className="mt-12">

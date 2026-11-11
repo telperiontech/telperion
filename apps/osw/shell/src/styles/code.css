@@ -1,0 +1,63 @@
+/*
+ * <tp-code> theme for every remote (the shell registers the element; remotes render into its light DOM).
+ * Public --tp-code-* / --tp-color-* variables cascade into the element's shadow DOM.
+ */
+
+:root {
+	/* Shared palette consumed by every tp-* element */
+	--tp-color-primary: var(--color-primary);
+	--tp-color-secondary: var(--color-secondary);
+	--tp-color-success: var(--color-success);
+	--tp-color-warning: var(--color-warning);
+	--tp-color-danger: var(--color-danger);
+	--tp-color-contrast: var(--color-neutral-990);
+
+	--tp-code-font-family: var(--font-mono);
+	--tp-code-background: var(--color-neutral-50);
+
+	/* Token colors, matching the shades the docs used before tp-code */
+	--tp-code-token-keyword: var(--color-secondary-700);
+	--tp-code-token-function: var(--color-primary-700);
+	--tp-code-token-constant: var(--color-tertiary-800);
+	--tp-code-token-string: var(--color-success-750);
+	--tp-code-token-string-expression: var(--color-success-800);
+	--tp-code-token-parameter: var(--color-quaternary-800);
+	--tp-code-token-comment: var(--color-neutral-550);
+	--tp-code-token-punctuation: var(--color-neutral-750);
+	--tp-code-token-link: var(--color-secondary-800);
+	--tp-code-token-inserted: var(--color-success-750);
+	--tp-code-token-deleted: var(--color-danger-700);
+	--tp-code-token-changed: var(--color-quaternary-800);
+
+	--tp-code-copy-background: var(--color-neutral-20);
+	--tp-code-copy-color: var(--color-neutral-850);
+	--tp-code-copy-success-color: var(--color-success-600);
+}
+
+/* Blocks: the frame (border, radius, margins) comes from utilities on the host */
+tp-code[variant='block'] {
+	--tp-code-background: var(--color-neutral-20);
+	--tp-code-font-size: 13px;
+	--tp-code-line-height: 1.625;
+	--tp-code-padding-block: 1rem;
+	--tp-code-padding-inline: 1rem;
+	overflow: hidden;
+}
+
+/* Inline: keep the chip inside the surrounding text size */
+tp-code:not([variant='block']) {
+	--tp-code-font-size: 0.85em;
+	--tp-code-inline-padding: 0.125rem 0.25rem;
+	--tp-code-radius: 0.25rem;
+}
+
+/* <CodeLine> rows: no chip, single line, truncated by the wrapper */
+.osw-code-line tp-code {
+	--tp-code-background: transparent;
+	--tp-code-inline-padding: 0;
+	--tp-code-font-size: 1em;
+}
+
+.osw-code-line tp-code::part(code) {
+	white-space: pre;
+}
