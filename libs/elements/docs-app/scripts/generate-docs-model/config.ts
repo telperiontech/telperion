@@ -17,6 +17,7 @@ interface EntryMeta {
 export const ENTRY_META: Record<string, EntryMeta> = {
 	button: { title: 'Button', summary: 'A form-associated button with palette-driven colors and four variants.' },
 	select: { title: 'Select', summary: 'A form-associated selectbox with single and multiple selection.' },
+	portal: { title: 'Portal', summary: 'Moves content into a named outlet elsewhere in the document, with bindings intact.' },
 	popover: { title: 'Popover', summary: 'A popover anchored with CSS anchor positioning, on top of the Popover API.' },
 	'details-set': { title: 'Details Set', summary: 'Groups `<details>` elements into accordions with a cap on how many stay open.' },
 	icon: { title: 'Icon', summary: 'Material Symbols, Simple Icons and theSVG icons from one element.' },

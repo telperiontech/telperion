@@ -69,6 +69,9 @@ Use the **explicit `/iife/...` path** so the CDN serves the standalone bundle (s
 
 <!-- Or just the button module (TelperionElements.Button) -->
 <script src="https://unpkg.com/@telperion/elements/iife/button/index.js"></script>
+
+<!-- Or just the portal module (TelperionElements.Portal) -->
+<script src="https://unpkg.com/@telperion/elements/iife/portal/index.js"></script>
 ```
 
 Each per-module bundle is fully self-contained: side-effect imports register the custom elements as soon as the script is evaluated. jsDelivr (`https://cdn.jsdelivr.net/npm/@telperion/elements/iife/...`) and other npm CDNs work the same way.
@@ -293,6 +296,40 @@ import "@telperion/elements/button";
 ```
 
 [Button Documentation →](./src/button/README.md)
+
+---
+
+### Portal
+
+Render content somewhere else in the document. Children of `<tp-portal>` are **moved** (not cloned) into the `<tp-portal-outlet>` with the same `name`, so listeners, element state and framework bindings keep working.
+
+**Includes:**
+- `<tp-portal>` &mdash; declares the content and the outlet `name` to render into
+- `<tp-portal-outlet>` &mdash; the render target
+
+**Features:**
+- Same nodes, moved: state and bindings survive; uses the state-preserving `moveBefore()` where supported
+- Framework-safe: `appendChild` / `insertBefore` / `removeChild` / `replaceChild` / `textContent` / `innerHTML` on the portal are forwarded to the outlet, so React, Angular, Vue and Lit keep reconciling without errors
+- Connection order doesn't matter; content returns to the portal when the outlet leaves
+- Several portals per outlet (in connection order); the most recent outlet of a name wins, the previous one takes over when it leaves
+- Reflected `projected` (portal) and `active` (outlet) attributes for styling
+
+#### JS/TS
+```ts
+import "@telperion/elements/portal";
+```
+
+#### HTML
+```html
+<tp-portal name="foo">
+  Foo Text
+  <section>Foo inner content</section>
+</tp-portal>
+
+<tp-portal-outlet name="foo"></tp-portal-outlet>
+```
+
+[Portal Documentation →](./src/portal/README.md)
 
 ---
 

@@ -21,3 +21,6 @@ export * from './select';
 // Button components
 export * from './button';
 
+// Portal components
+export * from './portal';
+
