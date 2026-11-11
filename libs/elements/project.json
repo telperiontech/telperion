@@ -21,7 +21,9 @@
           "popover/index": "src/popover/index.ts",
           "select/index": "src/select/index.ts",
           "button/index": "src/button/index.ts",
-          "portal/index": "src/portal/index.ts"
+          "portal/index": "src/portal/index.ts",
+          "code/index": "src/code/index.ts",
+          "code/cdn": "src/code/code-cdn-element.ts"
         },
         "formats": {
           "esm": { "perFile": true, "flat": true },
@@ -38,7 +40,8 @@
               "popover/index": {},
               "select/index": {},
               "button/index": {},
-              "portal/index": {}
+              "portal/index": {},
+              "code/cdn": { "name": "TelperionElements.Code" }
             }
           },
           "types": { "dts": true, "dcts": true }
@@ -97,7 +100,7 @@
       "options": {
         "outputPath": "dist/libs/elements",
         "cdn": "iife/elements.js",
-        "sideEffects": ["**/*-element.js", "**/*-element.cjs", "**/*.css"],
+        "sideEffects": ["**/*-element.js", "**/*-element.cjs", "**/code/cdn.js", "**/code/cdn.cjs", "**/*.css"],
         "populateExports": {
           "exports": ["types", "import", "require", "node", "script", "default"]
         }

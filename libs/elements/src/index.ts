@@ -24,3 +24,8 @@ export * from './button';
 // Portal components
 export * from './portal';
 
+// `<tp-code>` is intentionally NOT re-exported here: its bundled loader pulls in
+// every Shiki grammar via `import()`, which the self-contained root IIFE would
+// inline (~8 MB). Import it from `@telperion/elements/code` (bundlers) or load
+// `iife/code/cdn.js` (script tag, grammars from the CDN).
+

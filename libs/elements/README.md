@@ -72,6 +72,9 @@ Use the **explicit `/iife/...` path** so the CDN serves the standalone bundle (s
 
 <!-- Or just the portal module (TelperionElements.Portal) -->
 <script src="https://unpkg.com/@telperion/elements/iife/portal/index.js"></script>
+
+<!-- The code module (TelperionElements.Code) — not included in elements.js; grammars load from jsDelivr -->
+<script src="https://unpkg.com/@telperion/elements/iife/code/cdn.js"></script>
 ```
 
 Each per-module bundle is fully self-contained: side-effect imports register the custom elements as soon as the script is evaluated. jsDelivr (`https://cdn.jsdelivr.net/npm/@telperion/elements/iife/...`) and other npm CDNs work the same way.
@@ -332,6 +335,38 @@ import "@telperion/elements/portal";
 ```
 
 [Portal Documentation →](./src/portal/README.md)
+
+---
+
+### Code
+
+Syntax-highlighted code, inline or as a block, powered by [Shiki](https://shiki.style). Every Shiki language (~240 ids and aliases) loads lazily on first use.
+
+**Features:**
+- `inline` (default) and `block` variants
+- Block extras: `line-numbers` (+ `line-start`), `highlight-lines="2, 4-6"`, `copyable`
+- Themed entirely through `--tp-code-*` CSS variables, with defaults derived from the shared `--tp-color-*` palette
+- Source from text content, a `<template>` child (HTML samples, no escaping), or the `code` property; light-DOM changes re-highlight
+- Plain text renders instantly and is swapped for highlighted tokens without layout shift
+
+> `<tp-code>` is not part of the root `@telperion/elements` import (its grammars would bloat the all-in-one bundle). Import `@telperion/elements/code` explicitly.
+
+#### JS/TS
+```ts
+import "@telperion/elements/code";
+```
+
+#### HTML
+```html
+<p>Run <tp-code language="sh">pnpm install</tp-code> first.</p>
+
+<tp-code variant="block" language="ts" line-numbers highlight-lines="2" copyable>
+  const answer = 42;
+  console.log(answer);
+</tp-code>
+```
+
+[Code Documentation →](./src/code/README.md)
 
 ---
 
