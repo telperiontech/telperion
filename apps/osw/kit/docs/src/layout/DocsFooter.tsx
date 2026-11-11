@@ -1,18 +1,12 @@
 import type { ReactNode } from 'react';
-import { ExternalLink } from '@osw/react';
-import { issuesUrl } from '../meta';
+import { OSW_SLOTS } from '@osw/core';
+import { ShellSlot } from '@osw/react';
 
-/** Footer with a remote-specific note (`children`), the issue tracker and the license */
+/** Puts a remote-specific note (`children`) into the shell footer's bottom bar */
 export function DocsFooter({ children }: { children: ReactNode }) {
 	return (
-		<footer className="border-t border-neutral-100">
-			<div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-neutral-850 sm:px-6">
-				<p>{children}</p>
-				<p className="flex gap-4">
-					<ExternalLink href={issuesUrl()} className="hover:text-neutral-990">Report an issue</ExternalLink>
-					<span>© {new Date().getFullYear()} Telperion · MIT</span>
-				</p>
-			</div>
-		</footer>
+		<ShellSlot name={OSW_SLOTS.footerNote}>
+			<p>{children}</p>
+		</ShellSlot>
 	);
 }

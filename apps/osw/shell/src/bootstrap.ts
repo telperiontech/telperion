@@ -1,11 +1,13 @@
 // Loaded via dynamic import from main.ts: shared federated modules such as `@osw/core`
 // can only be consumed behind this async boundary, never from main.ts directly.
 import { defineOswElements, interceptLinks } from '@osw/core';
+import { fillCurrentYear } from './current-year';
 import { defineRemoteElement } from './remote-element';
 
 // Shared custom elements and client-side navigation for plain `<a href>` links in every remote
 defineOswElements();
 interceptLinks();
+fillCurrentYear();
 
 defineRemoteElement('osw-home', 'osw/home/Home');
 defineRemoteElement('osw-js-utils', 'osw/js-utils/Docs');

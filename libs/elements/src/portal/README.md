@@ -41,6 +41,24 @@ Properties: `name`, `outlet` (the hosting outlet or `null`), `projectedNodes` (t
 
 Properties: `name`, `portals` (portals projecting here, in order).
 
+### `<tp-portal-outlet-fallback>`
+
+Default content of an outlet. Place it as a **direct child** of a `<tp-portal-outlet>`: it is shown while no portal projects into the outlet, and hidden while one does (that is, while the outlet is `active`).
+
+```html
+<tp-portal-outlet name="toolbar">
+  <tp-portal-outlet-fallback>
+    <a href="/">Home</a>
+  </tp-portal-outlet-fallback>
+</tp-portal-outlet>
+```
+
+- It is `display: contents` by default, like the outlet.
+- Hiding is driven by CSS (`tp-portal-outlet[active] > tp-portal-outlet-fallback { display: none !important }`), so its nodes stay in place and frameworks can keep rendering into it. The rule is `!important` on purpose: your own `display` styling can't reveal a fallback that should be hidden.
+- Any attached portal hides it, even one with no content. To show the fallback, don't render the portal.
+
+Properties: `shown` (whether the fallback is currently visible).
+
 ## Rules
 
 - **No outlet**: the content stays inside the portal, which is `display: none` by default.

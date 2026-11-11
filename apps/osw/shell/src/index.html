@@ -16,31 +16,73 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />
 </head>
 
-<body class="bg-white font-sans text-neutral-990">
-  <tha-router>
+<!--
+  The shell owns the page chrome. Remotes fill the named outlets with <tp-portal name="…">;
+  each outlet's <tp-portal-outlet-fallback> shows while no remote projects into it.
+  Outlet names are listed in OSW_SLOTS (@osw/core).
+-->
+<body class="flex min-h-screen flex-col bg-white font-sans text-neutral-990">
+  <header class="sticky top-0 z-30 border-b border-neutral-100 bg-white/80 backdrop-blur-md">
+    <div aria-hidden="true" class="h-0.5 bg-linear-to-r from-primary-500 via-secondary-500 to-tertiary-500"></div>
+    <nav aria-label="Main" class="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:px-6">
+      <a href="/" class="flex shrink-0 items-center gap-2.5 rounded-md text-neutral-990" title="All libraries">
+        <osw-tree-mark class="size-7 text-secondary-600"></osw-tree-mark>
+        <span class="font-semibold tracking-tight">Telperion</span>
+      </a>
+
+      <!-- Right of the logo: what this page is about -->
+      <div class="mr-auto flex min-w-0 items-center gap-2">
+        <tp-portal-outlet name="osw-header-context">
+          <tp-portal-outlet-fallback>
+            <span class="hidden rounded-full border border-tertiary-200 bg-tertiary-100 px-2 py-0.5 text-xs font-medium text-tertiary-850 sm:inline">
+              Open Source
+            </span>
+          </tp-portal-outlet-fallback>
+        </tp-portal-outlet>
+      </div>
+
+      <!-- Right side: links and registry icons chosen by the remote -->
+      <tp-portal-outlet name="osw-header-actions">
+        <tp-portal-outlet-fallback>
+          <a href="https://telperion.tr/en/" target="_blank" rel="noopener noreferrer" class="hidden items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-920 transition-colors hover:bg-neutral-50 hover:text-neutral-990 sm:flex">
+            telperion.tr
+            <tp-icon aria-hidden="true" style="font-size: 16px">arrow_outward</tp-icon>
+          </a>
+          <a href="https://github.com/telperiontech/telperion" target="_blank" rel="noopener noreferrer" class="grid size-9 place-items-center rounded-lg text-neutral-920 transition-colors hover:bg-neutral-50 hover:text-neutral-990" aria-label="GitHub repository" title="GitHub">
+            <tp-icon family="simple-icons" slug="github" aria-hidden="true" style="font-size: 18px"></tp-icon>
+          </a>
+          <a href="https://www.npmjs.com/org/telperion" target="_blank" rel="noopener noreferrer" class="grid size-9 place-items-center rounded-lg text-neutral-920 transition-colors hover:bg-neutral-50 hover:text-neutral-990" aria-label="npm organization" title="npm">
+            <tp-icon family="simple-icons" slug="npm" aria-hidden="true" style="font-size: 18px"></tp-icon>
+          </a>
+        </tp-portal-outlet-fallback>
+      </tp-portal-outlet>
+    </nav>
+  </header>
+
+  <tha-router class="flex flex-1 flex-col">
     <tha-route path="/">
       <template>
-        <osw-home></osw-home>
+        <osw-home class="block flex-1"></osw-home>
       </template>
     </tha-route>
     <tha-route path="/js-utils{/*}?">
       <template>
-        <osw-js-utils></osw-js-utils>
+        <osw-js-utils class="block flex-1"></osw-js-utils>
       </template>
     </tha-route>
     <tha-route path="/paintlet{/*}?">
       <template>
-        <osw-paintlet></osw-paintlet>
+        <osw-paintlet class="block flex-1"></osw-paintlet>
       </template>
     </tha-route>
     <tha-route path="/elements{/*}?">
       <template>
-        <osw-elements></osw-elements>
+        <osw-elements class="block flex-1"></osw-elements>
       </template>
     </tha-route>
     <tha-route path="*">
       <template>
-        <main class="min-h-screen grid place-items-center px-4">
+        <main class="grid flex-1 place-items-center px-4 py-24">
           <div class="text-center">
             <p class="font-mono text-sm font-semibold text-primary-600">404</p>
             <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Page not found</h1>
@@ -53,8 +95,60 @@
         </main>
       </template>
     </tha-route>
-    <tha-router-outlet></tha-router-outlet>
+    <tha-router-outlet class="flex flex-1 flex-col"></tha-router-outlet>
   </tha-router>
+
+  <footer class="bg-white">
+    <div aria-hidden="true" class="h-1 bg-linear-to-r from-primary-500 via-secondary-500 to-tertiary-500"></div>
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr]">
+      <div class="max-w-sm">
+        <a href="https://telperion.tr/en/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2.5 text-neutral-990">
+          <osw-tree-mark class="size-7 text-secondary-600"></osw-tree-mark>
+          <span class="font-semibold tracking-tight">Telperion</span>
+        </a>
+        <p class="mt-4 text-sm leading-relaxed text-neutral-920">
+          Telperion builds privacy-first, open-source tools for team collaboration. This is where we share the libraries we build along the way.
+        </p>
+        <a href="https://telperion.tr/en/" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex text-sm font-medium text-secondary-800 hover:underline">
+          Visit telperion.tr →
+        </a>
+      </div>
+
+      <div>
+        <h2 class="text-sm font-semibold text-neutral-990">Open source</h2>
+        <ul class="mt-3 space-y-2 text-sm text-neutral-920">
+          <li><a href="https://github.com/telperiontech/telperion" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">GitHub</a></li>
+          <li><a href="https://www.npmjs.com/org/telperion" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">npm @telperion</a></li>
+          <li><a href="https://telperion.tr/en/open-source/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Open source at Telperion</a></li>
+          <li><a href="https://github.com/telperiontech/telperion/issues" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Report an issue</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="text-sm font-semibold text-neutral-990">Company</h2>
+        <ul class="mt-3 space-y-2 text-sm text-neutral-920">
+          <li><a href="https://telperion.tr/en/products/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Products</a></li>
+          <li><a href="https://telperion.tr/en/services/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Services</a></li>
+          <li><a href="https://telperion.tr/en/about/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">About</a></li>
+          <li><a href="https://telperion.tr/en/blog/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Blog</a></li>
+          <li><a href="https://telperion.tr/en/careers/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Careers</a></li>
+          <li><a href="https://telperion.tr/en/contact/" target="_blank" rel="noopener noreferrer" class="transition-colors hover:text-neutral-990">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-neutral-100">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-neutral-850 sm:px-6">
+        <p>© <span data-current-year>2026</span> Telperion. Released under the MIT License.</p>
+        <!-- Remote-specific note, e.g. which version the docs were generated from -->
+        <tp-portal-outlet name="osw-footer-note">
+          <tp-portal-outlet-fallback>
+            <p>Some packages are still published under the legacy <code class="font-mono">@thalesrc</code> scope.</p>
+          </tp-portal-outlet-fallback>
+        </tp-portal-outlet>
+      </div>
+    </div>
+  </footer>
 </body>
 
 </html>

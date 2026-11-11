@@ -3,6 +3,7 @@ import { html } from "lit";
 
 import "./portal-element";
 import "./portal-outlet-element";
+import "./portal-outlet-fallback-element";
 
 const meta: Meta = {
   title: "Elements/Portal",
@@ -120,6 +121,37 @@ export const FrameworkUpdates: Story = {
         <div class="box">
           <small>&lt;ul&gt;&lt;tp-portal-outlet name="list"&gt;</small>
           <ul><tp-portal-outlet name="list"></tp-portal-outlet></ul>
+        </div>
+      </div>
+    `;
+  },
+};
+
+/**
+ * `<tp-portal-outlet-fallback>` is the outlet's default content: shown while
+ * no portal projects into the outlet, hidden while one does.
+ */
+export const Fallback: Story = {
+  render: () => {
+    const toggle = (event: Event): void => {
+      const stage = (event.currentTarget as HTMLElement).closest(".portal-demo")!;
+      const existing = stage.querySelector("tp-portal[name='fallback']");
+      if (existing) existing.remove();
+      else {
+        const portal = Object.assign(document.createElement("tp-portal"), { name: "fallback" });
+        portal.innerHTML = "<strong>Projected content</strong>";
+        stage.prepend(portal);
+      }
+    };
+    return html`
+      ${styles}
+      <div class="portal-demo">
+        <button @click=${toggle}>Toggle portal</button>
+        <div class="box">
+          <small>&lt;tp-portal-outlet name="fallback"&gt;</small>
+          <tp-portal-outlet name="fallback">
+            <tp-portal-outlet-fallback><em>Nothing projected: fallback shown</em></tp-portal-outlet-fallback>
+          </tp-portal-outlet>
         </div>
       </div>
     `;

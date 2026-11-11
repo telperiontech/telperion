@@ -9,3 +9,4 @@ export { Icon } from './Icon';
 export { ExternalLink } from './ExternalLink';
 export { CopyButton } from './CopyButton';
 export { TreeMark } from './TreeMark';
+export { ShellSlot } from './ShellSlot';

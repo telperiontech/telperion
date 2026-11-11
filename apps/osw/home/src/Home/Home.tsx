@@ -1,17 +1,12 @@
 import { Catalog } from './catalog';
-import { Footer } from './footer';
 import { Hero } from './hero';
-import { Nav } from './nav';
 
+/** The shell provides the header and footer; home uses their fallback content and projects nothing */
 export default function Home() {
 	return (
-		<div className="flex min-h-screen flex-col bg-white font-sans text-neutral-990">
-			<Nav />
-			<main className="flex-1">
-				<Hero />
-				<Catalog />
-			</main>
-			<Footer />
-		</div>
+		<main>
+			<Hero />
+			<Catalog />
+		</main>
 	);
 }

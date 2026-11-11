@@ -9,13 +9,16 @@ interface DocsShellProps {
 	children: ReactNode;
 }
 
-/** Page frame of a docs remote: sticky nav, growing content, footer */
+/**
+ * Page frame of a docs remote. The header and footer belong to the shell;
+ * `nav` and `footer` are projected into its outlets, `children` render in place.
+ */
 export function DocsShell({ nav, footer, children }: DocsShellProps) {
 	return (
-		<div className="flex min-h-screen flex-col bg-white font-sans text-neutral-990">
+		<>
 			<DocsNav {...nav} />
-			<div className="flex-1">{children}</div>
+			{children}
 			<DocsFooter>{footer}</DocsFooter>
-		</div>
+		</>
 	);
 }

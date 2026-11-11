@@ -1,7 +1,6 @@
 import type { Library } from './libraries';
 
 export const REPO_URL = 'https://github.com/telperiontech/telperion';
-export const NPM_ORG_URL = 'https://www.npmjs.com/org/telperion';
 
 /** npm package page; `library.name` carries the package's current scope */
 export const npmUrl = (library: Library) => `https://www.npmjs.com/package/${library.name}`;

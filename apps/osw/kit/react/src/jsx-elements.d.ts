@@ -16,6 +16,11 @@ interface TpIconAttributes extends BaseAttributes {
 	filled?: '' | undefined;
 }
 
+/** `<tp-portal>` from `@telperion/elements/portal` (registered by the shell) */
+interface TpPortalAttributes extends BaseAttributes {
+	name: string;
+}
+
 /** `<osw-copy-button>` from `@osw/core` */
 interface OswCopyButtonAttributes extends BaseAttributes {
 	text: string;
@@ -26,6 +31,7 @@ declare module 'react' {
 	namespace JSX {
 		interface IntrinsicElements {
 			'tp-icon': TpIconAttributes;
+			'tp-portal': TpPortalAttributes;
 			'osw-copy-button': OswCopyButtonAttributes;
 			'osw-tree-mark': BaseAttributes;
 		}

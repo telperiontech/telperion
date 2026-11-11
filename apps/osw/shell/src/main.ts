@@ -21,5 +21,7 @@ fetch('/assets/module-federation.manifest.json')
     import('@telperion/elements/router'),
     // Registers <tp-icon>, used by the home remote (which compiles with Babel and can't parse Lit decorators)
     import('@telperion/elements/icon'),
+    // Registers the header/footer outlets in index.html and the <tp-portal> remotes render into them
+    import('@telperion/elements/portal'),
   ]))
   .then(() => import('./bootstrap').catch((err) => console.error(err)));

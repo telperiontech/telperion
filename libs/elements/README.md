@@ -306,6 +306,7 @@ Render content somewhere else in the document. Children of `<tp-portal>` are **m
 **Includes:**
 - `<tp-portal>` &mdash; declares the content and the outlet `name` to render into
 - `<tp-portal-outlet>` &mdash; the render target
+- `<tp-portal-outlet-fallback>` &mdash; default content of an outlet, shown while nothing is projected
 
 **Features:**
 - Same nodes, moved: state and bindings survive; uses the state-preserving `moveBefore()` where supported
@@ -313,6 +314,7 @@ Render content somewhere else in the document. Children of `<tp-portal>` are **m
 - Connection order doesn't matter; content returns to the portal when the outlet leaves
 - Several portals per outlet (in connection order); the most recent outlet of a name wins, the previous one takes over when it leaves
 - Reflected `projected` (portal) and `active` (outlet) attributes for styling
+- Declarative fallback content per outlet via `<tp-portal-outlet-fallback>`
 
 #### JS/TS
 ```ts

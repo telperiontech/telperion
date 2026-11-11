@@ -6,6 +6,7 @@
 export { navigate, onNavigate } from './navigation';
 export { interceptLinks } from './links';
 export type { OswRemote, OswUnmount } from './remote';
+export { OSW_SLOTS, type OswSlot } from './shell-slots';
 export { OswCopyButton, OswTreeMark, defineOswElements } from './elements';
 
 declare global {
