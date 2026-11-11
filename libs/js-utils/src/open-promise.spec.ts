@@ -12,7 +12,7 @@ describe('Open Promise Class', () => {
     const startedAt = new Date().getTime();
 
     op.then(value => {
-      expect(new Date().getTime() - startedAt).toBeGreaterThan(48);
+      expect(new Date().getTime() - startedAt).toBeGreaterThanOrEqual(45);
       expect(value).toBe(1);
       done();
     });
@@ -88,7 +88,7 @@ describe('Open Promise Class', () => {
     const startedAt = new Date().getTime();
 
     op.then(val => {
-      expect(new Date().getTime() - startedAt).toBeGreaterThan(48);
+      expect(new Date().getTime() - startedAt).toBeGreaterThanOrEqual(45);
       expect(val).toBe(1);
       done();
     });
@@ -105,7 +105,7 @@ describe('Open Promise Class', () => {
         throw new CustomError('bar');
       })
       .catch((err: CustomError) => {
-        expect(new Date().getTime() - startedAt).toBeGreaterThan(48);
+        expect(new Date().getTime() - startedAt).toBeGreaterThanOrEqual(45);
         expect(err.message).toBe('foo');
         done();
       });

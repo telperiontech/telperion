@@ -32,7 +32,7 @@ describe('Debounce Proto Function', () => {
       .then(() => {
         const sequence = new Date().getTime() - startedAt;
 
-        expect(sequence).toBeGreaterThan(49);
+        expect(sequence).toBeGreaterThanOrEqual(45);
         expect(bar.x).toBe(8);
 
         done();

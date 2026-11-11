@@ -1,9 +1,16 @@
 
-import { debounce } from './debounce';
+import { debounce, DEFAULT_DEBOUNCE_TIME } from './debounce';
 
 class CustomError {
   constructor(public message: string) {}
 }
+
+/**
+ * Node timers are scheduled against libuv's cached loop time, and `Date` has
+ * 1ms resolution, so a timer may appear to fire a few ms "early" when measured
+ * with `Date`. Allow that much jitter in elapsed-time assertions.
+ */
+const TIMER_JITTER = 5;
 
 describe('Debounce Function', () => {
   let foo = 0;
@@ -16,81 +23,62 @@ describe('Debounce Function', () => {
     foo = 0;
   });
 
-  it('should debounce functions', done => {
+  it('should debounce functions', async () => {
     debounce(bar);
     debounce(bar);
 
-    debounce(bar)
-      .then(() => {
-        expect(foo).toBe(1);
-        done();
-      });
+    await debounce(bar);
+
+    expect(foo).toBe(1);
   });
 
-  it('should wait the debouncing time to execute function', done => {
-    const started = new Date().getTime();
+  it('should wait the debouncing time to execute function', async () => {
+    const started = Date.now();
 
-    debounce(bar).then(() => {
-      expect(foo).toBe(1);
-      expect(new Date().getTime() - started).toBeGreaterThan(179);
-      done();
-    });
+    await debounce(bar);
+
+    expect(foo).toBe(1);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(DEFAULT_DEBOUNCE_TIME - TIMER_JITTER);
   });
 
-  it('should debounce by given time', done => {
-    const started = new Date().getTime();
+  it('should debounce by given time', async () => {
+    const started = Date.now();
 
-    debounce(bar, 50)
-      .then(() => {
-        const executedIn = new Date().getTime() - started;
+    await debounce(bar, 50);
 
-        expect(foo).toBe(1);
-        expect(executedIn).toBeGreaterThan(49);
-
-        done();
-      });
+    expect(foo).toBe(1);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(50 - TIMER_JITTER);
   });
 
-  it('should use passed this object', done => {
+  it('should use passed this object', async () => {
     const john = { x: 0 };
 
     function baz(this: { x: number }) {
       this.x++;
     }
 
-    debounce(baz, undefined, john)
-      .then(() => {
-        expect(john.x).toBe(1);
-        done();
-      });
+    await debounce(baz, undefined, john);
+
+    expect(john.x).toBe(1);
   });
 
-  it('should use passed arguments', done => {
-    let john: number;
+  it('should use passed arguments', async () => {
+    let john: number | undefined;
 
     function baz(a: number, b: number) {
       john = a + b;
     }
 
-    debounce(baz, undefined, undefined, 5, 3)
-      .then(() => {
-        expect(john).toBe(8);
-        done();
-      });
+    await debounce(baz, undefined, undefined, 5, 3);
+
+    expect(john).toBe(8);
   });
 
-  it('should throw the callback error if thrown', done => {
+  it('should throw the callback error if thrown', async () => {
     function baz() {
       throw new CustomError('baz error');
     }
 
-    debounce(baz)
-      .then(() => {
-        throw new CustomError("couldn't catch error");
-      })
-      .catch(err => {
-        expect(err.message).toBe('baz error');
-        done();
-      });
+    await expect(debounce(baz)).rejects.toEqual(new CustomError('baz error'));
   });
 });

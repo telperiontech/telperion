@@ -11,7 +11,7 @@ describe('Timeout Promise Function', () => {
 
     timeout(50)
       .then(() => {
-        expect(new Date().getTime() - startedAt).toBeGreaterThan(48);
+        expect(new Date().getTime() - startedAt).toBeGreaterThanOrEqual(45);
         done();
       });
   });
@@ -21,7 +21,7 @@ describe('Timeout Promise Function', () => {
 
     timeout(50, 'foo')
       .then(val => {
-        expect(new Date().getTime() - startedAt).toBeGreaterThan(48);
+        expect(new Date().getTime() - startedAt).toBeGreaterThanOrEqual(45);
         expect(val).toBe('foo');
         done();
       });
