@@ -2,7 +2,7 @@ import { treeUrl } from '@osw/docs';
 
 export { sourceUrl } from '@osw/docs';
 
-/** Mount path of this remote in the shell; must match the shell's `<tha-route>` */
+/** Mount path of this remote in the shell; must match the shell's `<tp-route>` */
 export const BASE_PATH = '/js-utils';
 
 export const overviewPath = () => BASE_PATH;

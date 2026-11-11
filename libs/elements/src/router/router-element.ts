@@ -1,8 +1,8 @@
 import { css, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
-import { PATH_PATTERN, ThaRoute } from "./tha-route";
+import { PATH_PATTERN, RouteElement, SET_ACTIVE } from "./route-element";
 import { signal } from '@lit-labs/signals';
-import { RENDER_ROUTE, ThaRouterOutlet } from "./tha-router-outlet";
+import { RENDER_ROUTE, RouterOutletElement } from "./router-outlet-element";
 import { noop } from "@telperion/js-utils/function/noop";
 import { Update } from 'history';
 import { defer } from "@telperion/js-utils/function/defer";
@@ -14,14 +14,14 @@ declare global {
     /**
      * A router element that manages client-side routing for single-page applications.
      * It watches for navigation events and matches the current URL against registered routes
-     * (tha-route elements), rendering the matching route's content in a tha-router-outlet element.
+     * (tp-route elements), rendering the matching route's content in a tp-router-outlet element.
      * The `history` attribute specifies the history management strategy:
      * - 'browser' for HTML5 History API (default)
      * - 'hash' for hash-based routing
      * - 'memory' for in-memory history (testing)
      * - 'memory:name' for named memory history instances
      */
-    "tha-router": ThaRouter;
+    "tp-router": RouterElement;
   }
 }
 
@@ -29,36 +29,36 @@ declare global {
  * A custom element that manages client-side routing for single-page applications.
  *
  * The router watches for navigation events and matches the current URL against
- * registered routes (tha-route elements), rendering the matching route's content
- * in a tha-router-outlet element.
+ * registered routes (tp-route elements), rendering the matching route's content
+ * in a tp-router-outlet element.
  *
  * @example
  * ```html
- * <tha-router history="browser">
- *   <tha-route path="/">
+ * <tp-router history="browser">
+ *   <tp-route path="/">
  *     <template><h1>Home</h1></template>
- *   </tha-route>
- *   <tha-route path="/about">
+ *   </tp-route>
+ *   <tp-route path="/about">
  *     <template><h1>About</h1></template>
- *   </tha-route>
- *   <tha-router-outlet></tha-router-outlet>
- * </tha-router>
+ *   </tp-route>
+ *   <tp-router-outlet></tp-router-outlet>
+ * </tp-router>
  * ```
  */
-@customElement("tha-router")
-export class ThaRouter extends HistoryManaged(SignalWatcherLitElement) {
+@customElement("tp-router")
+export class RouterElement extends HistoryManaged(SignalWatcherLitElement) {
   /**
-   * Injects global styles for tha-router elements to hide non-outlet children.
-   * Ensures that only tha-router-outlet elements are visible within the router.
+   * Injects global styles for tp-router elements to hide non-outlet children.
+   * Ensures that only tp-router-outlet elements are visible within the router.
    */
   static {
     const styleEl = document.createElement("style");
 
     styleEl.setAttribute("type", "text/css");
-    styleEl.setAttribute("data-id", "tha-router-styles");
+    styleEl.setAttribute("data-id", "tp-router-styles");
     styleEl.textContent = css`
-      tha-router {
-        & > :not(tha-router-outlet) {
+      tp-router {
+        & > :not(tp-router-outlet) {
           display: none;
         }
       }
@@ -68,7 +68,7 @@ export class ThaRouter extends HistoryManaged(SignalWatcherLitElement) {
 
   /**
    * Observes changes to child elements to detect when routes are added or removed.
-   * Updates the #routeEls signal whenever tha-route children change.
+   * Updates the #routeEls signal whenever tp-route children change.
    */
   #routeChildObserver = new MutationObserver((mutations) => {
     const childListMutations = mutations.filter(mutation => mutation.type === 'childList');
@@ -76,7 +76,7 @@ export class ThaRouter extends HistoryManaged(SignalWatcherLitElement) {
     if (!childListMutations.length) return;
 
     this.#routeEls.set(
-      Array.from(this.children).filter(child => child instanceof ThaRoute).map(routeEl => new WeakRef(routeEl))
+      Array.from(this.children).filter(child => child instanceof RouteElement).map(routeEl => new WeakRef(routeEl))
     );
   });
 
@@ -87,12 +87,14 @@ export class ThaRouter extends HistoryManaged(SignalWatcherLitElement) {
   /** Cleanup function to remove history listener */
   #historyListenerRemover = noop;
 
-  /** Signal containing weak references to all tha-route children */
-  #routeEls = signal<WeakRef<ThaRoute>[]>([]);
+  /** Signal containing weak references to all tp-route children */
+  #routeEls = signal<WeakRef<RouteElement>[]>([]);
   /** Signal containing weak reference to the currently active route */
-  #activeRoute = signal<WeakRef<ThaRoute> | null>(null);
+  #activeRoute = signal<WeakRef<RouteElement> | null>(null);
   /** Signal containing weak reference to the assigned outlet element */
-  #outlet = signal<WeakRef<ThaRouterOutlet> | null>(null);
+  #outlet = signal<WeakRef<RouterOutletElement> | null>(null);
+  /** Last route marked active through SET_ACTIVE (not reactive, see #activate) */
+  #activatedRoute: WeakRef<RouteElement> | null = null;
 
   /**
    * Lifecycle callback when the element is connected to the DOM.
@@ -143,7 +145,7 @@ export class ThaRouter extends HistoryManaged(SignalWatcherLitElement) {
    * @param outlet - The outlet element to assign, or null to unassign
    * @internal
    */
-  assignOutlet(outlet: ThaRouterOutlet | null) {
+  assignOutlet(outlet: RouterOutletElement | null) {
     this.#outlet.set(outlet ? new WeakRef(outlet) : null);
   }
 
@@ -157,16 +159,30 @@ export class ThaRouter extends HistoryManaged(SignalWatcherLitElement) {
     const routes = this.#routeEls.get()
       .map(weakRef => weakRef.deref()!)
       .filter(Boolean);
+    const match = routes.find(route => route[PATH_PATTERN]?.test({ pathname: update.location.pathname })) ?? null;
 
-    for (const route of routes) {
-      const pathPattern = route[PATH_PATTERN];
-      if (pathPattern?.test({ pathname: update.location.pathname })) {
-        this.#activeRoute.set(new WeakRef(route));
-        return;
-      }
-    }
-    this.#activeRoute.set(null);
+    this.#activate(match);
+    this.#activeRoute.set(match ? new WeakRef(match) : null);
   };
+
+  /**
+   * Marks the matched route as active and the previous one as inactive.
+   * Re-activating the same route is intentional: it retries a failed `src`.
+   *
+   * The previous route is tracked in a plain field rather than read from
+   * the #activeRoute signal, so effects calling #handleRouteChange do not
+   * start depending on the signal they write.
+   *
+   * @param route - The matched route, or null when nothing matches
+   */
+  #activate(route: RouteElement | null) {
+    const previous = this.#activatedRoute?.deref() ?? null;
+
+    if (previous && previous !== route) previous[SET_ACTIVE](false);
+
+    route?.[SET_ACTIVE](true);
+    this.#activatedRoute = route ? new WeakRef(route) : null;
+  }
 
   /**
    * Lifecycle callback when the element is disconnected from the DOM.

@@ -15,7 +15,7 @@ declare global {
      * - **In `<head>`**: Sets global history for all routers
      * - **In `<body>`**: Provides local history for descendant routers
      */
-    "tha-router-config": ThaRouterConfig;
+    "tp-router-config": RouterConfigElement;
   }
 }
 
@@ -33,13 +33,13 @@ declare global {
  * ```html
  * <head>
  *   <!-- All routers will use hash routing by default -->
- *   <tha-router-config history="hash"></tha-router-config>
+ *   <tp-router-config history="hash"></tp-router-config>
  * </head>
  * <body>
- *   <tha-router>
+ *   <tp-router>
  *     <!-- Uses hash history (global default) -->
- *     <tha-route path="/home">...</tha-route>
- *   </tha-router>
+ *     <tp-route path="/home">...</tp-route>
+ *   </tp-router>
  * </body>
  * ```
  *
@@ -52,20 +52,20 @@ declare global {
  * ```html
  * <body>
  *   <!-- Section 1: Hash routing -->
- *   <tha-router-config history="hash">
- *     <tha-router>
+ *   <tp-router-config history="hash">
+ *     <tp-router>
  *       <!-- Uses hash history from parent config -->
- *       <tha-route path="/dashboard">...</tha-route>
- *     </tha-router>
- *   </tha-router-config>
+ *       <tp-route path="/dashboard">...</tp-route>
+ *     </tp-router>
+ *   </tp-router-config>
  *
  *   <!-- Section 2: Memory routing (isolated) -->
- *   <tha-router-config history="memory">
- *     <tha-router>
+ *   <tp-router-config history="memory">
+ *     <tp-router>
  *       <!-- Uses memory history from parent config -->
- *       <tha-route path="/preview">...</tha-route>
- *     </tha-router>
- *   </tha-router-config>
+ *       <tp-route path="/preview">...</tp-route>
+ *     </tp-router>
+ *   </tp-router-config>
  * </body>
  * ```
  *
@@ -79,7 +79,7 @@ declare global {
  * <!DOCTYPE html>
  * <html>
  *   <head>
- *     <tha-router-config history="browser"></tha-router-config>
+ *     <tp-router-config history="browser"></tp-router-config>
  *   </head>
  *   <body>
  *     <!-- All routers use browser history -->
@@ -94,16 +94,16 @@ declare global {
  * ```html
  * <head>
  *   <!-- Global: browser history -->
- *   <tha-router-config history="browser"></tha-router-config>
+ *   <tp-router-config history="browser"></tp-router-config>
  * </head>
  * <body>
  *   <!-- Main app uses browser history -->
- *   <tha-router>...</tha-router>
+ *   <tp-router>...</tp-router>
  *
  *   <!-- Admin section uses hash history -->
- *   <tha-router-config history="hash">
- *     <tha-router>...</tha-router>
- *   </tha-router-config>
+ *   <tp-router-config history="hash">
+ *     <tp-router>...</tp-router>
+ *   </tp-router-config>
  * </body>
  * ```
  *
@@ -114,17 +114,17 @@ declare global {
  * ```html
  * <body>
  *   <!-- Each component has independent navigation -->
- *   <tha-router-config history="memory:component1">
+ *   <tp-router-config history="memory:component1">
  *     <my-widget>
- *       <tha-router>...</tha-router>
+ *       <tp-router>...</tp-router>
  *     </my-widget>
- *   </tha-router-config>
+ *   </tp-router-config>
  *
- *   <tha-router-config history="memory:component2">
+ *   <tp-router-config history="memory:component2">
  *     <my-widget>
- *       <tha-router>...</tha-router>
+ *       <tp-router>...</tp-router>
  *     </my-widget>
- *   </tha-router-config>
+ *   </tp-router-config>
  * </body>
  * ```
  *
@@ -137,11 +137,11 @@ declare global {
  *
  * it('should navigate', async () => {
  *   const el = await fixture(html`
- *     <tha-router-config history="memory:test">
- *       <tha-router>
- *         <tha-route path="/test">Test Page</tha-route>
- *       </tha-router>
- *     </tha-router-config>
+ *     <tp-router-config history="memory:test">
+ *       <tp-router>
+ *         <tp-route path="/test">Test Page</tp-route>
+ *       </tp-router>
+ *     </tp-router-config>
  *   `);
  *
  *   // Test navigation without affecting browser URL
@@ -153,57 +153,57 @@ declare global {
  * Router components resolve their history in this order:
  *
  * 1. **Own `history` attribute** (highest priority)
- * 2. **Parent `tha-router-config`** (local configuration)
- * 3. **Global `tha-router-config`** (in `<head>`)
+ * 2. **Parent `tp-router-config`** (local configuration)
+ * 3. **Global `tp-router-config`** (in `<head>`)
  * 4. **Default** (`"browser"`)
  *
  * ## Best Practices
  *
- * ✅ **DO**: Place one `tha-router-config` in `<head>` for global settings
+ * ✅ **DO**: Place one `tp-router-config` in `<head>` for global settings
  *
  * ```html
  * <head>
- *   <tha-router-config history="browser"></tha-router-config>
+ *   <tp-router-config history="browser"></tp-router-config>
  * </head>
  * ```
  *
  * ✅ **DO**: Use local configs for sections with different routing needs
  *
  * ```html
- * <tha-router-config history="memory">
+ * <tp-router-config history="memory">
  *   <component-preview>...</component-preview>
- * </tha-router-config>
+ * </tp-router-config>
  * ```
  *
  * ✅ **DO**: Use named memory history for isolated components
  *
  * ```html
- * <tha-router-config history="memory:sidebar">
+ * <tp-router-config history="memory:sidebar">
  *   <sidebar-nav>...</sidebar-nav>
- * </tha-router-config>
+ * </tp-router-config>
  * ```
  *
  * ❌ **DON'T**: Place multiple configs in `<head>` (last one wins)
  *
  * ```html
  * <head>
- *   <tha-router-config history="browser"></tha-router-config>
- *   <tha-router-config history="hash"></tha-router-config> <!-- Overrides above -->
+ *   <tp-router-config history="browser"></tp-router-config>
+ *   <tp-router-config history="hash"></tp-router-config> <!-- Overrides above -->
  * </head>
  * ```
  *
  * ❌ **DON'T**: Nest configs unnecessarily (inner configs take precedence)
  *
  * ```html
- * <tha-router-config history="browser">
- *   <tha-router-config history="hash">
+ * <tp-router-config history="browser">
+ *   <tp-router-config history="hash">
  *     <!-- Uses hash, not browser -->
- *   </tha-router-config>
- * </tha-router-config>
+ *   </tp-router-config>
+ * </tp-router-config>
  * ```
  */
-@customElement('tha-router-config')
-export class ThaRouterConfig extends HistoryManaged(SignalWatcherLitElement) {
+@customElement('tp-router-config')
+export class RouterConfigElement extends HistoryManaged(SignalWatcherLitElement) {
   /**
    * Cleanup function for the global history effect.
    * Only used when the element is placed in `<head>`.
@@ -222,7 +222,7 @@ export class ThaRouterConfig extends HistoryManaged(SignalWatcherLitElement) {
 
     if (!document.head.contains(this)) return;
 
-    console.log('ThaRouterConfig: Setting global history type to', this[HISTORY_TYPE].get());
+    console.log('RouterConfigElement: Setting global history type to', this[HISTORY_TYPE].get());
 
     // Set the global history type when this element is connected in <head>
     this.#globalHistoryUnsubscribe = this.updateEffect(() => {

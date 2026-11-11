@@ -1,6 +1,6 @@
 import { customElement, property, state } from "lit/decorators.js";
-import type { ThaRouter } from "./tha-router";
-import { FRAGMENT, PATH_PATTERN, ThaRoute } from "./tha-route";
+import type { RouterElement } from "./router-element";
+import { FRAGMENT, PATH_PATTERN, RouteElement, SOURCE_STATUS } from "./route-element";
 import { computed, signal } from "@lit-labs/signals";
 import { noop } from "@telperion/js-utils/function/noop";
 import { SignalWatcherLitElement } from "../utils/signal-watcher-lit-element";
@@ -10,12 +10,12 @@ import { defer } from "@telperion/js-utils/function/defer";
 declare global {
   interface HTMLElementTagNameMap {
     /**
-     * An outlet element that renders the active route's content from a tha-router.
-     * It automatically binds to the nearest parent tha-router or to a specific router via the `for` attribute.
-     * The outlet clones and renders the template content from the active tha-route element.
+     * An outlet element that renders the active route's content from a tp-router.
+     * It automatically binds to the nearest parent tp-router or to a specific router via the `for` attribute.
+     * The outlet clones and renders the template content from the active tp-route element.
      * The `routePath` and `routeID` attributes reflect the current route's path and ID.
      */
-    "tha-router-outlet": ThaRouterOutlet;
+    "tp-router-outlet": RouterOutletElement;
   }
 }
 
@@ -23,39 +23,42 @@ declare global {
  * Symbol used by the router to call the internal render method on the outlet.
  * @internal
  */
-export const RENDER_ROUTE = Symbol('ThaRouterOutlet:renderRoute');
-export const PARAMS = Symbol('ThaRouterOutlet:params');
+export const RENDER_ROUTE = Symbol('RouterOutletElement:renderRoute');
+export const PARAMS = Symbol('RouterOutletElement:params');
 
 /**
  * A custom element that serves as a rendering target for router content.
  *
- * The outlet automatically binds to its parent tha-router or to a specific router
+ * The outlet automatically binds to its parent tp-router or to a specific router
  * identified by the `for` attribute. When the router's active route changes,
  * the outlet clones and renders the route's template content.
  *
+ * While the active route's `src` content is pending, the outlet has the
+ * `route-loading` attribute; when it failed, the `route-error` attribute.
+ *
  * @example
  * ```html
- * <tha-router>
- *   <tha-route path="/"><template><h1>Home</h1></template></tha-route>
- *   <tha-router-outlet></tha-router-outlet>
- * </tha-router>
+ * <tp-router>
+ *   <tp-route path="/"><template><h1>Home</h1></template></tp-route>
+ *   <tp-router-outlet></tp-router-outlet>
+ * </tp-router>
  * ```
  *
  * @example
  * ```html
  * <!-- Bind to a specific router by ID -->
- * <tha-router id="main-router">
- *   <tha-route path="/"><template><h1>Home</h1></template></tha-route>
- * </tha-router>
- * <tha-router-outlet for="main-router"></tha-router-outlet>
+ * <tp-router id="main-router">
+ *   <tp-route path="/"><template><h1>Home</h1></template></tp-route>
+ * </tp-router>
+ * <tp-router-outlet for="main-router"></tp-router-outlet>
  * ```
  */
-@customElement("tha-router-outlet")
-export class ThaRouterOutlet extends SignalWatcherLitElement {
+@customElement("tp-router-outlet")
+export class RouterOutletElement extends SignalWatcherLitElement {
   /** Weak reference to the bound router instance */
-  #boundRouter = signal<WeakRef<ThaRouter> | undefined>(undefined);
+  #boundRouter = signal<WeakRef<RouterElement> | undefined>(undefined);
   /** Signal containing weak reference to the route to render */
-  #routeToRender = signal<WeakRef<ThaRoute> | null>(null);
+  #routeToRender = signal<WeakRef<RouteElement> | null>(null);
   /** Computed signal that extracts the fragment from the route to render */
   #fragmentToRender = computed(() => this.#routeToRender.get()?.deref()?.[FRAGMENT].get() ?? null);
 
@@ -73,7 +76,7 @@ export class ThaRouterOutlet extends SignalWatcherLitElement {
 
   [PARAMS] = computed(() => {
     const ownParams = this.#ownParams.get() ?? {};
-    const parent = this.parentElement?.closest('tha-router-outlet') as ThaRouterOutlet;
+    const parent = this.parentElement?.closest('tp-router-outlet') as RouterOutletElement;
     const parentParams: Record<string, string | undefined> = parent?.[PARAMS].get() ?? {};
 
     return Object.freeze({...parentParams, ...ownParams});
@@ -82,6 +85,8 @@ export class ThaRouterOutlet extends SignalWatcherLitElement {
   @state()
   params: Record<string, string | undefined> = {};
 
+  /** Nodes inserted for the current route (elements and text alike) */
+  #renderedNodes: Node[] = [];
   /** Cleanup function for the fragment update effect */
   #fragmentUpdateCleaner = noop;
   /** Cleanup function for the attribute update effect */
@@ -89,8 +94,8 @@ export class ThaRouterOutlet extends SignalWatcherLitElement {
   #paramsUpdateCleaner = noop;
 
   /**
-   * The ID of a specific tha-router element to bind to.
-   * If not set, binds to the nearest parent tha-router.
+   * The ID of a specific tp-router element to bind to.
+   * If not set, binds to the nearest parent tp-router.
    *
    * @attr for
    */
@@ -129,18 +134,26 @@ export class ThaRouterOutlet extends SignalWatcherLitElement {
     });
 
     this.#fragmentUpdateCleaner = this.updateEffect(() => {
-      Array.from(this.renderRoot.children).forEach(child => child.remove());
+      this.#renderedNodes.forEach(node => node.parentNode?.removeChild(node));
+      this.#renderedNodes = [];
 
-      const fragment = this.#fragmentToRender.get()?.deref() ?? null;
+      const fragment = this.#fragmentToRender.get();
       if (!fragment) return;
 
-      this.renderRoot.appendChild(fragment.cloneNode(true));
+      const clone = fragment.cloneNode(true) as DocumentFragment;
+
+      this.#renderedNodes = Array.from(clone.childNodes);
+      this.renderRoot.appendChild(clone);
     });
 
     this.#attrUpdateCleaner = this.updateEffect(() => {
       const route = this.#routeToRender.get()?.deref() ?? null;
       this.routePath = route?.getAttribute('path') ?? null;
       this.routeID = route?.id ? route?.id : undefined;
+
+      const status = route?.[SOURCE_STATUS].get() ?? null;
+      this.toggleAttribute('route-loading', status === 'idle' || status === 'loading');
+      this.toggleAttribute('route-error', status === 'error');
     });
 
     this.#paramsUpdateCleaner = this.updateEffect(() => {
@@ -162,25 +175,25 @@ export class ThaRouterOutlet extends SignalWatcherLitElement {
   }
 
   /**
-   * Binds this outlet to a tha-router element.
+   * Binds this outlet to a tp-router element.
    *
    * If no router is provided, automatically searches for one:
    * - If `for` attribute is set, finds router by ID in the same root
-   * - Otherwise, finds the nearest parent tha-router
+   * - Otherwise, finds the nearest parent tp-router
    *
    * Unbinds from the previous router if already bound to a different one.
    *
    * @param router - Optional router to bind to
    * @returns The bound router, or null if no router found
    */
-  bindToRouter(): ThaRouter | null;
-  bindToRouter(router?: ThaRouter): ThaRouter | null {
+  bindToRouter(): RouterElement | null;
+  bindToRouter(router?: RouterElement): RouterElement | null {
     if (!router) {
       if (this.for) {
         const root = this.getRootNode() as Document | ShadowRoot;
-        router = root.querySelector(`tha-router#${this.for}`) as ThaRouter ?? undefined;
+        router = root.querySelector(`tp-router#${this.for}`) as RouterElement ?? undefined;
       } else {
-        router = this.closest('tha-router') ?? undefined;
+        router = this.closest('tp-router') ?? undefined;
       }
     }
 
@@ -202,7 +215,7 @@ export class ThaRouterOutlet extends SignalWatcherLitElement {
    * @param route - The route to render, or null to clear
    * @internal
    */
-  [RENDER_ROUTE](route: ThaRoute | null) {
+  [RENDER_ROUTE](route: RouteElement | null) {
     this.#routeToRender.set(route ? new WeakRef(route) : null);
   }
 

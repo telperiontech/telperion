@@ -124,11 +124,11 @@ import "@telperion/elements/icon";
 A complete client-side routing solution for single-page applications, built with declarative web components.
 
 **Includes:**
-- `<tha-router>` - Main router component managing URL matching and navigation
-- `<tha-route>` - Route definitions with URLPattern syntax for path matching
-- `<tha-router-outlet>` - Content rendering outlet for active routes
-- `<tha-router-link>` - Navigation links with automatic active state detection
-- `<tha-route-config>` - Global router configuration
+- `<tp-router>` - Main router component managing URL matching and navigation
+- `<tp-route>` - Route definitions with URLPattern syntax for path matching
+- `<tp-router-outlet>` - Content rendering outlet for active routes
+- `<tp-router-link>` - Navigation links with automatic active state detection
+- `<tp-route-config>` - Global router configuration
 
 **Features:**
 - Template-based routing without JavaScript configuration

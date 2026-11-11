@@ -1,7 +1,7 @@
 /**
  * Client-side navigation shared by the shell and every remote.
  *
- * The shell's `<tha-router>` (via the `history` package) and the remotes all listen to
+ * The shell's `<tp-router>` (via the `history` package) and the remotes all listen to
  * `popstate`, so a navigation is a `pushState` followed by a synthetic `popstate`:
  * the shell re-matches its routes (mounting/unmounting remotes) and remotes update
  * their own sub-routes, without anyone sharing a history instance.

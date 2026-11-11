@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/web-components';
 import { html } from 'lit';
-import './tha-router';
-import './tha-route';
-import './tha-router-link';
-import './tha-router-outlet';
-import './tha-router-config';
-import '../../.storybook/tha-url-output';
+import './router-element';
+import './route-element';
+import './router-link-element';
+import './router-outlet-element';
+import './router-config-element';
+import '../../.storybook/url-output-element';
 import { HistoryType } from './history';
 
 interface RouterStoryArgs {
@@ -14,13 +14,13 @@ interface RouterStoryArgs {
 
 const meta: Meta<RouterStoryArgs> = {
   title: 'Router/Basic Navigation',
-  component: 'tha-router',
+  component: 'tp-router',
   tags: ['autodocs'],
   decorators: [
     (story, ctx) => {
-      let routerConfig = document.head.querySelector('tha-router-config');
+      let routerConfig = document.head.querySelector('tp-router-config');
       if (!routerConfig) {
-        routerConfig = document.createElement('tha-router-config');
+        routerConfig = document.createElement('tp-router-config');
         document.head.appendChild(routerConfig);
       }
 
@@ -43,7 +43,7 @@ const meta: Meta<RouterStoryArgs> = {
           margin-bottom: 1rem;
         }
 
-        tha-router-link {
+        tp-router-link {
           margin-right: 0.5rem;
           padding: 0.5rem 1rem;
           text-decoration: none;
@@ -55,18 +55,18 @@ const meta: Meta<RouterStoryArgs> = {
           transition: all 0.2s;
         }
 
-        tha-router-link[active] {
+        tp-router-link[active] {
           font-weight: bold;
           color: #0066cc;
           border-color: #0066cc;
           background: #e6f2ff;
         }
 
-        tha-router-link:hover {
+        tp-router-link:hover {
           background: #e9ecef;
         }
 
-        tha-url-output {
+        tp-url-output {
           margin-top: 1rem;
           padding: 1rem;
           background: #fff3cd;
@@ -76,7 +76,7 @@ const meta: Meta<RouterStoryArgs> = {
           display: block;
         }
 
-        tha-url-output > div {
+        tp-url-output > div {
           margin: 0.25rem 0;
         }
 
@@ -156,7 +156,7 @@ const meta: Meta<RouterStoryArgs> = {
           gap: 0.5rem;
         }
 
-        .sidebar tha-router-link {
+        .sidebar tp-router-link {
           padding: 0.75rem;
           text-decoration: none;
           color: #dee2e6;
@@ -167,11 +167,11 @@ const meta: Meta<RouterStoryArgs> = {
           transition: all 0.2s;
         }
 
-        .sidebar tha-router-link:hover {
+        .sidebar tp-router-link:hover {
           background: #5a6268;
         }
 
-        .sidebar tha-router-link[active] {
+        .sidebar tp-router-link[active] {
           color: white;
           background: #007bff;
           border-left-color: #fff;
@@ -209,7 +209,7 @@ const meta: Meta<RouterStoryArgs> = {
           margin-top: 1rem;
         }
 
-        .top-nav tha-router-link {
+        .top-nav tp-router-link {
           padding: 0.5rem 1.5rem;
           text-decoration: none;
           color: white;
@@ -219,11 +219,11 @@ const meta: Meta<RouterStoryArgs> = {
           transition: all 0.2s;
         }
 
-        .top-nav tha-router-link:hover {
+        .top-nav tp-router-link:hover {
           background: rgba(255, 255, 255, 0.3);
         }
 
-        .top-nav tha-router-link[active] {
+        .top-nav tp-router-link[active] {
           background: white;
           color: #667eea;
           border-color: white;
@@ -254,7 +254,7 @@ const meta: Meta<RouterStoryArgs> = {
           gap: 0.5rem;
         }
 
-        .side-nav tha-router-link {
+        .side-nav tp-router-link {
           padding: 0.75rem;
           text-decoration: none;
           color: #495057;
@@ -264,11 +264,11 @@ const meta: Meta<RouterStoryArgs> = {
           transition: all 0.2s;
         }
 
-        .side-nav tha-router-link:hover {
+        .side-nav tp-router-link:hover {
           background: #e9ecef;
         }
 
-        .side-nav tha-router-link[active] {
+        .side-nav tp-router-link[active] {
           background: #e7f5ff;
           color: #0066cc;
           border-left-color: #0066cc;
@@ -291,12 +291,12 @@ const meta: Meta<RouterStoryArgs> = {
           font-size: 0.875rem;
         }
 
-        .breadcrumb tha-router-link {
+        .breadcrumb tp-router-link {
           color: #0066cc;
           text-decoration: none;
         }
 
-        .breadcrumb tha-router-link:hover {
+        .breadcrumb tp-router-link:hover {
           text-decoration: underline;
         }
 
@@ -334,7 +334,7 @@ type Story = StoryObj<RouterStoryArgs>;
 
 /**
  * Basic router setup with three simple routes and navigation links.
- * The tha-url-output component displays both the router's history URL and the browser's actual URL.
+ * The tp-url-output component displays both the router's history URL and the browser's actual URL.
  */
 export const BasicRouting: Story = {
   args: {
@@ -345,38 +345,38 @@ export const BasicRouting: Story = {
       <h3>Router Demo</h3>
 
       <nav>
-        <tha-router-link to="/">Home</tha-router-link>
-        <tha-router-link to="/about">About</tha-router-link>
-        <tha-router-link to="/contact">Contact</tha-router-link>
+        <tp-router-link to="/">Home</tp-router-link>
+        <tp-router-link to="/about">About</tp-router-link>
+        <tp-router-link to="/contact">Contact</tp-router-link>
       </nav>
 
-      <tha-router>
-        <tha-route path="/">
+      <tp-router>
+        <tp-route path="/">
           <template>
             <h1>🏠 Home Page</h1>
             <p>Welcome to the home page!</p>
             <p>Click the navigation links above to explore different routes.</p>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/about">
+        <tp-route path="/about">
           <template>
             <h1>ℹ️ About Page</h1>
             <p>This is the about page with information about the application.</p>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/contact">
+        <tp-route path="/contact">
           <template>
             <h1>📧 Contact Page</h1>
             <p>Get in touch with us through this page.</p>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-router-outlet></tha-router-outlet>
-      </tha-router>
+        <tp-router-outlet></tp-router-outlet>
+      </tp-router>
 
-      <tha-url-output></tha-url-output>
+      <tp-url-output></tp-url-output>
     </div>
   `,
 };
@@ -394,15 +394,15 @@ export const DynamicRoutes: Story = {
       <h3>Dynamic Routes Demo</h3>
 
       <nav>
-        <tha-router-link to="/">Users List</tha-router-link>
-        <tha-router-link to="/users/1">User 1</tha-router-link>
-        <tha-router-link to="/users/2">User 2</tha-router-link>
-        <tha-router-link to="/users/3">User 3</tha-router-link>
-        <tha-router-link to="/users/42">User 42</tha-router-link>
+        <tp-router-link to="/">Users List</tp-router-link>
+        <tp-router-link to="/users/1">User 1</tp-router-link>
+        <tp-router-link to="/users/2">User 2</tp-router-link>
+        <tp-router-link to="/users/3">User 3</tp-router-link>
+        <tp-router-link to="/users/42">User 42</tp-router-link>
       </nav>
 
-      <tha-router history="${args.globalHistory}">
-        <tha-route path="/">
+      <tp-router history="${args.globalHistory}">
+        <tp-route path="/">
           <template>
             <h1>👥 Users List</h1>
             <p>Select a user from the navigation to view their profile.</p>
@@ -413,23 +413,23 @@ export const DynamicRoutes: Story = {
               <li>User 42 - Douglas Adams</li>
             </ul>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/users/:id">
+        <tp-route path="/users/:id">
           <template>
-            <h1>👤 User Profile <tha-router-param name="id"></tha-router-param></h1>
+            <h1>👤 User Profile <tp-router-param name="id"></tp-router-param></h1>
             <div class="user-card">
               <p><strong>User ID from URL pattern:</strong> Check the URL above! 🎯</p>
               <p>The <code>:id</code> parameter in the route pattern matches any value in that segment.</p>
               <p>Try navigating to different users to see how the URL changes.</p>
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-router-outlet></tha-router-outlet>
-      </tha-router>
+        <tp-router-outlet></tp-router-outlet>
+      </tp-router>
 
-      <tha-url-output history="${args.globalHistory}"></tha-url-output>
+      <tp-url-output history="${args.globalHistory}"></tp-url-output>
     </div>
   `,
 };
@@ -447,66 +447,66 @@ export const RelativeNavigation: Story = {
       <h3>Relative Navigation Demo</h3>
 
       <nav>
-        <tha-router-link to="/">Home</tha-router-link>
-        <tha-router-link to="/products">Products</tha-router-link>
-        <tha-router-link to="/products/electronics">Electronics</tha-router-link>
-        <tha-router-link to="/products/electronics/phones">Phones</tha-router-link>
+        <tp-router-link to="/">Home</tp-router-link>
+        <tp-router-link to="/products">Products</tp-router-link>
+        <tp-router-link to="/products/electronics">Electronics</tp-router-link>
+        <tp-router-link to="/products/electronics/phones">Phones</tp-router-link>
       </nav>
 
-      <tha-router history="${args.globalHistory}">
-        <tha-route path="/">
+      <tp-router history="${args.globalHistory}">
+        <tp-route path="/">
           <template>
             <h1>🏠 Home</h1>
             <p>Start your navigation journey here.</p>
             <div class="navigation-box">
               <strong>Navigate from here:</strong><br>
-              <tha-router-link to="./products">→ Go to Products (relative)</tha-router-link>
+              <tp-router-link to="./products">→ Go to Products (relative)</tp-router-link>
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/products">
+        <tp-route path="/products">
           <template>
             <h1>🛍️ Products</h1>
             <p>Browse our product categories.</p>
             <div class="navigation-box">
               <strong>Navigate from here:</strong><br>
-              <tha-router-link to="./electronics">→ View Electronics (relative)</tha-router-link><br>
-              <tha-router-link to="..">← Back to Home (up one level)</tha-router-link>
+              <tp-router-link to="./electronics">→ View Electronics (relative)</tp-router-link><br>
+              <tp-router-link to="..">← Back to Home (up one level)</tp-router-link>
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/products/electronics">
+        <tp-route path="/products/electronics">
           <template>
             <h1>💻 Electronics</h1>
             <p>Electronic devices and gadgets.</p>
             <div class="navigation-box">
               <strong>Navigate from here:</strong><br>
-              <tha-router-link to="./phones">→ View Phones (relative)</tha-router-link><br>
-              <tha-router-link to="..">← Back to Products (up one level)</tha-router-link><br>
-              <tha-router-link to="../..">← Back to Home (up two levels)</tha-router-link>
+              <tp-router-link to="./phones">→ View Phones (relative)</tp-router-link><br>
+              <tp-router-link to="..">← Back to Products (up one level)</tp-router-link><br>
+              <tp-router-link to="../..">← Back to Home (up two levels)</tp-router-link>
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/products/electronics/phones">
+        <tp-route path="/products/electronics/phones">
           <template>
             <h1>📱 Phones</h1>
             <p>Latest smartphones and accessories.</p>
             <div class="navigation-box">
               <strong>Navigate from here:</strong><br>
-              <tha-router-link to="..">← Back to Electronics</tha-router-link><br>
-              <tha-router-link to="../..">← Back to Products</tha-router-link><br>
-              <tha-router-link to="../../..">← Back to Home</tha-router-link>
+              <tp-router-link to="..">← Back to Electronics</tp-router-link><br>
+              <tp-router-link to="../..">← Back to Products</tp-router-link><br>
+              <tp-router-link to="../../..">← Back to Home</tp-router-link>
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-router-outlet></tha-router-outlet>
-      </tha-router>
+        <tp-router-outlet></tp-router-outlet>
+      </tp-router>
 
-      <tha-url-output history="${args.globalHistory}"></tha-url-output>
+      <tp-url-output history="${args.globalHistory}"></tp-url-output>
     </div>
   `,
 };
@@ -524,19 +524,19 @@ export const HistoryNavigation: Story = {
       <h3>History Navigation Demo</h3>
 
       <div class="history-controls">
-        <tha-router-link to="back">⬅️ Back</tha-router-link>
-        <tha-router-link to="forward">➡️ Forward</tha-router-link>
+        <tp-router-link to="back">⬅️ Back</tp-router-link>
+        <tp-router-link to="forward">➡️ Forward</tp-router-link>
       </div>
 
       <nav>
-        <tha-router-link to="/">Page 1</tha-router-link>
-        <tha-router-link to="/page2">Page 2</tha-router-link>
-        <tha-router-link to="/page3">Page 3</tha-router-link>
-        <tha-router-link to="/page4">Page 4</tha-router-link>
+        <tp-router-link to="/">Page 1</tp-router-link>
+        <tp-router-link to="/page2">Page 2</tp-router-link>
+        <tp-router-link to="/page3">Page 3</tp-router-link>
+        <tp-router-link to="/page4">Page 4</tp-router-link>
       </nav>
 
-      <tha-router history="${args.globalHistory}">
-        <tha-route path="/">
+      <tp-router history="${args.globalHistory}">
+        <tp-route path="/">
           <template>
             <h1>📄 Page 1</h1>
             <p>Navigate through the pages using the links above.</p>
@@ -545,9 +545,9 @@ export const HistoryNavigation: Story = {
               use the Back and Forward buttons to move through your history!
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/page2">
+        <tp-route path="/page2">
           <template>
             <h1>📄 Page 2</h1>
             <p>This is the second page.</p>
@@ -555,9 +555,9 @@ export const HistoryNavigation: Story = {
               Click the <strong>Back</strong> button to return to Page 1.
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/page3">
+        <tp-route path="/page3">
           <template>
             <h1>📄 Page 3</h1>
             <p>This is the third page.</p>
@@ -565,9 +565,9 @@ export const HistoryNavigation: Story = {
               Use <strong>Back</strong> to go to previous pages, then <strong>Forward</strong> to return here.
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-route path="/page4">
+        <tp-route path="/page4">
           <template>
             <h1>📄 Page 4</h1>
             <p>This is the fourth page.</p>
@@ -575,18 +575,18 @@ export const HistoryNavigation: Story = {
               You've visited multiple pages now. The Back button will take you through your navigation history!
             </div>
           </template>
-        </tha-route>
+        </tp-route>
 
-        <tha-router-outlet></tha-router-outlet>
-      </tha-router>
+        <tp-router-outlet></tp-router-outlet>
+      </tp-router>
 
-      <tha-url-output history="${args.globalHistory}"></tha-url-output>
+      <tp-url-output history="${args.globalHistory}"></tp-url-output>
     </div>
   `,
 };
 
 /**
- * Demonstrates using tha-router-config to configure history strategy.
+ * Demonstrates using tp-router-config to configure history strategy.
  * Shows both hash and memory history configurations.
  */
 export const WithRouterConfig: Story = {
@@ -598,80 +598,80 @@ export const WithRouterConfig: Story = {
         <h4>Section 1: Hash History <span class="config-badge">hash</span></h4>
         <p>This router uses hash-based routing (notice the # in the URL)</p>
 
-        <tha-router-config history="hash">
+        <tp-router-config history="hash">
           <nav>
-            <tha-router-link to="/">Home</tha-router-link>
-            <tha-router-link to="/about">About</tha-router-link>
-            <tha-router-link to="/services">Services</tha-router-link>
+            <tp-router-link to="/">Home</tp-router-link>
+            <tp-router-link to="/about">About</tp-router-link>
+            <tp-router-link to="/services">Services</tp-router-link>
           </nav>
 
-          <tha-router>
-            <tha-route path="/">
+          <tp-router>
+            <tp-route path="/">
               <template>
                 <h2>🏠 Hash Router - Home</h2>
                 <p>This section uses hash-based routing.</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/about">
+            <tp-route path="/about">
               <template>
                 <h2>ℹ️ Hash Router - About</h2>
                 <p>URLs use the hash fragment (#) for routing.</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/services">
+            <tp-route path="/services">
               <template>
                 <h2>⚙️ Hash Router - Services</h2>
                 <p>This works without server-side configuration!</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-router-outlet></tha-router-outlet>
-          </tha-router>
+            <tp-router-outlet></tp-router-outlet>
+          </tp-router>
 
-          <tha-url-output history="hash"></tha-url-output>
-        </tha-router-config>
+          <tp-url-output history="hash"></tp-url-output>
+        </tp-router-config>
       </div>
 
       <div class="demo-section">
         <h4>Section 2: Memory History <span class="config-badge">memory</span></h4>
         <p>This router uses in-memory routing (browser URL doesn't change)</p>
 
-        <tha-router-config history="memory:section2">
+        <tp-router-config history="memory:section2">
           <nav>
-            <tha-router-link to="/">Dashboard</tha-router-link>
-            <tha-router-link to="/settings">Settings</tha-router-link>
-            <tha-router-link to="/profile">Profile</tha-router-link>
+            <tp-router-link to="/">Dashboard</tp-router-link>
+            <tp-router-link to="/settings">Settings</tp-router-link>
+            <tp-router-link to="/profile">Profile</tp-router-link>
           </nav>
 
-          <tha-router>
-            <tha-route path="/">
+          <tp-router>
+            <tp-route path="/">
               <template>
                 <h2>📊 Memory Router - Dashboard</h2>
                 <p>This section uses memory-based routing.</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/settings">
+            <tp-route path="/settings">
               <template>
                 <h2>⚙️ Memory Router - Settings</h2>
                 <p>The browser URL stays the same!</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/profile">
+            <tp-route path="/profile">
               <template>
                 <h2>👤 Memory Router - Profile</h2>
                 <p>Perfect for embedded widgets or testing.</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-router-outlet></tha-router-outlet>
-          </tha-router>
+            <tp-router-outlet></tp-router-outlet>
+          </tp-router>
 
-          <tha-url-output history="memory:section2"></tha-url-output>
-        </tha-router-config>
+          <tp-url-output history="memory:section2"></tp-url-output>
+        </tp-router-config>
       </div>
     </div>
   `,
@@ -693,23 +693,23 @@ export const OutletWithForAttribute: Story = {
         <div class="sidebar">
           <h3>Navigation</h3>
           <nav>
-            <tha-router-link to="/">🏠 Dashboard</tha-router-link>
-            <tha-router-link to="/analytics">📊 Analytics</tha-router-link>
-            <tha-router-link to="/reports">📄 Reports</tha-router-link>
-            <tha-router-link to="/settings">⚙️ Settings</tha-router-link>
+            <tp-router-link to="/">🏠 Dashboard</tp-router-link>
+            <tp-router-link to="/analytics">📊 Analytics</tp-router-link>
+            <tp-router-link to="/reports">📄 Reports</tp-router-link>
+            <tp-router-link to="/settings">⚙️ Settings</tp-router-link>
           </nav>
 
           <!-- Router defined in sidebar with an ID -->
-          <tha-router id="app-router" history="${args.globalHistory}">
-            <tha-route path="/">
+          <tp-router id="app-router" history="${args.globalHistory}">
+            <tp-route path="/">
               <template>
                 <h1>📊 Dashboard</h1>
                 <p>Welcome to your dashboard! This is the main overview page.</p>
                 <p>The router element is in the sidebar, but the content renders in the main area using <code>for="app-router"</code>.</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/analytics">
+            <tp-route path="/analytics">
               <template>
                 <h1>📈 Analytics</h1>
                 <p>View detailed analytics and insights here.</p>
@@ -719,17 +719,17 @@ export const OutletWithForAttribute: Story = {
                   <li>Conversion rates</li>
                 </ul>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/reports">
+            <tp-route path="/reports">
               <template>
                 <h1>📄 Reports</h1>
                 <p>Generate and view reports.</p>
                 <p>Export data in various formats for analysis.</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/settings">
+            <tp-route path="/settings">
               <template>
                 <h1>⚙️ Settings</h1>
                 <p>Configure your application settings.</p>
@@ -739,15 +739,15 @@ export const OutletWithForAttribute: Story = {
                   <li>Privacy options</li>
                 </ul>
               </template>
-            </tha-route>
-          </tha-router>
+            </tp-route>
+          </tp-router>
         </div>
 
         <div class="main-content">
           <!-- Outlet binds to router via 'for' attribute -->
-          <tha-router-outlet for="app-router"></tha-router-outlet>
+          <tp-router-outlet for="app-router"></tp-router-outlet>
 
-          <tha-url-output history="${args.globalHistory}"></tha-url-output>
+          <tp-url-output history="${args.globalHistory}"></tp-url-output>
         </div>
       </div>
     </div>
@@ -762,7 +762,7 @@ export const CompleteExample: Story = {
     globalHistory: 'memory',
   },
   render: (args) => html`
-    <tha-url-output {
+    <tp-url-output {
         margin-top: 1rem;
         padding: 1rem;
         background: #fff3cd;
@@ -772,7 +772,7 @@ export const CompleteExample: Story = {
         display: block;
       }
 
-      tha-url-output > div {
+      tp-url-output > div {
         margin: 0.25rem 0;
       }
     </style>
@@ -781,35 +781,35 @@ export const CompleteExample: Story = {
       <header>
         <h1>🚀 Complete Router Demo Application</h1>
         <nav class="top-nav">
-          <tha-router-link to="/">Home</tha-router-link>
-          <tha-router-link to="/products">Products</tha-router-link>
-          <tha-router-link to="/about">About</tha-router-link>
-          <tha-router-link to="/contact">Contact</tha-router-link>
+          <tp-router-link to="/">Home</tp-router-link>
+          <tp-router-link to="/products">Products</tp-router-link>
+          <tp-router-link to="/about">About</tp-router-link>
+          <tp-router-link to="/contact">Contact</tp-router-link>
         </nav>
       </header>
 
-      <tha-router history="${args.globalHistory}">
+      <tp-router history="${args.globalHistory}">
         <div class="content-wrapper">
           <aside>
             <div class="history-controls">
-              <tha-router-link to="back">⬅️ Back</tha-router-link>
-              <tha-router-link to="forward">➡️</tha-router-link>
+              <tp-router-link to="back">⬅️ Back</tp-router-link>
+              <tp-router-link to="forward">➡️</tp-router-link>
             </div>
 
             <h3>Quick Links</h3>
             <nav class="side-nav">
-              <tha-router-link to="/">🏠 Home</tha-router-link>
-              <tha-router-link to="/products">📦 All Products</tha-router-link>
-              <tha-router-link to="/products/laptop">💻 Laptops</tha-router-link>
-              <tha-router-link to="/products/phone">📱 Phones</tha-router-link>
-              <tha-router-link to="/products/tablet">📱 Tablets</tha-router-link>
-              <tha-router-link to="/about">ℹ️ About Us</tha-router-link>
-              <tha-router-link to="/contact">📧 Contact</tha-router-link>
+              <tp-router-link to="/">🏠 Home</tp-router-link>
+              <tp-router-link to="/products">📦 All Products</tp-router-link>
+              <tp-router-link to="/products/laptop">💻 Laptops</tp-router-link>
+              <tp-router-link to="/products/phone">📱 Phones</tp-router-link>
+              <tp-router-link to="/products/tablet">📱 Tablets</tp-router-link>
+              <tp-router-link to="/about">ℹ️ About Us</tp-router-link>
+              <tp-router-link to="/contact">📧 Contact</tp-router-link>
             </nav>
           </aside>
 
           <main>
-            <tha-route path="/">
+            <tp-route path="/">
               <template>
                 <h2>Welcome to Our Store! 🎉</h2>
                 <p>This comprehensive demo showcases all router features:</p>
@@ -828,12 +828,12 @@ export const CompleteExample: Story = {
 
                 <p>Use the navigation above or the sidebar to explore different routes!</p>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/products">
+            <tp-route path="/products">
               <template>
                 <div class="breadcrumb">
-                  <tha-router-link to="/">Home</tha-router-link>
+                  <tp-router-link to="/">Home</tp-router-link>
                   <span>›</span>
                   <span>Products</span>
                 </div>
@@ -844,20 +844,20 @@ export const CompleteExample: Story = {
                 <div class="card">
                   <h3>Navigate to specific products:</h3>
                   <p>
-                    <tha-router-link to="./laptop">→ Laptops (relative path)</tha-router-link><br>
-                    <tha-router-link to="./phone">→ Phones (relative path)</tha-router-link><br>
-                    <tha-router-link to="./tablet">→ Tablets (relative path)</tha-router-link>
+                    <tp-router-link to="./laptop">→ Laptops (relative path)</tp-router-link><br>
+                    <tp-router-link to="./phone">→ Phones (relative path)</tp-router-link><br>
+                    <tp-router-link to="./tablet">→ Tablets (relative path)</tp-router-link>
                   </p>
                 </div>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/products/:category">
+            <tp-route path="/products/:category">
               <template>
                 <div class="breadcrumb">
-                  <tha-router-link to="/">Home</tha-router-link>
+                  <tp-router-link to="/">Home</tp-router-link>
                   <span>›</span>
-                  <tha-router-link to="/products">Products</tha-router-link>
+                  <tp-router-link to="/products">Products</tp-router-link>
                   <span>›</span>
                   <span>Category Details</span>
                 </div>
@@ -869,16 +869,16 @@ export const CompleteExample: Story = {
                   <p>This page uses a dynamic route pattern: <code>/products/:category</code></p>
                   <p>Check the URL display below to see the matched category!</p>
                   <p>
-                    <tha-router-link to="..">⬅️ Back to Products (relative up)</tha-router-link>
+                    <tp-router-link to="..">⬅️ Back to Products (relative up)</tp-router-link>
                   </p>
                 </div>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/about">
+            <tp-route path="/about">
               <template>
                 <div class="breadcrumb">
-                  <tha-router-link to="/">Home</tha-router-link>
+                  <tp-router-link to="/">Home</tp-router-link>
                   <span>›</span>
                   <span>About</span>
                 </div>
@@ -889,20 +889,20 @@ export const CompleteExample: Story = {
                 <div class="card">
                   <h3>Components Used:</h3>
                   <ul>
-                    <li><code>&lt;tha-router&gt;</code> - Main router container</li>
-                    <li><code>&lt;tha-route&gt;</code> - Route definitions with templates</li>
-                    <li><code>&lt;tha-router-link&gt;</code> - Navigation links</li>
-                    <li><code>&lt;tha-router-outlet&gt;</code> - Content rendering target</li>
-                    <li><code>&lt;tha-url-output&gt;</code> - URL debugging display</li>
+                    <li><code>&lt;tp-router&gt;</code> - Main router container</li>
+                    <li><code>&lt;tp-route&gt;</code> - Route definitions with templates</li>
+                    <li><code>&lt;tp-router-link&gt;</code> - Navigation links</li>
+                    <li><code>&lt;tp-router-outlet&gt;</code> - Content rendering target</li>
+                    <li><code>&lt;tp-url-output&gt;</code> - URL debugging display</li>
                   </ul>
                 </div>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-route path="/contact">
+            <tp-route path="/contact">
               <template>
                 <div class="breadcrumb">
-                  <tha-router-link to="/">Home</tha-router-link>
+                  <tp-router-link to="/">Home</tp-router-link>
                   <span>›</span>
                   <span>Contact</span>
                 </div>
@@ -915,20 +915,20 @@ export const CompleteExample: Story = {
                   <p>From this page, you can:</p>
                   <ul>
                     <li>Use the <strong>Back button</strong> in the sidebar</li>
-                    <li>Click <tha-router-link to="/">Home</tha-router-link> to go to the start</li>
-                    <li>Browse <tha-router-link to="/products">Products</tha-router-link></li>
-                    <li>Read the <tha-router-link to="/about">About</tha-router-link> page</li>
+                    <li>Click <tp-router-link to="/">Home</tp-router-link> to go to the start</li>
+                    <li>Browse <tp-router-link to="/products">Products</tp-router-link></li>
+                    <li>Read the <tp-router-link to="/about">About</tp-router-link> page</li>
                   </ul>
                 </div>
               </template>
-            </tha-route>
+            </tp-route>
 
-            <tha-router-outlet></tha-router-outlet>
+            <tp-router-outlet></tp-router-outlet>
 
-            <tha-url-output history="${args.globalHistory}"></tha-url-output>
+            <tp-url-output history="${args.globalHistory}"></tp-url-output>
           </main>
         </div>
-      </tha-router>
+      </tp-router>
 
       <footer>
         <p>THA Router Demo - Built with Lit and @lit-labs/signals</p>

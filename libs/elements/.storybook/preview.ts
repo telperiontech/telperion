@@ -6,7 +6,7 @@ import '@telperion/elements/drag-drop';
 import '@telperion/elements/icon';
 import '@telperion/elements/icon/material-symbols.css';
 import './preview.css';
-import './tha-url-output';
+import './url-output-element';
 
 // Autodocs and controls read attributes, events, slots and CSS properties from the manifest
 setCustomElementsManifest(customElements);

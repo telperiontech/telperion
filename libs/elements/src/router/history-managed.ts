@@ -99,7 +99,7 @@ export const HistoryManaged = <T extends Constructor<LitElement>>(superClass: T)
     #parentHistoryType = computed(() => {
       // Start above this element: `closest()` matches the element itself, and an outlet or config
       // resolving its own history type would read its own computed (a signal cycle)
-      const parent = this.parentElement?.closest('tha-router-config, tha-router-outlet') as HistoryManagedLitElementType | null | undefined;
+      const parent = this.parentElement?.closest('tp-router-config, tp-router-outlet') as HistoryManagedLitElementType | null | undefined;
 
       return parent?.[HISTORY_TYPE]?.get();
     });

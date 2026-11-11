@@ -10,6 +10,7 @@ The router system provides declarative, template-based routing without requiring
 
 - **Declarative routing**: Define routes using HTML elements
 - **Template-based content**: Route content is defined in `<template>` elements
+- **Remote content**: Load a route's HTML from a URL with `src`, fetched lazily and cached
 - **Multiple history strategies**: Browser History API, hash-based, or memory-based
 - **Active link detection**: Automatically highlights active navigation links
 - **Relative navigation**: Support for relative paths (`./`, `../`)
@@ -18,7 +19,7 @@ The router system provides declarative, template-based routing without requiring
 
 ## Components
 
-### `<tha-router>`
+### `<tp-router>`
 
 The main router component that manages routing for a section of your application.
 
@@ -27,33 +28,43 @@ The main router component that manages routing for a section of your application
 
 **Example:**
 ```html
-<tha-router history="browser">
-  <tha-route path="/"><template><h1>Home</h1></template></tha-route>
-  <tha-route path="/about"><template><h1>About</h1></template></tha-route>
-  <tha-router-outlet></tha-router-outlet>
-</tha-router>
+<tp-router history="browser">
+  <tp-route path="/"><template><h1>Home</h1></template></tp-route>
+  <tp-route path="/about"><template><h1>About</h1></template></tp-route>
+  <tp-router-outlet></tp-router-outlet>
+</tp-router>
 ```
 
-### `<tha-route>`
+### `<tp-route>`
 
-Defines a route with a URL pattern and template content.
+Defines a route with a URL pattern and its content: an inline template, or a URL to load it from.
 
 **Attributes:**
 - `path` (required): URL pattern using URLPattern syntax (e.g., `/users/:id`)
+- `src` (optional): URL of an HTML file to use as the content, loaded the first time the route matches (see [Remote Content](#remote-content))
+- `loading` / `loaded` / `error` (readonly): Reflect the status of the `src` content
+
+**Properties:**
+- `loader`: Function `(url, signal) => Promise<string>` that fetches the `src` content (defaults to `fetch`)
+
+**Events:**
+- `tp-route-load`: The `src` content loaded. `detail: { src }`
+- `tp-route-error`: The `src` content failed to load. `detail: { src, error }`
 
 **Content:**
-- Must contain a `<template>` element with the content to render
+- A `<template>` element with the content to render (unless `src` is set)
+- Optional `<template data-loading>` and `<template data-error>` elements, used with `src`
 
 **Example:**
 ```html
-<tha-route path="/users/:id">
+<tp-route path="/users/:id">
   <template>
     <h1>User Profile</h1>
   </template>
-</tha-route>
+</tp-route>
 ```
 
-### `<tha-router-outlet>`
+### `<tp-router-outlet>`
 
 Renders the content of the active route.
 
@@ -62,45 +73,47 @@ Renders the content of the active route.
 - `routepath` (readonly): Reflects the current route's path
 - `routeid` (readonly): Reflects the current route's ID
 - `param-*` (readonly): Dynamic attributes for each route parameter (e.g., `param-id`, `param-year`)
+- `route-loading` (readonly): Present while the active route's `src` content is loading
+- `route-error` (readonly): Present when the active route's `src` content failed to load
 
 **Properties:**
 - `params`: Object containing all current route parameters
 
-**Example 1: Inside tha-router element**
+**Example 1: Inside tp-router element**
 ```html
-<tha-router>
-  <tha-route path="/"><template><h1>Home</h1></template></tha-route>
-  <tha-route path="/about"><template><h1>About</h1></template></tha-route>
+<tp-router>
+  <tp-route path="/"><template><h1>Home</h1></template></tp-route>
+  <tp-route path="/about"><template><h1>About</h1></template></tp-route>
   <!-- Outlet automatically binds to parent router -->
-  <tha-router-outlet></tha-router-outlet>
-</tha-router>
+  <tp-router-outlet></tp-router-outlet>
+</tp-router>
 ```
 
-**Example 2: Outside tha-router element**
+**Example 2: Outside tp-router element**
 ```html
 <!-- Router with ID -->
-<tha-router id="main-router">
-  <tha-route path="/"><template><h1>Home</h1></template></tha-route>
-  <tha-route path="/about"><template><h1>About</h1></template></tha-route>
-</tha-router>
+<tp-router id="main-router">
+  <tp-route path="/"><template><h1>Home</h1></template></tp-route>
+  <tp-route path="/about"><template><h1>About</h1></template></tp-route>
+</tp-router>
 
 <!-- Outlet outside router, binds using 'for' attribute -->
-<tha-router-outlet for="main-router"></tha-router-outlet>
+<tp-router-outlet for="main-router"></tp-router-outlet>
 ```
 
 **Example 3: Accessing route parameters**
 ```html
-<tha-router>
-  <tha-route path="/products/:category/:id">
+<tp-router>
+  <tp-route path="/products/:category/:id">
     <template>
       <h1>Product Details</h1>
-      <!-- Use tha-router-param for declarative access -->
-      <p>Category: <tha-router-param name="category"></tha-router-param></p>
-      <p>Product ID: <tha-router-param name="id"></tha-router-param></p>
+      <!-- Use tp-router-param for declarative access -->
+      <p>Category: <tp-router-param name="category"></tp-router-param></p>
+      <p>Product ID: <tp-router-param name="id"></tp-router-param></p>
     </template>
-  </tha-route>
-  <tha-router-outlet id="product-outlet"></tha-router-outlet>
-</tha-router>
+  </tp-route>
+  <tp-router-outlet id="product-outlet"></tp-router-outlet>
+</tp-router>
 
 <script>
   // Or access params programmatically via the outlet
@@ -113,28 +126,28 @@ Renders the content of the active route.
 
 **Example 4: Nested outlets with parameter inheritance**
 ```html
-<tha-router>
-  <tha-route path="/projects/:projectId">
+<tp-router>
+  <tp-route path="/projects/:projectId">
     <template>
-      <h1>Project <tha-router-param name="projectId"></tha-router-param></h1>
+      <h1>Project <tp-router-param name="projectId"></tp-router-param></h1>
       
       <!-- Nested outlet inherits projectId parameter -->
-      <tha-router-outlet>
-        <tha-route path="/tasks/:taskId">
+      <tp-router-outlet>
+        <tp-route path="/tasks/:taskId">
           <template>
             <!-- Both parameters available -->
-            <p>Project: <tha-router-param name="projectId"></tha-router-param></p>
-            <p>Task: <tha-router-param name="taskId"></tha-router-param></p>
+            <p>Project: <tp-router-param name="projectId"></tp-router-param></p>
+            <p>Task: <tp-router-param name="taskId"></tp-router-param></p>
           </template>
-        </tha-route>
-      </tha-router-outlet>
+        </tp-route>
+      </tp-router-outlet>
     </template>
-  </tha-route>
-  <tha-router-outlet></tha-router-outlet>
-</tha-router>
+  </tp-route>
+  <tp-router-outlet></tp-router-outlet>
+</tp-router>
 ```
 
-### `<tha-router-link>`
+### `<tp-router-link>`
 
 Navigation link that performs client-side routing without page reloads.
 
@@ -146,27 +159,27 @@ Navigation link that performs client-side routing without page reloads.
 **Example:**
 ```html
 <!-- Absolute paths -->
-<tha-router-link to="/">Home</tha-router-link>
-<tha-router-link to="/about">About</tha-router-link>
+<tp-router-link to="/">Home</tp-router-link>
+<tp-router-link to="/about">About</tp-router-link>
 
 <!-- Relative paths -->
-<tha-router-link to="./details">Details</tha-router-link>
-<tha-router-link to="..">Back to Users</tha-router-link>
+<tp-router-link to="./details">Details</tp-router-link>
+<tp-router-link to="..">Back to Users</tp-router-link>
 
 <!-- History navigation -->
-<tha-router-link to="back">← Back</tha-router-link>
-<tha-router-link to="forward">Forward →</tha-router-link>
+<tp-router-link to="back">← Back</tp-router-link>
+<tp-router-link to="forward">Forward →</tp-router-link>
 
 <!-- Style active links with CSS -->
 <style>
-  tha-router-link[active] {
+  tp-router-link[active] {
     font-weight: bold;
     color: blue;
   }
 </style>
 ```
 
-### `<tha-router-param>`
+### `<tp-router-param>`
 
 Displays the value of a dynamic route parameter.
 
@@ -174,37 +187,37 @@ Displays the value of a dynamic route parameter.
 - `name` (required): The parameter name to display (must match a parameter in the route path)
 
 **Requirements:**
-- Must be used inside a `<tha-router-outlet>` element
+- Must be used inside a `<tp-router-outlet>` element
 - Parameter name must exist in the current route's path pattern
 
 **Example:**
 ```html
-<tha-router>
-  <tha-route path="/users/:id">
+<tp-router>
+  <tp-route path="/users/:id">
     <template>
       <h1>User Profile</h1>
-      <p>User ID: <tha-router-param name="id"></tha-router-param></p>
+      <p>User ID: <tp-router-param name="id"></tp-router-param></p>
     </template>
-  </tha-route>
-  <tha-router-outlet></tha-router-outlet>
-</tha-router>
+  </tp-route>
+  <tp-router-outlet></tp-router-outlet>
+</tp-router>
 
 <!-- Navigating to /users/123 displays: User ID: 123 -->
 ```
 
 **Multiple Parameters:**
 ```html
-<tha-route path="/blog/:year/:month/:slug">
+<tp-route path="/blog/:year/:month/:slug">
   <template>
     <article>
       <time>
-        <tha-router-param name="year"></tha-router-param>-
-        <tha-router-param name="month"></tha-router-param>
+        <tp-router-param name="year"></tp-router-param>-
+        <tp-router-param name="month"></tp-router-param>
       </time>
-      <h1><tha-router-param name="slug"></tha-router-param></h1>
+      <h1><tp-router-param name="slug"></tp-router-param></h1>
     </article>
   </template>
-</tha-route>
+</tp-route>
 
 <!-- /blog/2024/12/hello-world displays: 2024-12 and hello-world -->
 ```
@@ -212,18 +225,18 @@ Displays the value of a dynamic route parameter.
 **Styling Parameters:**
 ```html
 <style>
-  tha-router-param {
+  tp-router-param {
     font-weight: bold;
     color: var(--primary-color);
   }
   
-  tha-router-param[name="id"] {
+  tp-router-param[name="id"] {
     font-family: monospace;
   }
 </style>
 ```
 
-### `<tha-router-config>`
+### `<tp-router-config>`
 
 Configuration element for managing router history settings. Behavior depends on placement:
 
@@ -244,7 +257,7 @@ Configuration element for managing router history settings. Behavior depends on 
 ```html
 <head>
   <!-- All routers use hash by default -->
-  <tha-router-config history="hash"></tha-router-config>
+  <tp-router-config history="hash"></tp-router-config>
 </head>
 ```
 
@@ -252,14 +265,14 @@ Configuration element for managing router history settings. Behavior depends on 
 ```html
 <body>
   <!-- Section 1: Hash routing -->
-  <tha-router-config history="hash">
-    <tha-router>...</tha-router>
-  </tha-router-config>
+  <tp-router-config history="hash">
+    <tp-router>...</tp-router>
+  </tp-router-config>
   
   <!-- Section 2: Memory routing (isolated) -->
-  <tha-router-config history="memory">
-    <tha-router>...</tha-router>
-  </tha-router-config>
+  <tp-router-config history="memory">
+    <tp-router>...</tp-router>
+  </tp-router-config>
 </body>
 ```
 
@@ -270,7 +283,7 @@ Configuration element for managing router history settings. Behavior depends on 
 <html>
 <head>
   <!-- Global router configuration -->
-  <tha-router-config history="browser"></tha-router-config>
+  <tp-router-config history="browser"></tp-router-config>
   
   <style>
     nav {
@@ -278,13 +291,13 @@ Configuration element for managing router history settings. Behavior depends on 
       background: #f0f0f0;
     }
     
-    tha-router-link {
+    tp-router-link {
       margin-right: 1rem;
       text-decoration: none;
       color: #333;
     }
     
-    tha-router-link[active] {
+    tp-router-link[active] {
       font-weight: bold;
       color: #0066cc;
       border-bottom: 2px solid #0066cc;
@@ -293,49 +306,49 @@ Configuration element for managing router history settings. Behavior depends on 
 </head>
 <body>
   <nav>
-    <tha-router-link to="/">Home</tha-router-link>
-    <tha-router-link to="/about">About</tha-router-link>
-    <tha-router-link to="/users">Users</tha-router-link>
+    <tp-router-link to="/">Home</tp-router-link>
+    <tp-router-link to="/about">About</tp-router-link>
+    <tp-router-link to="/users">Users</tp-router-link>
   </nav>
 
   <!-- Main router inherits browser history from head config -->
-  <tha-router>
-    <tha-route path="/">
+  <tp-router>
+    <tp-route path="/">
       <template>
         <h1>Home Page</h1>
         <p>Welcome to our application!</p>
-        <tha-router-link to="/about">Learn more about us</tha-router-link>
+        <tp-router-link to="/about">Learn more about us</tp-router-link>
       </template>
-    </tha-route>
+    </tp-route>
 
-    <tha-route path="/about">
+    <tp-route path="/about">
       <template>
         <h1>About Us</h1>
         <p>This is the about page.</p>
-        <tha-router-link to="back">Go back</tha-router-link>
+        <tp-router-link to="back">Go back</tp-router-link>
       </template>
-    </tha-route>
+    </tp-route>
 
-    <tha-route path="/users">
+    <tp-route path="/users">
       <template>
         <h1>Users</h1>
         <ul>
-          <li><tha-router-link to="/users/1">User 1</tha-router-link></li>
-          <li><tha-router-link to="/users/2">User 2</tha-router-link></li>
+          <li><tp-router-link to="/users/1">User 1</tp-router-link></li>
+          <li><tp-router-link to="/users/2">User 2</tp-router-link></li>
         </ul>
       </template>
-    </tha-route>
+    </tp-route>
 
-    <tha-route path="/users/:id">
+    <tp-route path="/users/:id">
       <template>
         <h1>User Profile</h1>
         <p>Viewing user profile</p>
-        <tha-router-link to="..">Back to users list</tha-router-link>
+        <tp-router-link to="..">Back to users list</tp-router-link>
       </template>
-    </tha-route>
+    </tp-route>
 
-    <tha-router-outlet></tha-router-outlet>
-  </tha-router>
+    <tp-router-outlet></tp-router-outlet>
+  </tp-router>
 </body>
 </html>
 ```
@@ -349,25 +362,25 @@ Route parameters allow you to create dynamic routes that match variable segments
 Parameters are defined in route paths using the `:paramName` syntax:
 
 ```html
-<tha-route path="/users/:id">
+<tp-route path="/users/:id">
   <template>
     <!-- Parameter 'id' is available here -->
   </template>
-</tha-route>
+</tp-route>
 ```
 
 ### Accessing Parameters
 
-#### Option 1: Using `<tha-router-param>` (Declarative)
+#### Option 1: Using `<tp-router-param>` (Declarative)
 
 The recommended approach for templates:
 
 ```html
-<tha-route path="/users/:id">
+<tp-route path="/users/:id">
   <template>
-    <h1>User <tha-router-param name="id"></tha-router-param></h1>
+    <h1>User <tp-router-param name="id"></tp-router-param></h1>
   </template>
-</tha-route>
+</tp-route>
 ```
 
 #### Option 2: Via Outlet Attributes
@@ -375,10 +388,10 @@ The recommended approach for templates:
 Parameters are exposed as `param-*` attributes on the outlet:
 
 ```html
-<tha-router-outlet id="outlet">
+<tp-router-outlet id="outlet">
   <!-- When route /users/123 is active -->
   <!-- outlet will have param-id="123" attribute -->
-</tha-router-outlet>
+</tp-router-outlet>
 
 <script>
   const outlet = document.getElementById('outlet');
@@ -391,7 +404,7 @@ Parameters are exposed as `param-*` attributes on the outlet:
 Access all parameters as an object:
 
 ```javascript
-const outlet = document.querySelector('tha-router-outlet');
+const outlet = document.querySelector('tp-router-outlet');
 console.log(outlet.params); // { id: '123' }
 ```
 
@@ -400,19 +413,19 @@ console.log(outlet.params); // { id: '123' }
 Routes can have multiple parameters:
 
 ```html
-<tha-route path="/blog/:year/:month/:slug">
+<tp-route path="/blog/:year/:month/:slug">
   <template>
     <article>
       <header>
         <time>
-          <tha-router-param name="year"></tha-router-param>-
-          <tha-router-param name="month"></tha-router-param>
+          <tp-router-param name="year"></tp-router-param>-
+          <tp-router-param name="month"></tp-router-param>
         </time>
-        <h1><tha-router-param name="slug"></tha-router-param></h1>
+        <h1><tp-router-param name="slug"></tp-router-param></h1>
       </header>
     </article>
   </template>
-</tha-route>
+</tp-route>
 
 <!-- Matches: /blog/2024/12/hello-world -->
 <!-- Params: { year: '2024', month: '12', slug: 'hello-world' } -->
@@ -423,24 +436,24 @@ Routes can have multiple parameters:
 Nested outlets inherit parameters from parent routes:
 
 ```html
-<tha-router>
-  <tha-route path="/projects/:projectId">
+<tp-router>
+  <tp-route path="/projects/:projectId">
     <template>
-      <h1>Project <tha-router-param name="projectId"></tha-router-param></h1>
+      <h1>Project <tp-router-param name="projectId"></tp-router-param></h1>
       
-      <tha-router-outlet>
-        <tha-route path="/tasks/:taskId">
+      <tp-router-outlet>
+        <tp-route path="/tasks/:taskId">
           <template>
             <!-- Both parameters available -->
-            <p>Project: <tha-router-param name="projectId"></tha-router-param></p>
-            <p>Task: <tha-router-param name="taskId"></tha-router-param></p>
+            <p>Project: <tp-router-param name="projectId"></tp-router-param></p>
+            <p>Task: <tp-router-param name="taskId"></tp-router-param></p>
           </template>
-        </tha-route>
-      </tha-router-outlet>
+        </tp-route>
+      </tp-router-outlet>
     </template>
-  </tha-route>
-  <tha-router-outlet></tha-router-outlet>
-</tha-router>
+  </tp-route>
+  <tp-router-outlet></tp-router-outlet>
+</tp-router>
 
 <!-- URL: /projects/proj-1/tasks/task-42 -->
 <!-- Child outlet has: { projectId: 'proj-1', taskId: 'task-42' } -->
@@ -454,24 +467,72 @@ You can style parameter display using CSS:
 
 ```css
 /* Style all parameters */
-tha-router-param {
+tp-router-param {
   font-weight: bold;
   color: var(--primary-color);
 }
 
 /* Style specific parameters by name */
-tha-router-param[name="id"] {
+tp-router-param[name="id"] {
   font-family: monospace;
   background: #f0f0f0;
   padding: 0.2em 0.4em;
   border-radius: 3px;
 }
 
-tha-router-param[name="year"],
-tha-router-param[name="month"] {
+tp-router-param[name="year"],
+tp-router-param[name="month"] {
   color: #666;
 }
 ```
+
+## Remote Content
+
+A route can load its HTML from a URL instead of an inline template:
+
+```html
+<tp-router>
+  <tp-route path="/"><template><h1>Home</h1></template></tp-route>
+
+  <tp-route path="/docs" src="/partials/docs.html">
+    <template data-loading><p>Loading…</p></template>
+    <template data-error><p>Could not load the docs.</p></template>
+  </tp-route>
+
+  <tp-router-outlet></tp-router-outlet>
+</tp-router>
+```
+
+**Behavior:**
+- `src` is resolved against `document.baseURI`.
+- The content is fetched the first time the route matches, not on page load.
+- It is cached per route until `src` changes. Navigating away and back does not fetch again, and a request that is already running is reused.
+- `src` takes precedence over an inline content template. While loading, the outlet renders `<template data-loading>` (or nothing). On failure, it renders `<template data-error>` (or nothing).
+- A failure is not cached: the next time the route matches, it retries.
+- Changing `src` or removing the route from the DOM aborts a running request. A late response for an old `src` is ignored.
+
+**Styling the state:**
+
+```css
+tp-router-outlet[route-loading] { opacity: 0.5; }
+tp-router-outlet[route-error] { border-color: crimson; }
+```
+
+**Custom loader:** Override `loader` to add headers or credentials, or to stub requests in tests. It must reject on failure:
+
+```ts
+const route = document.querySelector('tp-route[path="/docs"]')!;
+
+route.loader = async (url, signal) => {
+  const response = await fetch(url, { signal, credentials: 'include' });
+  if (!response.ok) throw new Error(`${response.status}`);
+  return response.text();
+};
+
+route.addEventListener('tp-route-error', (event) => console.error(event.detail.src, event.detail.error));
+```
+
+> **Security:** The fetched HTML is inserted as-is, like `innerHTML`, so only point `src` at content you trust. `<script>` elements in it do not run, and `<html>`, `<head>` and `<body>` wrappers are dropped.
 
 ## URL Pattern Syntax
 
@@ -479,27 +540,27 @@ Routes use the [URLPattern API](https://developer.mozilla.org/en-US/docs/Web/API
 
 ### Static Paths
 ```html
-<tha-route path="/"><template>Home</template></tha-route>
-<tha-route path="/about"><template>About</template></tha-route>
-<tha-route path="/contact"><template>Contact</template></tha-route>
+<tp-route path="/"><template>Home</template></tp-route>
+<tp-route path="/about"><template>About</template></tp-route>
+<tp-route path="/contact"><template>Contact</template></tp-route>
 ```
 
 ### Dynamic Segments
 ```html
 <!-- Match /users/123 -->
-<tha-route path="/users/:id"><template>User Profile</template></tha-route>
+<tp-route path="/users/:id"><template>User Profile</template></tp-route>
 
 <!-- Match /blog/2024/hello-world -->
-<tha-route path="/blog/:year/:slug"><template>Blog Post</template></tha-route>
+<tp-route path="/blog/:year/:slug"><template>Blog Post</template></tp-route>
 ```
 
 ### Wildcards
 ```html
 <!-- Match /blog, /blog/post, /blog/post/123 -->
-<tha-route path="/blog/*"><template>Blog Section</template></tha-route>
+<tp-route path="/blog/*"><template>Blog Section</template></tp-route>
 
 <!-- Match any path under /docs -->
-<tha-route path="/docs/**"><template>Documentation</template></tha-route>
+<tp-route path="/docs/**"><template>Documentation</template></tp-route>
 ```
 
 ## History Strategies
@@ -508,9 +569,9 @@ Routes use the [URLPattern API](https://developer.mozilla.org/en-US/docs/Web/API
 Uses the HTML5 History API (`pushState`, `replaceState`). URLs are clean without hash fragments.
 
 ```html
-<tha-router history="browser">
+<tp-router history="browser">
   <!-- URLs: /, /about, /users/123 -->
-</tha-router>
+</tp-router>
 ```
 
 **Requires:** Server-side configuration to serve `index.html` for all routes.
@@ -519,39 +580,39 @@ Uses the HTML5 History API (`pushState`, `replaceState`). URLs are clean without
 Uses hash fragments in the URL. Works without server configuration.
 
 ```html
-<tha-router history="hash">
+<tp-router history="hash">
   <!-- URLs: /#/, /#/about, /#/users/123 -->
-</tha-router>
+</tp-router>
 ```
 
 ### Memory History
 In-memory history for testing or non-browser environments.
 
 ```html
-<tha-router history="memory">
+<tp-router history="memory">
   <!-- No URL changes -->
-</tha-router>
+</tp-router>
 
 <!-- Named instances for isolation -->
-<tha-router history="memory:test1">...</tha-router>
-<tha-router history="memory:test2">...</tha-router>
+<tp-router history="memory:test1">...</tp-router>
+<tp-router history="memory:test2">...</tp-router>
 ```
 
 ## Navigation
 
-Use `<tha-router-link>` elements for navigation:
+Use `<tp-router-link>` elements for navigation:
 
 ```html
 <!-- Absolute paths -->
-<tha-router-link to="/about">About</tha-router-link>
+<tp-router-link to="/about">About</tp-router-link>
 
 <!-- Relative paths -->
-<tha-router-link to="./details">Details</tha-router-link>
-<tha-router-link to="../">Parent</tha-router-link>
+<tp-router-link to="./details">Details</tp-router-link>
+<tp-router-link to="../">Parent</tp-router-link>
 
 <!-- History navigation -->
-<tha-router-link to="back">Back</tha-router-link>
-<tha-router-link to="forward">Forward</tha-router-link>
+<tp-router-link to="back">Back</tp-router-link>
+<tp-router-link to="forward">Forward</tp-router-link>
 ```
 
 ## Multiple Routers
@@ -561,31 +622,31 @@ You can have multiple routers in your application, each with different history s
 ```html
 <head>
   <!-- Set global default to browser history -->
-  <tha-router-config history="browser"></tha-router-config>
+  <tp-router-config history="browser"></tp-router-config>
 </head>
 <body>
   <!-- Main router uses browser history from global config -->
-  <tha-router>
-    <tha-route path="/"><template>Home</template></tha-route>
-    <tha-route path="/dashboard"><template>Dashboard</template></tha-route>
-    <tha-router-outlet></tha-router-outlet>
-  </tha-router>
+  <tp-router>
+    <tp-route path="/"><template>Home</template></tp-route>
+    <tp-route path="/dashboard"><template>Dashboard</template></tp-route>
+    <tp-router-outlet></tp-router-outlet>
+  </tp-router>
 
   <!-- Admin section with hash history (overrides global) -->
-  <tha-router history="hash">
-    <tha-route path="/users"><template>Users</template></tha-route>
-    <tha-route path="/settings"><template>Settings</template></tha-route>
-    <tha-router-outlet></tha-router-outlet>
-  </tha-router>
+  <tp-router history="hash">
+    <tp-route path="/users"><template>Users</template></tp-route>
+    <tp-route path="/settings"><template>Settings</template></tp-route>
+    <tp-router-outlet></tp-router-outlet>
+  </tp-router>
   
   <!-- Widget with isolated memory history -->
-  <tha-router-config history="memory:widget">
-    <tha-router>
-      <tha-route path="/step1"><template>Step 1</template></tha-route>
-      <tha-route path="/step2"><template>Step 2</template></tha-route>
-      <tha-router-outlet></tha-router-outlet>
-    </tha-router>
-  </tha-router-config>
+  <tp-router-config history="memory:widget">
+    <tp-router>
+      <tp-route path="/step1"><template>Step 1</template></tp-route>
+      <tp-route path="/step2"><template>Step 2</template></tp-route>
+      <tp-router-outlet></tp-router-outlet>
+    </tp-router>
+  </tp-router-config>
 </body>
 ```
 
@@ -593,10 +654,10 @@ You can have multiple routers in your application, each with different history s
 
 ### Active Links
 
-The `active` attribute is automatically added to `<tha-router-link>` elements when their path matches:
+The `active` attribute is automatically added to `<tp-router-link>` elements when their path matches:
 
 ```css
-tha-router-link[active] {
+tp-router-link[active] {
   font-weight: bold;
   color: var(--active-link-color);
   border-bottom: 2px solid currentColor;
@@ -608,7 +669,7 @@ tha-router-link[active] {
 The outlet renders content in light DOM, so you can style it directly:
 
 ```css
-tha-router-outlet {
+tp-router-outlet {
   display: block;
   padding: 2rem;
   min-height: 400px;
@@ -621,9 +682,9 @@ All components are fully typed with TypeScript. Types are automatically inferred
 
 ```typescript
 // Types are inferred automatically - no need for type assertions
-const router = document.querySelector('tha-router');
-const outlet = document.querySelector('tha-router-outlet');
-const link = document.querySelector('tha-router-link');
+const router = document.querySelector('tp-router');
+const outlet = document.querySelector('tp-router-outlet');
+const link = document.querySelector('tp-router-link');
 
 // TypeScript knows the correct types:
 router?.assignOutlet(outlet);

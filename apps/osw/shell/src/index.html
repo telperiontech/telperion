@@ -59,44 +59,31 @@
     </nav>
   </header>
 
-  <tha-router class="flex flex-1 flex-col">
-    <tha-route path="/">
+  <tp-router class="flex flex-1 flex-col">
+    <tp-route path="/">
       <template>
         <osw-home class="block flex-1"></osw-home>
       </template>
-    </tha-route>
-    <tha-route path="/js-utils{/*}?">
+    </tp-route>
+    <tp-route path="/js-utils{/*}?">
       <template>
         <osw-js-utils class="block flex-1"></osw-js-utils>
       </template>
-    </tha-route>
-    <tha-route path="/paintlet{/*}?">
+    </tp-route>
+    <tp-route path="/paintlet{/*}?">
       <template>
         <osw-paintlet class="block flex-1"></osw-paintlet>
       </template>
-    </tha-route>
-    <tha-route path="/elements{/*}?">
+    </tp-route>
+    <tp-route path="/elements{/*}?">
       <template>
         <osw-elements class="block flex-1"></osw-elements>
       </template>
-    </tha-route>
-    <tha-route path="*">
-      <template>
-        <main class="grid flex-1 place-items-center px-4 py-24">
-          <div class="text-center">
-            <p class="font-mono text-sm font-semibold text-primary-600">404</p>
-            <h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Page not found</h1>
-            <p class="mt-4 text-neutral-920">This branch of the tree doesn't exist (yet).</p>
-            <div class="mt-8 flex flex-wrap justify-center gap-3">
-              <a href="/" class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors">Browse libraries</a>
-              <a href="https://telperion.tr/en/" class="rounded-lg border border-neutral-100 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-990 hover:border-neutral-250 transition-colors">Go to telperion.tr</a>
-            </div>
-          </div>
-        </main>
-      </template>
-    </tha-route>
-    <tha-router-outlet class="flex flex-1 flex-col"></tha-router-outlet>
-  </tha-router>
+    </tp-route>
+    <!-- Absolute src: relative URLs would resolve against deep paths and hit the SPA rewrite -->
+    <tp-route path="*" src="/404.html"></tp-route>
+    <tp-router-outlet class="flex flex-1 flex-col"></tp-router-outlet>
+  </tp-router>
 
   <footer class="bg-white">
     <div aria-hidden="true" class="h-1 bg-linear-to-r from-primary-500 via-secondary-500 to-tertiary-500"></div>

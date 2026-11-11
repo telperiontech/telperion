@@ -3,7 +3,7 @@ import type { OswRemote } from '@osw/core';
 
 /**
  * Defines a custom element that mounts a federated module's `bootstrap` export on connect
- * and calls the returned cleanup on disconnect (e.g. when `<tha-router>` swaps routes).
+ * and calls the returned cleanup on disconnect (e.g. when `<tp-router>` swaps routes).
  */
 export function defineRemoteElement(tagName: string, remoteModule: string): void {
 	class RemoteElement extends HTMLElement {

@@ -1,6 +1,6 @@
 import { treeUrl } from '@osw/docs';
 
-/** Mount path of this remote in the shell; must match the shell's `<tha-route>` */
+/** Mount path of this remote in the shell; must match the shell's `<tp-route>` */
 export const BASE_PATH = '/elements';
 
 export const homePath = () => BASE_PATH;

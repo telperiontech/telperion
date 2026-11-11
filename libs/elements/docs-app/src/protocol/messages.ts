@@ -3,7 +3,7 @@
  * (an iframe on the remote's own origin that runs the stories).
  *
  * Stories run in the iframe because they define custom elements: the shell already
- * registers some of them (`<tha-router>`, `<tp-icon>`) from its own copy of the library,
+ * registers some of them (`<tp-router>`, `<tp-icon>`) from its own copy of the library,
  * and a second `customElements.define` of the same tag throws. The iframe also isolates
  * the elements' document-level styles from the docs' Tailwind preflight, and the other way around.
  */

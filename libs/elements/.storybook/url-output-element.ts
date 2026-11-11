@@ -10,7 +10,7 @@ declare global {
      * A debugging component that displays the current history URL and the actual browser URL.
      * Useful for understanding the difference between router state and browser location.
      */
-    "tha-url-output": ThaUrlOutput;
+    "url-output-element": UrlOutputElement;
   }
 }
 
@@ -27,17 +27,17 @@ declare global {
  * @example
  * ```html
  * <!-- Show URLs for browser history -->
- * <tha-url-output history="browser"></tha-url-output>
+ * <tp-url-output history="browser"></tp-url-output>
  *
  * <!-- Show URLs for hash history -->
- * <tha-url-output history="hash"></tha-url-output>
+ * <tp-url-output history="hash"></tp-url-output>
  *
  * <!-- Show URLs for memory history (browser URL won't change) -->
- * <tha-url-output history="memory"></tha-url-output>
+ * <tp-url-output history="memory"></tp-url-output>
  * ```
  */
-@customElement('tha-url-output')
-export class ThaUrlOutput extends HistoryManaged(SignalWatcherLitElement) {
+@customElement('url-output-element')
+export class UrlOutputElement extends HistoryManaged(SignalWatcherLitElement) {
   #historyChangeUnsubscribe = noop;
   #historyEventsUnsubscribe = noop;
 

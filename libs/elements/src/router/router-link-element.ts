@@ -15,7 +15,7 @@ declare global {
      * The `active` attribute reflects whether the link matches the current route.
      * The `history` attribute specifies which history instance to use.
      */
-    "tha-router-link": ThaRouterLink;
+    "tp-router-link": RouterLinkElement;
   }
 }
 
@@ -41,27 +41,27 @@ type LinkType = LinkSymbol | AbsolutePath | RelativePath;
  * @example
  * ```html
  * <!-- Absolute path -->
- * <tha-router-link to="/about">About</tha-router-link>
+ * <tp-router-link to="/about">About</tp-router-link>
  *
  * <!-- Relative path -->
- * <tha-router-link to="./details">Details</tha-router-link>
- * <tha-router-link to="../users">Back to Users</tha-router-link>
+ * <tp-router-link to="./details">Details</tp-router-link>
+ * <tp-router-link to="../users">Back to Users</tp-router-link>
  *
  * <!-- History navigation -->
- * <tha-router-link to="back">← Back</tha-router-link>
- * <tha-router-link to="forward">Forward →</tha-router-link>
+ * <tp-router-link to="back">← Back</tp-router-link>
+ * <tp-router-link to="forward">Forward →</tp-router-link>
  * ```
  */
-@customElement("tha-router-link")
-export class ThaRouterLink extends HistoryManaged(SignalWatcherLitElement) {
-  /** Injects global styles for tha-router-link elements to show pointer cursor */
+@customElement("tp-router-link")
+export class RouterLinkElement extends HistoryManaged(SignalWatcherLitElement) {
+  /** Injects global styles for tp-router-link elements to show pointer cursor */
   static {
     const styleEl = document.createElement("style");
 
     styleEl.setAttribute("type", "text/css");
-    styleEl.setAttribute("data-id", "tha-router-link-styles");
+    styleEl.setAttribute("data-id", "tp-router-link-styles");
     styleEl.textContent = css`
-      tha-router-link {
+      tp-router-link {
         cursor: pointer;
       }
     `.toString();
