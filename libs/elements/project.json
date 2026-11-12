@@ -22,6 +22,7 @@
           "select/index": "src/select/index.ts",
           "button/index": "src/button/index.ts",
           "portal/index": "src/portal/index.ts",
+          "date/index": "src/date/index.ts",
           "code/index": "src/code/index.ts",
           "code/cdn": "src/code/code-cdn-element.ts"
         },
@@ -41,6 +42,7 @@
               "select/index": {},
               "button/index": {},
               "portal/index": {},
+              "date/index": {},
               "code/cdn": { "name": "TelperionElements.Code" }
             }
           },

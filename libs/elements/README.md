@@ -73,6 +73,9 @@ Use the **explicit `/iife/...` path** so the CDN serves the standalone bundle (s
 <!-- Or just the portal module (TelperionElements.Portal) -->
 <script src="https://unpkg.com/@telperion/elements/iife/portal/index.js"></script>
 
+<!-- Or just the date module (TelperionElements.Date) -->
+<script src="https://unpkg.com/@telperion/elements/iife/date/index.js"></script>
+
 <!-- The code module (TelperionElements.Code) — not included in elements.js; grammars load from jsDelivr -->
 <script src="https://unpkg.com/@telperion/elements/iife/code/cdn.js"></script>
 ```
@@ -335,6 +338,34 @@ import "@telperion/elements/portal";
 ```
 
 [Portal Documentation →](./src/portal/README.md)
+
+---
+
+### Date
+
+A localized date/time, optionally live. Zero dependencies: formatting is built on `Intl`.
+
+**Features:**
+- Date from the text content, the `datetime` attribute or the `value` property; ISO 8601, epoch ms, or numeric dates in the locale's order (`22/01/2024` under `lang="tr"`)
+- `input-format` for any other layout (moment-style tokens: `DD/MM/YYYY HH:mm`)
+- `format`: `Intl` presets (`short` … `full`), `relative` ("3 minutes ago"), or a moment-style pattern with localized month/weekday names
+- `locale` (defaults to the nearest `lang`) and `time-zone` (IANA)
+- Empty or invalid input shows the current time; invalid input also sets `invalid` and fires `tp-date-invalid`
+- Live dates tick on a shared, boundary-aligned clock at the cadence the format needs (seconds only when `ss` is shown); fixed absolute dates never tick; paused while the tab is hidden
+
+#### JS/TS
+```ts
+import "@telperion/elements/date";
+```
+
+#### HTML
+```html
+<tp-date format="DD MMMM YYYY">2024-01-22</tp-date>
+<tp-date format="HH:mm:ss"></tp-date>
+<tp-date format="relative" datetime="2024-01-22T14:30:00Z"></tp-date>
+```
+
+[Date Documentation →](./src/date/README.md)
 
 ---
 

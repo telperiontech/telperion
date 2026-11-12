@@ -1,7 +1,7 @@
 {
   "name": "@telperion/elements",
   "version": "0.0.0",
-  "description": "Framework-agnostic web components built with Lit: Material Symbols / Simple Icons / theSVG icons, declarative client-side router, drag-and-drop primitives, details accordion with FIFO open caps, a CSS-anchored popover, a form-associated selectbox with single/multi-select, a form-associated button, portals that render content into named outlets elsewhere in the document, and Shiki-powered syntax-highlighted code (inline or block) with lazily loaded languages.",
+  "description": "Framework-agnostic web components built with Lit: Material Symbols / Simple Icons / theSVG icons, declarative client-side router, drag-and-drop primitives, details accordion with FIFO open caps, a CSS-anchored popover, a form-associated selectbox with single/multi-select, a form-associated button, portals that render content into named outlets elsewhere in the document, a localized and optionally live date/time with moment-style formatting, and Shiki-powered syntax-highlighted code (inline or block) with lazily loaded languages.",
   "keywords": [
     "web-components",
     "custom-elements",
@@ -33,7 +33,13 @@
     "code",
     "syntax-highlighting",
     "shiki",
-    "themeable"
+    "themeable",
+    "date",
+    "time",
+    "datetime",
+    "relative-time",
+    "intl",
+    "clock"
   ],
   "homepage": "https://open-source.telperion.tr/elements",
   "repository": {
