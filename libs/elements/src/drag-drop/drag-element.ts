@@ -4,24 +4,54 @@ import { customElement, property } from "lit/decorators.js";
 
 import type { DropZoneElement } from "./dropzone-element";
 import { ACCEPT_DROP_PROP, REGISTER_HANDLE_PROP, UNREGISTER_HANDLE_PROP } from "./private-props";
-import { ThaDragEvent } from "./tha-drag-event";
+import { DragDropEvent } from "./drag-drop-event";
 import type { DragHandleElement } from "./drag-handle-element";
 
 declare global {
   interface HTMLElementTagNameMap {
     /**
-     * A draggable element that can be used to initiate drag-and-drop operations.
-     * It can contain child elements and supports drag handles.
-     * The `replaceclone` attribute indicates whether the element should be replaced with a clone during
-     * the drag operation.
-     * The `draggingstrategy` attribute defines the drag behavior, such as 'move' or 'copyMove'.
+     * Makes its content draggable. While dragged, the element itself follows the
+     * pointer (`position: fixed`, driven by CSS custom properties) instead of the
+     * browser's translucent drag image. On release it animates back to where it
+     * came from, or into the rectangle a `<tp-dropzone>` accepted it into.
      *
+     * Give it a `name` so drop zones can filter it with `accept`, and carry data
+     * with `data-drag-*` attributes (read back from `event.dragData`).
+     *
+     * Custom elements are `display: inline` by default: give `tp-drag` (and
+     * `tp-drag-clone`, when using `replaceclone`) a `display` of your choice.
+     *
+     * @example
+     * ```html
+     * <tp-drag name="card" data-drag-id="42" replaceclone>Drag me</tp-drag>
+     *
+     * <tp-dropzone accept="card">Drop here</tp-dropzone>
+     * ```
+     *
+     * @attr {string} name - Identifies the element to drop zones; matched against their `accept` list.
+     * @attr {"move" | "copyMove"} [draggingstrategy=move] - Sets `dataTransfer.effectAllowed`. Both values animate the same way.
+     * @attr {boolean} replaceclone - Leaves a `<tp-drag-clone>` copy in place while dragging, so the layout doesn't collapse.
+     * @attr {boolean} disabled - Prevents dragging.
+     * @attr {boolean} dragging - Read-only. Set while the element is being dragged.
+     * @attr {boolean} dragend - Read-only. Set during the release animation.
+     * @attr {string} draggedover - Read-only. The `name` of the accepting drop zone under the pointer (empty if it has none).
+     * @attr {boolean} dropaccepted - Read-only. Set once a drop zone called `acceptDrop()`, until the release animation ends.
+     *
+     * @fires tp-drag-start - Dragging started (the element is already `[dragging]`).
+     * @fires tp-drag-end - Dragging finished, after the release animation.
+     * @fires tp-drag-zone-enter - The pointer entered an accepting drop zone.
+     * @fires tp-drag-zone-leave - The pointer left an accepting drop zone.
+     * @fires tp-drag-zone-over - The pointer moves over an accepting drop zone (fires continuously).
+     * @fires tp-drag-drop - The element was dropped on an accepting drop zone.
+     *
+     * @cssprop --tp-drag-offset-x - Horizontal offset of the dragged element from the pointer. Defaults to `0px`.
+     * @cssprop --tp-drag-offset-y - Vertical offset of the dragged element from the pointer. Defaults to `0px`.
      */
-    "tha-drag": DragElement;
+    "tp-drag": DragElement;
   }
 }
 
-@customElement('tha-drag')
+@customElement('tp-drag')
 export class DragElement extends LitElement {
   /**
    * A transparent image used as a drag image to prevent flickering during drag operations.
@@ -50,8 +80,8 @@ export class DragElement extends LitElement {
 
   static override styles: CSSResultGroup = css`
     :host {
-      --tha-diff-x: calc(var(--tha-cx) - var(--tha-x));
-      --tha-diff-y: calc(var(--tha-cy) - var(--tha-y));
+      --tp-drag-diff-x: calc(var(--tp-drag-cx) - var(--tp-drag-x));
+      --tp-drag-diff-y: calc(var(--tp-drag-cy) - var(--tp-drag-y));
     }
 
     :host([draggingstrategy="move"]),
@@ -64,27 +94,27 @@ export class DragElement extends LitElement {
     :host([draggingstrategy="move"][dragging]),
     :host([draggingstrategy="copyMove"][dragging]) {
       position: fixed;
-      width: var(--tha-width);
-      height: var(--tha-height);
-      left: calc(var(--tha-left) + var(--tha-diff-x) + var(--tha-offset-x));
-      top: calc(var(--tha-top) + var(--tha-diff-y) + var(--tha-offset-y));
-      transform-origin: calc(var(--tha-x) - var(--tha-left)) calc(var(--tha-y) - var(--tha-top));
+      width: var(--tp-drag-width);
+      height: var(--tp-drag-height);
+      left: calc(var(--tp-drag-left) + var(--tp-drag-diff-x) + var(--tp-drag-offset-x));
+      top: calc(var(--tp-drag-top) + var(--tp-drag-diff-y) + var(--tp-drag-offset-y));
+      transform-origin: calc(var(--tp-drag-x) - var(--tp-drag-left)) calc(var(--tp-drag-y) - var(--tp-drag-top));
       z-index: 100;
     }
 
     :host([draggingstrategy="move"][dragend]),
     :host([draggingstrategy="copyMove"][dragend]) {
-      left: var(--tha-left);
-      top: var(--tha-top);
+      left: var(--tp-drag-left);
+      top: var(--tp-drag-top);
       transition-property: all;
     }
 
     :host([draggingstrategy="move"][dragend][dropaccepted]),
     :host([draggingstrategy="copyMove"][dragend][dropaccepted]) {
-      left: var(--tha-target-left);
-      top: var(--tha-target-top);
-      width: var(--tha-target-width);
-      height: var(--tha-target-height);
+      left: var(--tp-drag-target-left);
+      top: var(--tp-drag-target-top);
+      width: var(--tp-drag-target-width);
+      height: var(--tp-drag-target-height);
     }
   `;
 
@@ -95,13 +125,13 @@ export class DragElement extends LitElement {
     const style = this.GLOBAL_STYLE = document.createElement('style');
 
     style.innerHTML = `
-      @property --tha-offset-x {
+      @property --tp-drag-offset-x {
         syntax: '<length>';
         initial-value: 0px;
         inherits: true;
       }
 
-      @property --tha-offset-y {
+      @property --tp-drag-offset-y {
         syntax: '<length>';
         initial-value: 0px;
         inherits: true;
@@ -111,7 +141,8 @@ export class DragElement extends LitElement {
   }
 
   /**
-   * A record of drag-related data attributes.
+   * Values of the element's `data-drag-*` attributes, keyed without the prefix
+   * (`data-drag-id="42"` → `{ id: "42" }`). Kept in sync with attribute changes.
    */
   readonly dragData: Record<string, string> = {};
 
@@ -157,10 +188,10 @@ export class DragElement extends LitElement {
   declare name: string;
 
   /**
-   * The dragging strategy to use for the element.
-   * This determines how the element is dragged (e.g., move or copy).
+   * The `dataTransfer.effectAllowed` of the drag. Both values animate the same way;
+   * the element itself always moves (nothing is copied).
    */
-  @property({ type: String, reflect: true })
+  @property({ type: String, reflect: true, attribute: "draggingstrategy" })
   draggingStrategy: 'move' | 'copyMove' = 'move';
 
   /**
@@ -170,14 +201,16 @@ export class DragElement extends LitElement {
    *
    * !!! Not implemented yet !!!
    */
-  @property({ type: String })
+  @property({ type: String, attribute: "draggroup" })
   declare dragGroup: string;
 
   /**
-   * Indicates whether the element should replace its clone during drag operations.
-   * If true , the original element is replaced with a clone during dragging.
+   * Leaves a `<tp-drag-clone>` placeholder in the element's place while it is dragged,
+   * so surrounding content doesn't reflow. The placeholder copies the element's attributes
+   * (except `dragging`, `replaceclone` and `draggable`) and child nodes; style it with the
+   * `tp-drag-clone` selector. It is removed when the drag ends.
    */
-  @property({ type: Boolean })
+  @property({ type: Boolean, attribute: "replaceclone" })
   declare replaceClone: boolean;
 
   /**
@@ -196,14 +229,14 @@ export class DragElement extends LitElement {
   /**
    * The ID of the drop zone the element is currently over.
    */
-  @property({ type: String, reflect: true })
+  @property({ type: String, reflect: true, attribute: "draggedover" })
   draggedOver: string | null = null;
 
   /**
    * Indicates whether the element has been accepted by a drop zone.
    * This is used to manage the state of the element during drag-and-drop operations.
    */
-  @property({ type: Boolean, reflect: true })
+  @property({ type: Boolean, reflect: true, attribute: "dropaccepted" })
   dropAccepted = false;
 
   /**
@@ -226,8 +259,8 @@ export class DragElement extends LitElement {
     this.addEventListener('dragstart', this.#handleDragStart);
     this.addEventListener('dragend', this.#handleDragEnd);
     this.addEventListener('drag', this.#handleDrag);
-    this.addEventListener('thadropzoneenter', this.#handleDropZoneEnter);
-    this.addEventListener('thadropzoneleave', this.#handleDropZoneLeave);
+    this.addEventListener('tp-drag-zone-enter', this.#handleDropZoneEnter);
+    this.addEventListener('tp-drag-zone-leave', this.#handleDropZoneLeave);
   }
 
   override disconnectedCallback(): void {
@@ -237,8 +270,8 @@ export class DragElement extends LitElement {
     this.removeEventListener('dragstart', this.#handleDragStart);
     this.removeEventListener('dragend', this.#handleDragEnd);
     this.removeEventListener('drag', this.#handleDrag);
-    this.removeEventListener('thadropzoneenter', this.#handleDropZoneEnter);
-    this.removeEventListener('thadropzoneleave', this.#handleDropZoneLeave);
+    this.removeEventListener('tp-drag-zone-enter', this.#handleDropZoneEnter);
+    this.removeEventListener('tp-drag-zone-leave', this.#handleDropZoneLeave);
   }
 
   protected override render(): TemplateResult {
@@ -260,7 +293,7 @@ export class DragElement extends LitElement {
     const { width, height, left, right, top, bottom } = rect;
 
     for (const prop in { width, height, left, right, top, bottom }) {
-      this.style.setProperty(`--tha-target-${prop}`, `${rect[prop as keyof DOMRect]}px`);
+      this.style.setProperty(`--tp-drag-target-${prop}`, `${rect[prop as keyof DOMRect]}px`);
     }
   }
 
@@ -323,7 +356,7 @@ export class DragElement extends LitElement {
         this.parentElement!.insertBefore(clone, this.nextSibling);
       }
 
-      this.dispatchEvent(new ThaDragEvent('thadragstart', { dragTarget: new WeakRef(this) }, event));
+      this.dispatchEvent(new DragDropEvent('tp-drag-start', { dragTarget: new WeakRef(this) }, event));
     });
   };
 
@@ -340,11 +373,11 @@ export class DragElement extends LitElement {
       if (this.replaceClone) this.clone?.remove();
 
       this.style.pointerEvents = this.preDragData.styles.pointerEvents;
-      ['--tha-width', '--tha-height', '--tha-left', '--tha-top', '--tha-x', '--tha-y', '--tha-cx', '--tha-cy'].forEach(prop => {
+      ['--tp-drag-width', '--tp-drag-height', '--tp-drag-left', '--tp-drag-top', '--tp-drag-x', '--tp-drag-y', '--tp-drag-cx', '--tp-drag-cy'].forEach(prop => {
         this.style.removeProperty(prop);
       });
       ['width', 'height', 'left', 'right', 'top', 'bottom'].forEach(prop => {
-        this.style.removeProperty(`--tha-target-${prop}`);
+        this.style.removeProperty(`--tp-drag-target-${prop}`);
       });
 
       const acceptedDropzone = this.#acceptedDropzone;
@@ -357,14 +390,14 @@ export class DragElement extends LitElement {
       this.#acceptedDropzone = null;
 
       if (dropAccepted && acceptedDropzone) {
-        acceptedDropzone.deref()?.dispatchEvent(new ThaDragEvent(
-          'thadropend',
+        acceptedDropzone.deref()?.dispatchEvent(new DragDropEvent(
+          'tp-dropzone-drop-end',
           { dragTarget: new WeakRef(this), dropzoneTarget: acceptedDropzone },
           event
         ));
       }
 
-      this.dispatchEvent(new ThaDragEvent('thadragend', { dragTarget: new WeakRef(this) }, event));
+      this.dispatchEvent(new DragDropEvent('tp-drag-end', { dragTarget: new WeakRef(this) }, event));
     };
 
     if (hasTransition) this.addEventListener('transitionend', clear, { once: true });
@@ -379,23 +412,23 @@ export class DragElement extends LitElement {
   #handleDrag = (event: DragEvent) => {
     const { x, y } = event;
 
-    this.style.setProperty('--tha-cx', `${x}px`);
-    this.style.setProperty('--tha-cy', `${y}px`);
+    this.style.setProperty('--tp-drag-cx', `${x}px`);
+    this.style.setProperty('--tp-drag-cy', `${y}px`);
   };
 
   /**
    * Handles the drop zone enter event.
    * This updates the draggedOver property to indicate which drop zone the element is currently over.
-   * @param event The ThaDragEvent for the drop zone enter.
+   * @param event The DragDropEvent for the drop zone enter.
    */
-  #handleDropZoneEnter = (event: ThaDragEvent) => {
+  #handleDropZoneEnter = (event: DragDropEvent) => {
     this.draggedOver = event.dropzoneTarget?.deref()?.name ?? '';
   };
 
   /**
    * Handles the drop zone leave event.
    * This clears the draggedOver property when the element leaves a drop zone.
-   * @param event The ThaDragEvent for the drop zone leave.
+   * @param event The DragDropEvent for the drop zone leave.
    */
   #handleDropZoneLeave = () => {
     this.draggedOver = null;
@@ -407,7 +440,7 @@ export class DragElement extends LitElement {
    * @returns The cloned element.
    */
   #createClone() {
-    const container = document.createElement('tha-drag-clone');
+    const container = document.createElement('tp-drag-clone');
 
     Object.values(this.attributes)
       .filter(attr => !['dragging', 'replaceclone', 'draggable'].includes(attr.name))
@@ -445,7 +478,7 @@ export class DragElement extends LitElement {
     const props = { width, height, left, top, x, y };
 
     for (const prop in props) {
-      this.style.setProperty(`--tha-${prop}`, `${props[prop as keyof typeof props]}px`);
+      this.style.setProperty(`--tp-drag-${prop}`, `${props[prop as keyof typeof props]}px`);
     }
   }
 

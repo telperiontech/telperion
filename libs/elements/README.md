@@ -179,6 +179,39 @@ import "@telperion/elements/details-set";
 
 ---
 
+### Drag & Drop
+
+Declarative drag and drop on top of the native HTML Drag and Drop API. The dragged element itself follows the pointer (no browser ghost image) and animates into its drop target, or back home.
+
+**Includes:**
+- `<tp-drag>` &mdash; a draggable element
+- `<tp-drag-handle>` &mdash; restricts where its `<tp-drag>` can be grabbed
+- `<tp-dropzone>` &mdash; a drop target
+
+**Features:**
+- Style the drag with plain CSS: `[dragging]`, `[dragend]`, `[dropaccepted]` on the element; `[acceptabledrag]`, `[itemdragged]` on drop zones
+- `accept="task, bug"` filters drop zones by the dragged element's `name`
+- `event.acceptDrop(rect)` animates the element into a target rectangle; move it in the DOM on `tp-dropzone-drop-end`
+- `data-drag-*` attributes travel with the drag as `event.dragData`
+- `replaceclone` leaves a placeholder in place while the element is away
+- Typed, bubbling `DragDropEvent`s for every step of the drag
+
+#### JS/TS
+```ts
+import "@telperion/elements/drag-drop";
+```
+
+#### HTML
+```html
+<tp-drag name="task" data-drag-id="42" replaceclone>Write the docs</tp-drag>
+
+<tp-dropzone name="done" accept="task">Done</tp-dropzone>
+```
+
+[Drag & Drop Documentation →](./src/drag-drop/README.md)
+
+---
+
 ### Popover
 
 Framework-agnostic popover element built on the native [Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API) and [CSS Anchor Positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning). Placement is **pure CSS** — JavaScript only parses attributes, resolves the anchor, and (optionally) wires triggers.

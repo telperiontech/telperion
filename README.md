@@ -231,13 +231,13 @@ debounce(() => console.log('Debounced!'), 300);
 import '@telperion/elements/drag-drop';
 </script>
 
-<tha-drag name="item" draggingStrategy="move">
+<tp-drag name="item" replaceclone>
   <div>Drag me!</div>
-</tha-drag>
+</tp-drag>
 
-<tha-dropzone accept="item">
+<tp-dropzone accept="item">
   <div>Drop here!</div>
-</tha-dropzone>
+</tp-dropzone>
 ```
 
 **RxJS Utilities:**

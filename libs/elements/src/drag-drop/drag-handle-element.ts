@@ -7,11 +7,24 @@ import { REGISTER_HANDLE_PROP, UNREGISTER_HANDLE_PROP } from "./private-props";
 
 declare global {
   interface HTMLElementTagNameMap {
-    "tha-drag-handle": DragHandleElement;
+    /**
+     * Restricts where a `<tp-drag>` can be grabbed. Once a `<tp-drag>` has at
+     * least one handle among its descendants, dragging only starts from one of
+     * them. A handle belongs to its nearest `<tp-drag>` ancestor.
+     *
+     * @example
+     * ```html
+     * <tp-drag>
+     *   <tp-drag-handle>⠿</tp-drag-handle>
+     *   Only the dots start a drag; this text can be selected.
+     * </tp-drag>
+     * ```
+     */
+    "tp-drag-handle": DragHandleElement;
   }
 }
 
-@customElement("tha-drag-handle")
+@customElement("tp-drag-handle")
 export class DragHandleElement extends LitElement {
   get #parent(): DragElement | null {
     for (const parent of getParents(this)) {

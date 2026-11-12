@@ -1,24 +1,24 @@
-import type { ThaDragEvent } from './tha-drag-event';
+import type { DragDropEvent } from './drag-drop-event';
 
 declare global {
   interface GlobalEventHandlersEventMap {
-    thadrag: ThaDragEvent;
-    thadragstart: ThaDragEvent;
-    thadragend: ThaDragEvent;
-    thadrop: ThaDragEvent;
-    thadropend: ThaDragEvent;
-    thadropped: ThaDragEvent;
-    thadragenter: ThaDragEvent;
-    thadragleave: ThaDragEvent;
-    thadragover: ThaDragEvent;
-    thadropzoneenter: ThaDragEvent;
-    thadropzoneleave: ThaDragEvent;
-    thadropzoneover: ThaDragEvent;
+    'tp-drag-move': DragDropEvent;
+    'tp-drag-start': DragDropEvent;
+    'tp-drag-end': DragDropEvent;
+    'tp-dropzone-drop': DragDropEvent;
+    'tp-dropzone-drop-end': DragDropEvent;
+    'tp-drag-drop': DragDropEvent;
+    'tp-dropzone-enter': DragDropEvent;
+    'tp-dropzone-leave': DragDropEvent;
+    'tp-dropzone-over': DragDropEvent;
+    'tp-drag-zone-enter': DragDropEvent;
+    'tp-drag-zone-leave': DragDropEvent;
+    'tp-drag-zone-over': DragDropEvent;
   }
 }
 
 export { DragElement } from './drag-element';
 export { DropZoneElement } from './dropzone-element';
 export { DragHandleElement } from './drag-handle-element';
-export { ThaDragEvent } from './tha-drag-event';
-export type { DragElementEventTypes, DropElementEventTypes, ThaDragEventTypes } from './tha-drag-event';
+export { DragDropEvent } from './drag-drop-event';
+export type { DragElementEventTypes, DropElementEventTypes, DragDropEventTypes } from './drag-drop-event';
