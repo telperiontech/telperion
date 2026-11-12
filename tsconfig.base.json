@@ -37,6 +37,7 @@
       "@telperion/elements/popover": ["libs/elements/src/popover/index.ts"],
       "@telperion/elements/portal": ["libs/elements/src/portal/index.ts"],
       "@telperion/elements/code": ["libs/elements/src/code/index.ts"],
+      "@telperion/elements/date": ["libs/elements/src/date/index.ts"],
       "@telperion/elements/router": ["libs/elements/src/router/index.ts"],
       "@telperion/elements/icon": ["libs/elements/src/icon/index.ts"],
       "@telperion/elements/icon/icon.css": ["libs/elements/src/icon/icon.css"],
