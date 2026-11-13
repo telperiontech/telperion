@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CheckPaintlet } from './check';
 import { LowPolyMeshPaintlet } from './low-poly-mesh';
 import { PalGradientPaintlet } from './pal-gradient';
+import { PlexusPaintlet } from './plexus';
 import { RainPaintlet } from './rain';
 import { RipplePaintlet } from './ripple';
 import { PaintletClass } from './register';
@@ -15,6 +16,7 @@ describe.each([
   ['tp-check', CheckPaintlet],
   ['tp-low-poly-mesh', LowPolyMeshPaintlet],
   ['tp-pal-gradient', PalGradientPaintlet],
+  ['tp-plexus', PlexusPaintlet],
   ['tp-rain', RainPaintlet],
   ['tp-ripple', RipplePaintlet],
 ] as [string, PaintletClass][])('%s worklet source', (name, worklet) => {
@@ -38,7 +40,7 @@ describe('paintlet property definitions', () => {
     'number', 'percentage', 'resolution', 'string', 'time', 'transform-function', 'transform-list', 'url',
   ]);
 
-  it.each([CheckPaintlet, LowPolyMeshPaintlet, PalGradientPaintlet, RainPaintlet, RipplePaintlet].flatMap(
+  it.each([CheckPaintlet, LowPolyMeshPaintlet, PalGradientPaintlet, PlexusPaintlet, RainPaintlet, RipplePaintlet].flatMap(
     worklet => (worklet as PaintletClass).PROPERTIES ?? []
   ).map(property => [property.name, property.syntax]))('%s has a valid syntax', (_, syntax) => {
     for (const component of syntax.split('|').map(part => part.trim().replace(/[+#]$/, ''))) {

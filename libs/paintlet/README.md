@@ -229,6 +229,35 @@ Combine point movement with color transitions for mesmerizing effects:
 }
 ```
 
+#### Plexus
+
+Drifting dots that bounce off the element edges, joined by lines that fade in as two dots get closer (a "particle network" background).
+
+**Custom Properties:**
+- `--tp-plexus-dot-color`: Dot color (default: `#666666`)
+- `--tp-plexus-line-color`: Line color (default: `#666666`)
+- `--tp-plexus-density`: Area in px² per dot, lower means more dots (default: `10000`)
+- `--tp-plexus-dot-size`: Dot diameter in px (default: `3.5`)
+- `--tp-plexus-line-width`: Line width in px (default: `1`)
+- `--tp-plexus-proximity`: Max distance in px for two dots to be joined (default: `100`)
+- `--tp-plexus-max-laps`: Max edge-to-edge round trips per axis per animation cycle (default: `2`)
+- `--tp-plexus-seed`: Seed for the dot layout (default: `1`)
+- `--tp-plexus-frame`: Animation frame from 0 to 100 (default: `0`)
+
+**Animated Example:**
+
+```css
+.hero {
+  background-color: #0b1a2e;
+  background-image: --tp-plexus();
+  animation: --tp-plexus-animation(60s);
+  --tp-plexus-dot-color: #eeeeee;
+  --tp-plexus-line-color: #eeeeee;
+}
+```
+
+Each dot makes a whole number of round trips per cycle, so the loop is seamless. The distance travelled scales with the element size, so larger elements need longer durations to keep a calm pace.
+
 ## Browser Support
 
 CSS Paint API is supported in:

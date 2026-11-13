@@ -5,3 +5,4 @@ export * from './rain';
 export * from './pal-gradient';
 export * from './check';
 export * from './low-poly-mesh';
+export * from './plexus';

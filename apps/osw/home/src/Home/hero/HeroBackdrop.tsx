@@ -1,10 +1,30 @@
-/** Soft, static color washes behind the hero: primary, secondary and tertiary. */
+import '@telperion/paintlet/plexus';
+import type { CSSProperties } from 'react';
+
+/**
+ * Plain `paint()` and `@keyframes` rather than the `--tp-plexus()` CSS
+ * functions, which need `@function` support. Without the Paint API the
+ * declaration is dropped and the hero stays plain.
+ */
+const plexusStyle = {
+	backgroundImage: '--tp-plexus()',
+	'--tp-plexus-dot-color': 'var(--color-secondary-300)',
+	'--tp-plexus-line-color': 'var(--color-primary-200)',
+	'--tp-plexus-density': 9000,
+	'--tp-plexus-dot-size': 3,
+	'--tp-plexus-proximity': 120,
+	'--tp-plexus-max-laps': 1,
+	// Fade out toward the bottom so the network blends into the next section
+	maskImage: 'linear-gradient(to bottom, black 55%, transparent)',
+} as CSSProperties;
+
+/** Animated particle network behind the hero, drawn by the `tp-plexus` paintlet. */
 export function HeroBackdrop() {
 	return (
-		<div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-			<div className="absolute -top-48 left-[10%] size-[32rem] rounded-full bg-radial from-primary-200 to-transparent to-70%" />
-			<div className="absolute -top-56 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-radial from-secondary-200 to-transparent to-70%" />
-			<div className="absolute -top-32 right-[8%] size-[28rem] rounded-full bg-radial from-tertiary-200 to-transparent to-70%" />
-		</div>
+		<div
+			aria-hidden="true"
+			className="pointer-events-none absolute inset-0 -z-10 animate-[tp-plexus-animation_90s_linear_infinite] motion-reduce:animate-none"
+			style={plexusStyle}
+		/>
 	);
 }
