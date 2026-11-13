@@ -39,6 +39,8 @@ jobs:
           OSW_JS_UTILS_URL: https://js-utils.open-source.telperion.tr
           OSW_PAINTLET_URL: https://paintlet.open-source.telperion.tr
           OSW_ELEMENTS_URL: https://elements.open-source.telperion.tr
+          # Public GA4 measurement ID (repository variable); empty disables analytics and the consent banner
+          GOOGLE_ANALYTICS_ID: ${{ vars.GOOGLE_ANALYTICS_ID }}
 
       - name: Create firebase.json
         run: |

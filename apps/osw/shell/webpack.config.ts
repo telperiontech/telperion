@@ -24,7 +24,11 @@ const config = composePlugins(
     config.plugins.push(
       new Dotenv({
         path: 'apps/osw/shell/.env',
-        prefix: 'import.meta.env.'
+        prefix: 'import.meta.env.',
+        // CI has no `.env`: values come from the workflow's environment
+        systemvars: true,
+        // Every documented key exists (empty when unset), so `import.meta.env.X` is never left untransformed
+        defaults: 'apps/osw/shell/.env.template'
       })
     )
 

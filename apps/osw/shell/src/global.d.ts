@@ -15,7 +15,8 @@ declare global {
   }
 
   interface Window {
-    dataLayer: Record<string, any>[];
+    /** gtag.js command queue; `window.gtag` itself is declared by `@osw/core` */
+    dataLayer: unknown[];
   }
 }
 

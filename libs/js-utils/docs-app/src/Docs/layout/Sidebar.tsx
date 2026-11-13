@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchTracking } from '@osw/docs';
 import { Icon } from '@osw/react';
 import { entriesOf, matchesQuery, model } from '../model';
 import { docsPath } from '../routing';
@@ -24,6 +25,8 @@ export function Sidebar({ activeId, onNavigate }: SidebarProps) {
 				.filter((group) => group.entries.length),
 		[query],
 	);
+
+	useSearchTracking(query, groups.reduce((count, group) => count + group.entries.length, 0));
 
 	return (
 		<nav aria-label="Modules" className="text-sm">

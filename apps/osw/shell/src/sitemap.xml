@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pages owned by the shell itself; docs remotes list theirs in their own sitemaps (see robots.txt) -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://open-source.telperion.tr/</loc></url>
+</urlset>

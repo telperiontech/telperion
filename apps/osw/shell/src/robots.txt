@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# The shell's own pages
+Sitemap: https://open-source.telperion.tr/sitemap.xml
+
+# Each docs remote publishes the list of its pages (on this origin) with its own deploy,
+# so new docs pages are listed without a shell release. Add a line per new remote.
+Sitemap: https://js-utils.open-source.telperion.tr/sitemap.xml
+Sitemap: https://paintlet.open-source.telperion.tr/sitemap.xml
+Sitemap: https://elements.open-source.telperion.tr/sitemap.xml

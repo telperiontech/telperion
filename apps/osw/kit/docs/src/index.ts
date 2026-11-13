@@ -6,6 +6,7 @@
  * Remotes must add `@source "<path>/apps/osw/kit/docs/src"` to their Tailwind entry
  * so the classes used here are generated.
  */
+export * from './analytics';
 export * from './code';
 export * from './home';
 export * from './layout';

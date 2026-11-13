@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+import { trackEvent } from '@osw/core';
+
 interface NotFoundProps {
 	title: string;
 	backHref: string;
@@ -7,8 +10,10 @@ interface NotFoundProps {
 	className?: string;
 }
 
-/** 404 body for a docs remote */
+/** 404 body for a docs remote; reports `page_not_found` so broken links show up in analytics */
 export function NotFound({ title, backHref, backLabel, message = 'It may have been renamed or removed in this version.', className = 'py-16' }: NotFoundProps) {
+	useEffect(() => trackEvent('page_not_found', { page_location: window.location.href }), []);
+
 	return (
 		<div className={`text-center ${className}`}>
 			<p className="font-mono text-sm font-semibold text-primary-600">404</p>

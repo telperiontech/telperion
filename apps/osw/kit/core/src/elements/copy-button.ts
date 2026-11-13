@@ -1,3 +1,5 @@
+import { trackEvent } from '../analytics';
+
 const HOST_CLASSES = [
 	'grid', 'place-items-center', 'size-7', 'rounded-md', 'text-neutral-850',
 	'hover:text-neutral-990', 'hover:bg-neutral-50', 'transition-colors',
@@ -75,6 +77,9 @@ export class OswCopyButton extends HTMLElement {
 			// Clipboard can be unavailable (insecure context, denied permission); fail quietly.
 			return;
 		}
+
+		// Mostly install commands: the clearest sign a visitor is about to use a library
+		trackEvent('copy_snippet', { snippet: this.text.slice(0, 100) });
 
 		this.#copied = true;
 		this.#sync();

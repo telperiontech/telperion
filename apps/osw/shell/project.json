@@ -70,7 +70,9 @@
         "tsConfig": "apps/osw/shell/tsconfig.app.json",
         "assets": [
           "apps/osw/shell/src/assets",
-          { "input": "apps/osw/shell/src", "glob": "404.html", "output": "." }
+          { "input": "apps/osw/shell/src", "glob": "404.html", "output": "." },
+          { "input": "apps/osw/shell/src", "glob": "robots.txt", "output": "." },
+          { "input": "apps/osw/shell/src", "glob": "sitemap.xml", "output": "." }
         ],
         "styles": ["apps/osw/shell/src/styles/styles.css"],
         "postcssConfig": "apps/osw/shell/postcss.config.cjs",

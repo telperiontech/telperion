@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import type { Configuration, RuleSetRule } from 'webpack';
-import { configureSwcForLit, docsRemoteConfig, skipWorkspaceLicense } from '@osw/build';
+import { configureSwcForLit, docsRemoteConfig, skipWorkspaceLicense, withSitemap } from '@osw/build';
+import { sitemap } from './sitemap';
 
 /** `*.stories.ts?meta` (the docs page's copy) loses its element-defining side-effect imports */
 function stripStorySideEffects(config: Configuration): void {
@@ -29,4 +30,5 @@ export default docsRemoteConfig(
 	stripStorySideEffects,
 	keepRuntimeImportMeta,
 	skipWorkspaceLicense,
+	withSitemap(sitemap),
 );

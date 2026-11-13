@@ -1,3 +1,4 @@
-import { docsRemoteConfig } from '@osw/build';
+import { docsRemoteConfig, withSitemap } from '@osw/build';
+import { sitemap } from './sitemap';
 
-export default docsRemoteConfig('osw/js-utils');
+export default docsRemoteConfig('osw/js-utils', withSitemap(sitemap));

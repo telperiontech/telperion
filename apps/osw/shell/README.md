@@ -12,7 +12,7 @@ cp apps/osw/shell/.env.template apps/osw/shell/.env
 - `OSW_JS_UTILS_URL`: base URL of the `osw/js-utils` docs remote (`https://js-utils.open-source.telperion.local` locally).
 - `OSW_PAINTLET_URL`: base URL of the `osw/paintlet` docs remote (`https://paintlet.open-source.telperion.local` locally).
 - `OSW_ELEMENTS_URL`: base URL of the `osw/elements` docs remote (`https://elements.open-source.telperion.local` locally).
-- `GOOGLE_ANALYTICS_ID`: your Google Analytics measurement ID (for example `G-XXXXXXXXXX`); optional locally.
+- `GOOGLE_ANALYTICS_ID`: your Google Analytics measurement ID (for example `G-XXXXXXXXXX`); optional locally. When empty, gtag and the consent banner are not loaded. In CI it comes from the `GOOGLE_ANALYTICS_ID` repository variable (see `src/analytics/`).
 - Do NOT commit your local `.env` to git. Add `apps/osw/shell/.env` to your `.gitignore` if it is not already ignored.
 
 How the app reads these values

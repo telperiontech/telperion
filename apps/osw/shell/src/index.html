@@ -126,7 +126,11 @@
 
     <div class="border-t border-neutral-100">
       <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-neutral-850 sm:px-6">
-        <p>© <tp-date format="YYYY"></tp-date> Telperion. Released under the MIT License.</p>
+        <p>
+          © <tp-date format="YYYY"></tp-date> Telperion. Released under the MIT License.
+          <!-- Revealed by <osw-consent-banner>, which only exists when analytics is configured -->
+          <button type="button" hidden data-osw-consent-open class="ml-2 cursor-pointer underline-offset-2 hover:text-neutral-990 hover:underline">Cookie settings</button>
+        </p>
         <!-- Remote-specific note, e.g. which version the docs were generated from -->
         <tp-portal-outlet name="osw-footer-note">
           <tp-portal-outlet-fallback>
@@ -136,6 +140,9 @@
       </div>
     </div>
   </footer>
+
+  <!-- Google Analytics consent; defined only when GOOGLE_ANALYTICS_ID is set -->
+  <osw-consent-banner hidden></osw-consent-banner>
 </body>
 
 </html>
