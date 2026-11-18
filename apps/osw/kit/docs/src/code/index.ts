@@ -1,3 +1,3 @@
 export { CodeBlock } from './CodeBlock';
-export { namedImport, sideEffectImport } from './imports';
+export { namedImport, sideEffectImport, typeImport } from './imports';
 export { Code, CodeLine } from '@osw/react';

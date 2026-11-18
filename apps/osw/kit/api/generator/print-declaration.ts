@@ -95,10 +95,20 @@ export function printVariable(node: ts.VariableDeclaration, checker: ts.TypeChec
 	return `const ${node.name.getText()}: ${type};`;
 }
 
+/**
+ * Type alias as written, minus `export`/`declare`: the printer puts a whole conditional type
+ * on one line, while the source is usually wrapped for reading
+ */
+function printTypeAlias(node: ts.TypeAliasDeclaration): string {
+	const printed = print(f.updateTypeAliasDeclaration(node, keptModifiers(node), node.name, node.typeParameters, node.type), node.getSourceFile());
+
+	if (!node.getText().includes('\n')) return printed;
+
+	return node.getText().replace(/^(?:(?:export|declare|default)\s+)+/, '');
+}
+
 export function printTypeLike(node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration | ts.EnumDeclaration): string {
-	if (ts.isTypeAliasDeclaration(node)) {
-		return print(f.updateTypeAliasDeclaration(node, keptModifiers(node), node.name, node.typeParameters, node.type), node.getSourceFile());
-	}
+	if (ts.isTypeAliasDeclaration(node)) return printTypeAlias(node);
 
 	if (ts.isInterfaceDeclaration(node)) {
 		return print(f.updateInterfaceDeclaration(node, keptModifiers(node), node.name, node.typeParameters, node.heritageClauses, node.members), node.getSourceFile());

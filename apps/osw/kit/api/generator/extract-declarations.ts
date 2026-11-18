@@ -64,7 +64,8 @@ export function extractDeclarations(sourceFile: ts.SourceFile, checker: ts.TypeC
 	return collect(sourceFile, checker).map(toDocsDeclaration);
 }
 
-const camelCase = (fileName: string) => fileName.replace(/-(\w)/g, (_, char: string) => char.toUpperCase());
+/** `smart-map` → `smartMap`; a role suffix is dropped first: `partial-some.type` → `partialSome` */
+const camelCase = (fileName: string) => fileName.replace(/\.[\w-]+$/, '').replace(/-(\w)/g, (_, char: string) => char.toUpperCase());
 
 /** The declaration a module is named after (`smart-map` → `SmartMap`), else its first function or class */
 export function pickPrimary(declarations: DocsDeclaration[], baseName: string): DocsDeclaration | undefined {

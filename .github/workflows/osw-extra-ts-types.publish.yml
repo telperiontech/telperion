@@ -1,0 +1,29 @@
+name: OSW / Extra TS Types Docs / Publish
+
+# Deploys the extra-ts-types docs remote (https://open-source.telperion.tr/extra-ts-types).
+# - Called by extra-ts-types.publish.yml after every npm release, with that release's version.
+# - Pushing an `osw-extra-ts-types-vX.Y.Z` tag redeploys UI-only changes; the version shown is
+#   then the latest `extra-ts-types-v*` tag.
+
+on:
+  push:
+    tags:
+      - 'osw-extra-ts-types-v[0-9]+.[0-9]+.[0-9]+'
+  workflow_call:
+    inputs:
+      package-version:
+        description: extra-ts-types version the docs are generated for
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/osw-deploy.yml
+    permissions:
+      contents: read
+      deployments: write
+    with:
+      project: osw/extra-ts-types
+      site: osw-extra-ts-types
+      package-version: ${{ inputs.package-version }}
+    secrets: inherit

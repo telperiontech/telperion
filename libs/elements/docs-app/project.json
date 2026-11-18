@@ -18,7 +18,6 @@
   "targets": {
     "serve": {
       "dependsOn": [
-        "osw:mediator",
         "generate-model",
         "build/preview"
       ],

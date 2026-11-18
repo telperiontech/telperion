@@ -2,6 +2,7 @@
   { "name": "home", "route": "/", "module": "Home", "sitemap": false },
   { "name": "js-utils" },
   { "name": "ts-utils" },
+  { "name": "extra-ts-types" },
   { "name": "paintlet" },
   { "name": "elements" }
 ]

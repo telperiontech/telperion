@@ -43,6 +43,15 @@ export interface DocsExtension {
 	description: string;
 }
 
+/** A `var`/`let`/`const`/`function` a base module declares in `declare global`, e.g. a type-only polyfill */
+export interface DocsGlobal {
+	name: string;
+	/** Printed declaration, comments removed, e.g. `var URLPattern: URLPatternConstructor;` */
+	signature: string;
+	/** Doc comment of the declaration, as markdown */
+	description: string;
+}
+
 /** One importable module, e.g. `@telperion/js-utils/array/difference` */
 export interface DocsEntry {
 	/** Module path inside the package, also the docs URL path: `array/difference` */
@@ -53,6 +62,8 @@ export interface DocsEntry {
 	primary: DocsDeclaration;
 	related: DocsDeclaration[];
 	extensions: DocsExtension[];
+	/** Globals declared when the module is imported for its side effect */
+	globals: DocsGlobal[];
 }
 
 export interface DocsCategory {

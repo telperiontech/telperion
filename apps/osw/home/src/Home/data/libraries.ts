@@ -46,6 +46,7 @@ export const libraries: Library[] = [
 		ecosystem: 'core',
 		icon: 'category',
 		type: 'npm',
+		docsPath: '/extra-ts-types',
 	},
 	{
 		name: '@telperion/rx-utils',

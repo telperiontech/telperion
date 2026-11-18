@@ -40,7 +40,8 @@ export function docsRemoteTargets({ name, root, modelScript }: DocsRemote): Reco
 	const targets: Record<string, TargetConfiguration> = {
 		serve: {
 			executor: '@thalesrc/nx-utils:run-parallel',
-			dependsOn: ['osw:mediator', ...model],
+			// The local gateway (`nx run osw:mediator`) is started separately, so serving works without Docker
+			dependsOn: [...model],
 			options: {
 				commands: [
 					{ command: `nx run ${name}:build/tailwind-config -- --watch`, readyWhen: 'Sass is watching for changes' },

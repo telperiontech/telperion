@@ -9,6 +9,7 @@ const STYLES: Record<string, string> = {
 	enum: 'border-neutral-100 bg-neutral-30 text-neutral-920',
 	prototype: 'border-quaternary-200 bg-quaternary-100 text-quaternary-850',
 	static: 'border-success-200 bg-success-100 text-success-850',
+	global: 'border-warning-200 bg-warning-100 text-warning-850',
 };
 const LABELS: Record<string, string> = { variable: 'const', prototype: 'proto' };
 
@@ -23,3 +24,6 @@ export function KindBadge({ kind }: { kind: string }) {
 
 /** Distinct extension kinds of an entry, for badges (two proto modules → one "proto") */
 export const extensionKinds = (entry: DocsEntry) => [...new Set(entry.extensions.map((extension) => extension.kind))];
+
+/** Badges beside an entry's declaration kind: its extension kinds, then `global` when it declares globals */
+export const entryKinds = (entry: DocsEntry): string[] => [...extensionKinds(entry), ...(entry.globals.length ? ['global'] : [])];

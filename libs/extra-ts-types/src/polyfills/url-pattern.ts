@@ -116,16 +116,29 @@ export interface URLPatternResult {
 }
 
 /**
- * The URLPattern API provides a way to match URLs against a pattern.
- * The pattern syntax is based on the path-to-regexp library used in Express.js.
+ * ### URLPattern
  *
- * @example
+ * Type declarations for the URLPattern Web API, which matches URLs against a pattern
+ *
+ * TypeScript's DOM library does not declare `URLPattern` yet. Import this module once, for its
+ * side effect, to declare the global `URLPattern` constructor; import the interfaces with
+ * `import type` wherever you annotate values. This module only declares types: in runtimes
+ * without native support, load a runtime polyfill such as `urlpattern-polyfill` as well.
+ *
+ * The pattern syntax is based on the path-to-regexp library used by Express.
+ *
+ * * * *
+ * Example usage:
  * ```typescript
- * const pattern = new URLPattern({ pathname: '/books/:id' });
- * const result = pattern.exec('https://example.com/books/123');
- * console.log(result?.pathname.groups.id); // '123'
- * ```
+ * import "@telperion/extra-ts-types/polyfills/url-pattern";
+ * import type { URLPattern } from "@telperion/extra-ts-types/polyfills/url-pattern";
  *
+ * const pattern: URLPattern = new URLPattern({ pathname: "/books/:id" });
+ *
+ * pattern.test("https://example.com/books/123"); // true
+ * pattern.exec("https://example.com/books/123")?.pathname.groups.id; // "123"
+ * ```
+ * * * *
  * @see https://developer.mozilla.org/en-US/docs/Web/API/URLPattern
  */
 export interface URLPattern {
@@ -217,7 +230,7 @@ export interface URLPatternConstructor {
 
 declare global {
   /**
-   * The URLPattern API provides a way to match URLs against a pattern.
+   * The URLPattern constructor, available in browsers and runtimes that implement the URLPattern API.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/URLPattern
    */

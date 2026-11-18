@@ -34,8 +34,16 @@ staticProxies()
 		proxies.forEach((proxy) => console.log(`mediator: ${proxy}`));
 		execSync(`docker compose -f "${COMPOSE_FILE}" up --build -d`, {
 			stdio: 'inherit',
-			env: { ...process.env, OSW_STATIC_PROXIES: proxies.join(',') },
+			env: {
+				...process.env,
+				OSW_STATIC_PROXIES: proxies.join(','),
+				// Compose builds through `buildx bake`, which refuses to read the gateway's build context
+				// (libs/auto-proxy) because it lies outside the compose file's folder; that path is ours
+				BUILDX_BAKE_ENTITLEMENTS_FS: '0',
+			},
 		});
+		// The Nx daemon connection opened by createProjectGraphAsync keeps the process alive
+		process.exit(0);
 	})
 	.catch((error) => {
 		console.error(error);

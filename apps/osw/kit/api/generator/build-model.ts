@@ -3,6 +3,7 @@ import type { DocsCategory, DocsEntry, DocsModel } from '../src/model/types';
 import { rootCategory, type ApiModelConfig } from './config';
 import { extractDeclarations, pickPrimary } from './extract-declarations';
 import { extractExtension } from './extract-extension';
+import { extractGlobals } from './extract-globals';
 import { listModuleFiles, type ModuleFile } from './module-files';
 import { getSourceFile } from './program';
 
@@ -21,6 +22,7 @@ function buildEntry(module: ModuleFile, program: ts.Program, config: ApiModelCon
 		primary,
 		related: declarations.filter((declaration) => declaration !== primary),
 		extensions: [],
+		globals: extractGlobals(sourceFile),
 	};
 }
 

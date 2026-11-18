@@ -1,15 +1,15 @@
 import { useApiDocs } from '../config';
-import { extensionKinds, KindBadge } from '../entry';
+import { entryKinds, KindBadge } from '../entry';
 import type { DocsEntry } from '../model';
 
-/** Linked rows of entries with their summary and badges (extension kinds, or the declaration kind) */
+/** Linked rows of entries with their summary and badges (extension kinds and `global`, or the declaration kind) */
 export function EntryList({ entries }: { entries: DocsEntry[] }) {
 	const { docsPath } = useApiDocs();
 
 	return (
 		<ul className="divide-y divide-neutral-100 rounded-xl border border-neutral-100">
 			{entries.map((entry) => {
-				const kinds = extensionKinds(entry);
+				const kinds = entryKinds(entry);
 
 				return (
 					<li key={entry.id}>

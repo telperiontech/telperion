@@ -22,10 +22,16 @@ const ga = import.meta.env.GOOGLE_ANALYTICS_ID;
 - If your editor/TypeScript doesn't pick up `import.meta.env` types, restart the TypeScript server (VS Code: "TypeScript: Restart TS Server"). The available keys are declared in `apps/osw/shell/src/global.d.ts`.
 
 Running the app
-- Start the app in development with Nx (use pnpm):
+- Start the shell and every remote (dev servers on ports 4200+) with Nx (use pnpm):
 
 ```bash
-pnpm nx run osw/shell:serve
+pnpm nx run osw:serve
+```
+
+- The apps are reached through the local HTTPS gateway (`https://<name>.open-source.telperion.local`), a Docker container that `serve` does not start, so you can switch between projects' gateways freely. Start or refresh it when needed (also after adding a remote, so it proxies the new port):
+
+```bash
+pnpm nx run osw:mediator
 ```
 
 Notes and troubleshooting

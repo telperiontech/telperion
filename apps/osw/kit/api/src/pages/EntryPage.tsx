@@ -1,10 +1,12 @@
 import { Code, ExternalLink, Icon } from '@osw/react';
-import { CodeLine, namedImport, sourceUrl } from '@osw/docs';
+import { CodeLine, namedImport, sourceUrl, typeImport } from '@osw/docs';
 import { useApiDocs } from '../config';
-import { DeclarationDetails, ExtensionSection, extensionKinds, KindBadge } from '../entry';
-import type { DocsEntry } from '../model';
+import { DeclarationDetails, entryKinds, ExtensionSection, GlobalsSection, KindBadge } from '../entry';
+import type { DeclarationKind, DocsEntry } from '../model';
 
 const sectionTitle = 'mt-12 text-lg font-semibold tracking-tight';
+/** Kinds that exist only at the type level, so the import line uses `import type` */
+const TYPE_ONLY: DeclarationKind[] = ['type', 'interface'];
 
 export function EntryPage({ entry }: { entry: DocsEntry }) {
 	const { name, overviewPath, docsPath, getCategory } = useApiDocs();
@@ -23,12 +25,12 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 				<div className="flex flex-wrap items-center gap-3">
 					<h1 className="font-mono text-2xl font-semibold tracking-tight sm:text-3xl">{primary.name}</h1>
 					<KindBadge kind={primary.kind} />
-					{extensionKinds(entry).map((kind) => <KindBadge key={kind} kind={kind} />)}
+					{entryKinds(entry).map((kind) => <KindBadge key={kind} kind={kind} />)}
 				</div>
 				{primary.summary && <p className="mt-3 text-base leading-relaxed text-neutral-920">{primary.summary}</p>}
 				<div className="mt-5 flex flex-wrap items-center gap-3">
 					<div className="min-w-0 flex-1">
-						<CodeLine code={namedImport([primary.name], entry.importPath)} language="ts" />
+						<CodeLine code={(TYPE_ONLY.includes(primary.kind) ? typeImport : namedImport)([primary.name], entry.importPath)} language="ts" />
 					</div>
 					<ExternalLink
 						href={sourceUrl(entry.sourcePath)}
@@ -41,6 +43,8 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 			</header>
 
 			<DeclarationDetails declaration={primary} summaryShown />
+
+			<GlobalsSection entry={entry} />
 
 			{entry.extensions.length > 0 && (
 				<section aria-labelledby="extensions">
