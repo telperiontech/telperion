@@ -3,6 +3,7 @@
   { "name": "js-utils" },
   { "name": "ts-utils" },
   { "name": "extra-ts-types" },
+  { "name": "rx-utils" },
   { "name": "paintlet" },
   { "name": "elements" }
 ]

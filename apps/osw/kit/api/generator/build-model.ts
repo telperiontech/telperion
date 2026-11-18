@@ -26,8 +26,12 @@ function buildEntry(module: ModuleFile, program: ts.Program, config: ApiModelCon
 	};
 }
 
-/** Base entry a `proto/`/`static/` module wraps: same category first, then root, then any category */
+/** Base entry a `proto/`/`static/` module wraps: the configured one, else by file name in the same category, then root, then any */
 function findBaseEntry(module: ModuleFile, entries: DocsEntry[], config: ApiModelConfig): DocsEntry | undefined {
+	const explicit = config.extensionBases?.[module.id];
+
+	if (explicit) return entries.find((entry) => entry.id === explicit);
+
 	const byName = entries.filter((entry) => entry.id.split('/').pop() === module.baseName);
 
 	return (

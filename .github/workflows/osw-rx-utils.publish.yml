@@ -1,0 +1,29 @@
+name: OSW / Rx Utils Docs / Publish
+
+# Deploys the rx-utils docs remote (https://open-source.telperion.tr/rx-utils).
+# - Called by rx-utils.publish.yml after every npm release, with that release's version.
+# - Pushing an `osw-rx-utils-vX.Y.Z` tag redeploys UI-only changes; the version shown is
+#   then the latest `rx-utils-v*` tag.
+
+on:
+  push:
+    tags:
+      - 'osw-rx-utils-v[0-9]+.[0-9]+.[0-9]+'
+  workflow_call:
+    inputs:
+      package-version:
+        description: rx-utils version the docs are generated for
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/osw-deploy.yml
+    permissions:
+      contents: read
+      deployments: write
+    with:
+      project: osw/rx-utils
+      site: osw-rx-utils
+      package-version: ${{ inputs.package-version }}
+    secrets: inherit

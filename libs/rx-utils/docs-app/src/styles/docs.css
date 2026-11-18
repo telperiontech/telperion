@@ -1,0 +1,14 @@
+/*
+ * The docs remote ships its own utilities so it can be redeployed on every rx-utils
+ * release without rebuilding the shell. Preflight and theme duplicate the shell's, harmlessly.
+ */
+@import './tailwind.config.css';
+
+@source "..";
+/* Classes used by the osw custom elements (e.g. <osw-copy-button>) */
+@source "../../../../../apps/osw/kit/core/src";
+/* Classes used by the shared docs kits */
+@source "../../../../../apps/osw/kit/api/src";
+@source "../../../../../apps/osw/kit/docs/src";
+/* Arg controls of the marble playgrounds */
+@source "../../../../../apps/osw/kit/stories/src/controls";

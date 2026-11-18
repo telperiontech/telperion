@@ -7,5 +7,5 @@
  */
 export * from './core';
 export { StoryCanvas, ZoomBadge, useFitZoom, type FitOptions } from './canvas';
-export { ControlsPanel } from './controls';
+export { ControlInput, ControlsPanel } from './controls';
 export { StoryHeader, StorySidebar, useStoryArgs } from './playground';

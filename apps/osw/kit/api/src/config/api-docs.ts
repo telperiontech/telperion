@@ -12,6 +12,11 @@ export interface ApiDocsOptions {
 	libRoot: string;
 	/** Content of the overview page (`basePath` itself) */
 	overview: ComponentType;
+	/**
+	 * Extra content under an entry page's header, e.g. an interactive demo. Rendered for every
+	 * entry; return `null` for entries without one.
+	 */
+	entryShowcase?: ComponentType<{ entry: DocsEntry }>;
 	/** The package ships a barrel per category (`<package>/array`); category pages then say so */
 	categoryBarrels?: boolean;
 	/**

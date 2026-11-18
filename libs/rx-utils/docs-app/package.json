@@ -1,0 +1,6 @@
+{
+  "name": "@osw/rx-utils-docs",
+  "private": true,
+  "description": "osw docs remote for @telperion/rx-utils. Resets the library's \"type\": \"module\" so the CommonJS generator scripts run under @swc-node/register.",
+  "type": "commonjs"
+}

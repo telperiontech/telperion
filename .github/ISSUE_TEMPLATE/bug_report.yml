@@ -31,7 +31,7 @@ body:
         - reactive-storage
         - rx-utils
         - ts-utils
-        - osw (shell / home / elements / js-utils / paintlet / ts-utils)
+        - osw (shell / home / elements / js-utils / paintlet / rx-utils / ts-utils)
         - Other / not sure
     validations:
       required: true

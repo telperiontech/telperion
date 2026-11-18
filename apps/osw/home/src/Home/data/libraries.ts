@@ -56,6 +56,7 @@ export const libraries: Library[] = [
 		ecosystem: 'core',
 		icon: 'water',
 		type: 'npm',
+		docsPath: '/rx-utils',
 	},
 	{
 		name: '@telperion/reactive-storage',

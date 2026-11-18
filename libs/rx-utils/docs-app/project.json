@@ -1,0 +1,14 @@
+{
+  "name": "osw/rx-utils",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/rx-utils/docs-app/src",
+  "projectType": "application",
+  "tags": ["scope:osw", "type:docs-app", "framework:react"],
+  "implicitDependencies": ["rx-utils", "osw/kit/tokens", "osw/kit/api", "osw/kit/stories"],
+  "metadata": { "description": "Docs remote with marble playgrounds; serve, build and generate-model targets are inferred for type:docs-app projects by apps/osw/kit/build/src/nx-plugin" },
+  "targets": {
+    "serve/app": {
+      "options": { "port": 4207 }
+    }
+  }
+}

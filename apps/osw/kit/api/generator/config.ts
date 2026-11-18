@@ -19,6 +19,11 @@ export interface ApiModelConfig {
 	rootCategory?: string;
 	/** Display order and copy for categories; unknown folders are appended with a generated title */
 	categories?: Record<string, ApiCategoryMeta>;
+	/**
+	 * Base entry of a `proto/`/`static/` module whose file name differs from it, e.g.
+	 * `{ 'static/async-iterator': 'to-async-iteratable' }`. Others are matched by file name.
+	 */
+	extensionBases?: Record<string, string>;
 }
 
 export const sourceRoot = (config: ApiModelConfig) => `${config.libRoot}/src`;

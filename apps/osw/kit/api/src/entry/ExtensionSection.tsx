@@ -3,8 +3,12 @@ import { CodeBlock, CodeLine, Markdown, sideEffectImport, sourceUrl } from '@osw
 import type { DocsExtension } from '../model';
 import { KindBadge } from './KindBadge';
 
-const usageName = (extension: DocsExtension, member: string) =>
-	extension.kind === 'prototype' ? `${extension.target}.prototype.${member}` : `${extension.target}.${member}`;
+/** `Array.prototype.remove`, `Promise.timeout`; computed members keep their brackets: `Observable.prototype[Symbol.asyncIterator]` */
+const usageName = (extension: DocsExtension, member: string) => {
+	const owner = extension.kind === 'prototype' ? `${extension.target}.prototype` : extension.target;
+
+	return member.startsWith('[') ? `${owner}${member}` : `${owner}.${member}`;
+};
 
 /** A `proto/` or `static/` module that installs the entry's function on a global */
 export function ExtensionSection({ extension }: { extension: DocsExtension }) {

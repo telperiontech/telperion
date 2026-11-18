@@ -9,7 +9,7 @@ const sectionTitle = 'mt-12 text-lg font-semibold tracking-tight';
 const TYPE_ONLY: DeclarationKind[] = ['type', 'interface'];
 
 export function EntryPage({ entry }: { entry: DocsEntry }) {
-	const { name, overviewPath, docsPath, getCategory } = useApiDocs();
+	const { name, overviewPath, docsPath, getCategory, entryShowcase: Showcase } = useApiDocs();
 	const { primary } = entry;
 	const category = getCategory(entry.category);
 
@@ -42,6 +42,8 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 				</div>
 			</header>
 
+			{Showcase && <Showcase key={entry.id} entry={entry} />}
+
 			<DeclarationDetails declaration={primary} summaryShown />
 
 			<GlobalsSection entry={entry} />
@@ -50,7 +52,7 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 				<section aria-labelledby="extensions">
 					<h2 id="extensions" className={sectionTitle}>Prototype &amp; static versions</h2>
 					<p className="mt-1 text-sm text-neutral-920">
-						Opt-in modules that install <Code code={primary.name} language="ts" /> on a built-in. Import them once, for their side effect.
+						Opt-in modules that install <Code code={primary.name} language="ts" /> on an existing class. Import them once, for their side effect.
 					</p>
 					<div className="mt-4 space-y-4">
 						{entry.extensions.map((extension) => <ExtensionSection key={extension.importPath} extension={extension} />)}
