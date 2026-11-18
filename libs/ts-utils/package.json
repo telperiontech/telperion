@@ -1,9 +1,9 @@
 {
-  "name": "@thalesrc/ts-utils",
+  "name": "@telperion/ts-utils",
   "version": "0.0.0",
   "dependencies": {
     "tslib": "*",
-    "@thalesrc/js-utils": "^3.3.1"
+    "@telperion/js-utils": "^3.8.7"
   },
   "type": "module",
   "module": "./index.js",

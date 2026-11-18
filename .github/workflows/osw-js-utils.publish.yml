@@ -17,97 +17,13 @@ on:
         type: string
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  deploy:
+    uses: ./.github/workflows/osw-deploy.yml
     permissions:
       contents: read
       deployments: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          # Tags are needed to resolve the latest js-utils version on tag-triggered runs
-          fetch-depth: 0
-          fetch-tags: true
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm nx run osw/js-utils:build:production --skip-nx-cache
-        env:
-          PACKAGE_VERSION: ${{ inputs.package-version }}
-
-      - name: Create firebase.json
-        run: |
-          cat > firebase.json << 'EOF'
-          {
-            "hosting": {
-              "site": "osw-js-utils",
-              "public": "dist/osw/js-utils",
-              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-              "rewrites": [
-                {
-                  "source": "**",
-                  "destination": "/index.html"
-                }
-              ],
-              "headers": [
-                {
-                  "source": "**",
-                  "headers": [
-                    {
-                      "key": "Access-Control-Allow-Origin",
-                      "value": "https://open-source.telperion.tr"
-                    },
-                    {
-                      "key": "Access-Control-Allow-Methods",
-                      "value": "GET, HEAD, OPTIONS"
-                    },
-                    {
-                      "key": "Access-Control-Allow-Headers",
-                      "value": "Content-Type"
-                    }
-                  ]
-                },
-                {
-                  "source": "**/*.@(js|css|woff2|woff|ttf)",
-                  "headers": [
-                    {
-                      "key": "Cache-Control",
-                      "value": "public, max-age=31536000, immutable"
-                    }
-                  ]
-                },
-                {
-                  "source": "/@(mf-manifest.json|mf-stats.json|remoteEntry.js)",
-                  "headers": [
-                    {
-                      "key": "Cache-Control",
-                      "value": "no-cache"
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-          EOF
-
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
-          channelId: live
-          target: osw-js-utils
+    with:
+      project: osw/js-utils
+      site: osw-js-utils
+      package-version: ${{ inputs.package-version }}
+    secrets: inherit

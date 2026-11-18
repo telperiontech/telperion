@@ -15,6 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@osw/api": ["apps/osw/kit/api/src/index.ts"],
+      "@osw/api/sitemap": ["apps/osw/kit/api/generator/sitemap.ts"],
       "@osw/build": ["apps/osw/kit/build/src/index.ts"],
       "@osw/core": ["apps/osw/kit/core/src/index.ts"],
       "@osw/docs": ["apps/osw/kit/docs/src/index.ts"],
@@ -68,6 +70,8 @@
       "@telperion/rx-utils/*": ["libs/rx-utils/src/*"],
       "@thalesrc/rx-utils": ["libs/rx-utils/src/index.ts"],
       "@thalesrc/rx-utils/*": ["libs/rx-utils/src/*"],
+      "@telperion/ts-utils": ["libs/ts-utils/src/index.ts"],
+      "@telperion/ts-utils/*": ["libs/ts-utils/src/*"],
       "@thalesrc/ts-utils": ["libs/ts-utils/src/index.ts"],
       "@thalesrc/ts-utils/*": ["libs/ts-utils/src/*"],
       "@telperion/ng-pack/storage-signals": [

@@ -35,6 +35,7 @@
     }
   },
   "plugins": [
+    "./apps/osw/kit/build/src/nx-plugin/index.ts",
     {
       "plugin": "@nx/eslint/plugin",
       "options": {

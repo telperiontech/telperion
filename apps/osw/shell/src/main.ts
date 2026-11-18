@@ -1,8 +1,12 @@
 import { registerRemotes } from '@module-federation/enhanced/runtime';
 import { startAnalytics } from './analytics';
+import { renderRemoteRoutes } from './remotes';
 
 // First, and independent of the remotes: a failing manifest must not hide the visit
 startAnalytics();
+
+// Before `<tp-router>` is defined below, so it starts with every remote's route
+renderRemoteRoutes();
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())

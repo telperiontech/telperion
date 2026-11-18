@@ -1,5 +1,5 @@
 /** Kit libraries that are stateless and differ per remote, so each remote bundles its own copy */
-const BUNDLED_KIT_LIBRARIES = ['@osw/docs', '@osw/stories', '@osw/stories/core'];
+const BUNDLED_KIT_LIBRARIES = ['@osw/api', '@osw/docs', '@osw/stories', '@osw/stories/core'];
 
 /**
  * `shared` option for the docs remotes' `withModuleFederation`.

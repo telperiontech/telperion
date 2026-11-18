@@ -46,11 +46,12 @@ Advanced TypeScript utility types for sophisticated type manipulations. Includes
 
 **Highlights**: Deep object navigation, Tuple manipulation, Constructor types, Partial utilities
 
-#### [@thalesrc/ts-utils](libs/ts-utils)
+#### [@telperion/ts-utils](https://www.npmjs.com/package/@telperion/ts-utils)
+[![npm](https://img.shields.io/npm/v/@telperion/ts-utils.svg)](https://www.npmjs.com/package/@telperion/ts-utils)
 
-TypeScript-specific utility types and helper functions built on top of the TypeScript compiler API.
+Decorators and helpers for TypeScript classes, built on top of `@telperion/js-utils`. Includes `FifoPromise`, a method decorator that queues async calls first in first out.
 
-**Highlights**: TypeScript utilities, Compiler helpers
+**Highlights**: Method decorators, Promise queues, Timeouts
 
 ---
 

@@ -28,7 +28,7 @@ body:
         - reactive-storage
         - rx-utils
         - ts-utils
-        - osw (shell / home / elements / js-utils / paintlet)
+        - osw (shell / home / elements / js-utils / paintlet / ts-utils)
         - New package
         - Other / not sure
     validations:

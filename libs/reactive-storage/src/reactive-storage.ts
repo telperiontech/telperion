@@ -5,7 +5,7 @@ import { compact } from "@telperion/js-utils/array/compact";
 import { remove } from "@telperion/js-utils/array/remove";
 import { deepFreeze } from "@telperion/js-utils/object/deep-freeze";
 import { shareLast } from "@telperion/rx-utils/operators/share-last";
-import { FifoPromise } from "@thalesrc/ts-utils/fifo-promise";
+import { FifoPromise } from "@telperion/ts-utils/fifo-promise";
 
 const GET_ALL = Symbol('Reactive Storage Get All');
 const CHANGES = Symbol('Reactive Storage Changes');

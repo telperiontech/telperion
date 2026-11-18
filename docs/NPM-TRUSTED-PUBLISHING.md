@@ -43,7 +43,7 @@ Not yet confirmed:
 | @thalesrc/node-utils | node-utils.publish.yml | repository_dispatch | v4 | thalesrc/thalesrc (old repo) |
 | @thalesrc/nx-utils | nx-utils.publish.yml | repository_dispatch | v4 | missing |
 | @thalesrc/react-utils | react-utils.publish.yml | repository_dispatch | v4 | missing |
-| @thalesrc/ts-utils | ts-utils.publish.yml | repository_dispatch | v4 | missing |
+| @telperion/ts-utils | ts-utils.publish.yml | repository_dispatch | v4 | missing |
 
 Not affected: `docker-frp`, `osw-home`, `osw-shell` and `auto-proxy` do not publish to npm.
 

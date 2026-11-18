@@ -29,13 +29,14 @@ export const libraries: Library[] = [
 		docsPath: '/js-utils',
 	},
 	{
-		name: '@thalesrc/ts-utils',
+		name: '@telperion/ts-utils',
 		packageName: 'ts-utils',
 		tagline: 'Type-safe TypeScript helpers',
 		description: 'Utility functions that simplify complex operations while keeping your types precise.',
 		ecosystem: 'core',
 		icon: 'code',
 		type: 'npm',
+		docsPath: '/ts-utils',
 	},
 	{
 		name: '@telperion/extra-ts-types',

@@ -48,7 +48,7 @@
         "main": "apps/osw/home/src/main.tsx",
         "tsConfig": "apps/osw/home/tsconfig.app.json",
         "assets": ["apps/osw/home/src/assets"],
-        "postcssConfig": "apps/osw/home/postcss.config.cjs",
+        "postcssConfig": "apps/osw/kit/build/postcss.config.cjs",
         "webpackConfig": "apps/osw/home/webpack.config.ts"
       },
       "configurations": {

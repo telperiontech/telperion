@@ -6,75 +6,14 @@ on:
       - 'osw-shell-v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  deploy:
+    uses: ./.github/workflows/osw-deploy.yml
     permissions:
       contents: read
       deployments: write
-
-    steps:
-      - name: Set version env variable
-        run: echo "VERSION=${GITHUB_REF_NAME#osw-shell-v}" >> $GITHUB_ENV
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm nx run osw/shell:build:production
-        env:
-          OSW_HOME_URL: https://home.open-source.telperion.tr
-          OSW_JS_UTILS_URL: https://js-utils.open-source.telperion.tr
-          OSW_PAINTLET_URL: https://paintlet.open-source.telperion.tr
-          OSW_ELEMENTS_URL: https://elements.open-source.telperion.tr
-          # Public GA4 measurement ID (repository variable); empty disables analytics and the consent banner
-          GOOGLE_ANALYTICS_ID: ${{ vars.GOOGLE_ANALYTICS_ID }}
-
-      - name: Create firebase.json
-        run: |
-          cat > firebase.json << 'EOF'
-          {
-            "hosting": {
-              "site": "osw-shell",
-              "public": "dist/osw/shell",
-              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-              "rewrites": [
-                {
-                  "source": "**",
-                  "destination": "/index.html"
-                }
-              ],
-              "headers": [
-                {
-                  "source": "**/*.@(js|css|woff2|woff|ttf)",
-                  "headers": [
-                    {
-                      "key": "Cache-Control",
-                      "value": "public, max-age=31536000, immutable"
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-          EOF
-
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
-          channelId: live
-          target: osw-shell
+    with:
+      project: osw/shell
+      site: osw-shell
+      # The host page: loaded from its own origin, never cross-origin
+      remote: false
+    secrets: inherit

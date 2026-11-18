@@ -1,0 +1,84 @@
+name: OSW / Deploy
+
+# Builds one osw app (shell, home or a docs remote) and deploys it to its Firebase Hosting site.
+# Called by the `osw-*.publish.yml` workflows; not triggered directly.
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: Nx project to build, e.g. `osw/js-utils`; its output must be `dist/<project>`
+        required: true
+        type: string
+      site:
+        description: Firebase Hosting site and deploy target, e.g. `osw-js-utils`
+        required: true
+        type: string
+      package-version:
+        description: Library version a docs remote is generated for; empty uses the latest release tag
+        required: false
+        type: string
+        default: ''
+      remote:
+        description: Loaded by the shell from another origin, so its files are served with CORS headers
+        required: false
+        type: boolean
+        default: true
+      no-cache:
+        description: Extra `|`-separated root files to revalidate on every load (federation entry points always are)
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Tags are needed to resolve a docs remote's latest library version on tag-triggered runs
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm nx run ${{ inputs.project }}:build:production --skip-nx-cache
+        env:
+          PACKAGE_VERSION: ${{ inputs.package-version }}
+          # Shell only: remotes are loaded from `https://<name>.<OSW_DOMAIN>`
+          OSW_DOMAIN: open-source.telperion.tr
+          # Shell only: public GA4 measurement ID (repository variable); empty disables analytics and the consent banner
+          GOOGLE_ANALYTICS_ID: ${{ vars.GOOGLE_ANALYTICS_ID }}
+
+      - name: Create firebase.json
+        run: node apps/osw/kit/build/scripts/firebase-json.mjs > firebase.json
+        env:
+          SITE: ${{ inputs.site }}
+          PUBLIC_DIR: dist/${{ inputs.project }}
+          CORS_ORIGIN: ${{ inputs.remote && 'https://open-source.telperion.tr' || '' }}
+          NO_CACHE: ${{ inputs.no-cache }}
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+          channelId: live
+          target: ${{ inputs.site }}

@@ -8,11 +8,10 @@
   "targets": {
     "serve": {
       "executor": "@thalesrc/nx-utils:run-parallel",
-      "dependsOn": [],
+      "dependsOn": ["generate-remotes"],
       "options": {
         "commands": [
           { "command": "nx run osw/shell:build/tailwind-config -- --watch", "readyWhen": "Sass is watching for changes" },
-          "nx run osw/shell:generate-mf-manifest:serve",
           "nx run osw/shell:serve/app"
         ]
       }
@@ -44,13 +43,13 @@
       "configurations": {
         "production": {
           "commands": [
-            "nx run osw/shell:generate-mf-manifest",
+            "nx run osw/shell:generate-remotes",
             "nx run osw/shell:build/app:production"
           ]
         },
         "development": {
           "commands": [
-            "nx run osw/shell:generate-mf-manifest",
+            "nx run osw/shell:generate-remotes",
             "nx run osw/shell:build/app:development"
           ]
         }
@@ -71,7 +70,7 @@
         "assets": [
           "apps/osw/shell/src/assets",
           { "input": "apps/osw/shell/src", "glob": "404.html", "output": "." },
-          { "input": "apps/osw/shell/src", "glob": "robots.txt", "output": "." },
+          { "input": "apps/osw/shell/src/generated", "glob": "robots.txt", "output": "." },
           { "input": "apps/osw/shell/src", "glob": "sitemap.xml", "output": "." }
         ],
         "styles": ["apps/osw/shell/src/styles/styles.css"],
@@ -108,24 +107,12 @@
         "command": "sass apps/osw/kit/tokens/tailwind.config.scss apps/osw/shell/src/styles/tailwind.config.css"
       }
     },
-    "generate-mf-manifest": {
-      "executor": "@thalesrc/nx-utils:copy",
+    "generate-remotes": {
+      "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/config/remotes.json", "{projectRoot}/scripts/generate-remotes.mjs", { "env": "OSW_DOMAIN" }],
+      "outputs": ["{projectRoot}/src/assets/module-federation.manifest.json", "{projectRoot}/src/generated"],
       "options": {
-        "input": {
-          "path": "apps/osw/shell/config/module-federation.manifest.json",
-          "output": "apps/osw/shell/src/assets",
-          "replace": {
-            "OSW_HOME_URL": "#{OSW_HOME_URL}",
-            "OSW_JS_UTILS_URL": "#{OSW_JS_UTILS_URL}",
-            "OSW_PAINTLET_URL": "#{OSW_PAINTLET_URL}",
-            "OSW_ELEMENTS_URL": "#{OSW_ELEMENTS_URL}"
-          }
-        }
-      },
-      "configurations": {
-        "serve": {
-          "watch": true
-        }
+        "command": "node apps/osw/shell/scripts/generate-remotes.mjs"
       }
     }
   }

@@ -60,26 +60,7 @@
   </header>
 
   <tp-router class="flex flex-1 flex-col">
-    <tp-route path="/">
-      <template>
-        <osw-home class="block flex-1"></osw-home>
-      </template>
-    </tp-route>
-    <tp-route path="/js-utils{/*}?">
-      <template>
-        <osw-js-utils class="block flex-1"></osw-js-utils>
-      </template>
-    </tp-route>
-    <tp-route path="/paintlet{/*}?">
-      <template>
-        <osw-paintlet class="block flex-1"></osw-paintlet>
-      </template>
-    </tp-route>
-    <tp-route path="/elements{/*}?">
-      <template>
-        <osw-elements class="block flex-1"></osw-elements>
-      </template>
-    </tp-route>
+    <!-- A <tp-route> per remote of config/remotes.json is inserted here at startup (src/remotes) -->
     <!-- Absolute src: relative URLs would resolve against deep paths and hit the SPA rewrite -->
     <tp-route path="*" src="/404.html"></tp-route>
     <tp-router-outlet class="flex flex-1 flex-col"></tp-router-outlet>

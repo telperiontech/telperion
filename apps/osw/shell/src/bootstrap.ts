@@ -3,6 +3,7 @@
 import { defineOswElements, interceptLinks } from '@osw/core';
 import { startTracking } from './analytics/tracking';
 import { defineRemoteElement } from './remote-element';
+import { REMOTES } from './remotes';
 
 // Shared custom elements and client-side navigation for plain `<a href>` links in every remote
 defineOswElements();
@@ -11,9 +12,7 @@ interceptLinks();
 // Page views and 404s; remotes report their own events through `trackEvent` from `@osw/core`
 startTracking();
 
-defineRemoteElement('osw-home', 'osw/home/Home');
-defineRemoteElement('osw-js-utils', 'osw/js-utils/Docs');
-defineRemoteElement('osw-paintlet', 'osw/paintlet/Docs');
-defineRemoteElement('osw-elements', 'osw/elements/Docs');
+// One element per entry of config/remotes.json; its route is already in the router (see main.ts)
+REMOTES.forEach((remote) => defineRemoteElement(remote.tagName, remote.module));
 
 export {};
