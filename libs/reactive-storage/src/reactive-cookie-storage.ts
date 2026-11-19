@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
+import { makeAsyncIterator } from '@telperion/rx-utils/to-async-iteratable';
 
 import { ReactiveStorage, ReactiveStorageChangeEvent } from './reactive-storage';
-import { toAsyncIterator } from './async-iterator.polyfill';
 import { jsonParse } from './json-parse';
 
 /**
@@ -117,8 +117,9 @@ export class ReactiveCookieStorage<S extends string = string> extends ReactiveSt
     );
   }
 
+  // Prefer an Observable's own async iterator (rxjs 8, or `@telperion/rx-utils/static/async-iterator`)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected [ReactiveStorage.Props.CHANGES] = (this.#changes$ as any)[Symbol.asyncIterator] ?? toAsyncIterator(this.#changes$);
+  protected [ReactiveStorage.Props.CHANGES]: AsyncGenerator<ReactiveStorageChangeEvent<S>> = (this.#changes$ as any)[Symbol.asyncIterator]?.() ?? makeAsyncIterator(this.#changes$);
 
   protected async [ReactiveStorage.Props.SET](storeName: S, value: unknown): Promise<void> {
     const serialized = JSON.stringify(value);

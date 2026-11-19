@@ -52,6 +52,11 @@ for await (const value of asyncIterable) {
 
 Creates an AsyncIterator from an Observable. This function is used internally by `toAsyncIteratable` but can also be used directly if you need more control over the iteration process.
 
+- The Observable is subscribed on the first `next()` call, not when the iterator is created.
+- Values that arrive while nobody is waiting are buffered and handed out in order.
+- Completion resolves pending and later `next()` calls with `{ done: true }`; an error rejects them.
+- `return()`, `throw()` and `Symbol.asyncDispose` unsubscribe from the source.
+
 ```typescript
 import { of } from 'rxjs';
 import { makeAsyncIterator } from '@telperion/rx-utils/to-async-iteratable';
@@ -62,13 +67,15 @@ const asyncIterator = makeAsyncIterator(observable);
 // Manually iterate
 const result1 = await asyncIterator.next(); // { value: 1, done: false }
 const result2 = await asyncIterator.next(); // { value: 2, done: false }
+const result3 = await asyncIterator.next(); // { value: 3, done: false }
+const result4 = await asyncIterator.next(); // { value: undefined, done: true }
 ```
 
 **Parameters:**
 - `observable: Observable<T>` - The Observable to convert
 
 **Returns:**
-- `AsyncIterator<T>` - An AsyncIterator that yields values from the Observable
+- `AsyncGenerator<T, void, void>` - An async iterator (and async iterable) that yields values from the Observable
 
 ### pluck (Operator)
 

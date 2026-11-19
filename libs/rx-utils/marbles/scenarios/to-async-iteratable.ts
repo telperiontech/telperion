@@ -28,7 +28,7 @@ export const slowConsumer = defineScenario({
 	id: 'slow-consumer',
 	title: 'A slow loop over a fast source',
 	description:
-		'The source pushes whenever it likes; the loop pulls one value per iteration. Values that arrive while the body is busy are buffered and handed out in order.',
+		'The source pushes whenever it likes; the loop pulls one value per iteration. Values that arrive while the body is busy are buffered and handed out in order, and the loop ends once the source has completed and the buffer is drained.',
 	engine: 'stepped',
 	inputs: { source: { marbles: '-a-b-c-d---|' } },
 	subscribers: [{ label: 'for await', marbles: '^' }],
@@ -42,7 +42,7 @@ for await (const value of toAsyncIteratable(source$)) {
   await process(value); // ${work} frames
 }`,
 	run: ({ source }, { work }, scheduler) => forAwait(source, work, scheduler),
-	expected: [{ marbles: '-a---b---c---d' }],
+	expected: [{ marbles: '-a---b---c---d---|' }],
 	duration: 24,
 });
 

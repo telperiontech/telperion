@@ -1,50 +1,104 @@
-import { OpenPromise } from "@telperion/js-utils/open-promise";
-import { type Observable } from "rxjs";
+import type { Observable, Subscription } from "rxjs";
+
+type Deferred<T> = [resolve: (result: IteratorResult<T, void>) => void, reject: (reason: unknown) => void];
 
 /**
  * Creates an AsyncIterator from an Observable.
  *
+ * The Observable is subscribed on the first `next()` call. Values that arrive while nobody is
+ * waiting are buffered and handed out in order. Completion resolves every pending and later
+ * `next()` with `done: true`, and an error rejects them. `return()`, `throw()` and
+ * `Symbol.asyncDispose` unsubscribe.
+ *
+ * Adapted from RxJS's own `Observable[Symbol.asyncIterator]`
+ * (https://github.com/ReactiveX/rxjs/blob/master/packages/observable/src/observable.ts).
+ *
+ * ```ts
+ * import { of } from 'rxjs';
+ * import { makeAsyncIterator } from '@telperion/rx-utils/to-async-iteratable';
+ *
+ * const iterator = makeAsyncIterator(of(1, 2));
+ *
+ * await iterator.next(); // { value: 1, done: false }
+ * await iterator.next(); // { value: 2, done: false }
+ * await iterator.next(); // { value: undefined, done: true }
+ * ```
+ *
  * @param observable The Observable to convert.
- * @returns An AsyncIterator that yields values from the Observable.
+ * @returns An AsyncGenerator that yields values from the Observable.
  */
-export function makeAsyncIterator<T>(observable: Observable<T>): AsyncIterator<T> {
-  const cache = [] as T[];
-  let i = 0;
-  let promise = new OpenPromise<T>();
+export function makeAsyncIterator<T>(observable: Observable<T>): AsyncGenerator<T, void, void> {
+  let subscription: Subscription | undefined;
+  let hasError = false;
+  let error: unknown;
+  let completed = false;
+  const values: T[] = [];
+  const deferreds: Deferred<T>[] = [];
+  const handleError = (err: unknown) => {
+    hasError = true;
+    error = err;
 
-  const subs = observable.subscribe({
-    next(value) {
-      cache.push(value);
-      promise.resolve(value);
-      promise = new OpenPromise<T>();
-    },
-    error(err) {
-      promise.reject(err);
-      throw err;
-    },
-    complete() {
-      subs.unsubscribe();
+    while (deferreds.length) {
+      const [, reject] = deferreds.shift()!;
+      reject(err);
     }
-  });
+  };
+  const handleComplete = () => {
+    completed = true;
+
+    while (deferreds.length) {
+      const [resolve] = deferreds.shift()!;
+      resolve({ value: undefined, done: true });
+    }
+  };
 
   return {
-    async next() {
-      if (i < cache.length) {
-        return { value: cache[i++], done: false };
-      }
-      const value = await promise;
-      i++;
-      return { value, done: false };
+    next(): Promise<IteratorResult<T, void>> {
+      // Subscribe only once iteration starts
+      subscription ??= observable.subscribe({
+        next: (value) => {
+          if (deferreds.length) {
+            const [resolve] = deferreds.shift()!;
+            resolve({ value, done: false });
+          } else {
+            values.push(value);
+          }
+        },
+        error: handleError,
+        complete: handleComplete,
+      });
+
+      if (values.length) return Promise.resolve({ value: values.shift()!, done: false });
+
+      if (completed) return Promise.resolve({ value: undefined, done: true });
+
+      if (hasError) return Promise.reject(error);
+
+      return new Promise((resolve, reject) => {
+        deferreds.push([resolve, reject]);
+      });
     },
-    throw(err) {
-      subs.unsubscribe();
+    throw(err: unknown): Promise<IteratorResult<T, void>> {
+      subscription?.unsubscribe();
+      // Pending `next()` promises would otherwise never settle
+      handleError(err);
+
       return Promise.reject(err);
     },
-    return() {
-      subs.unsubscribe();
+    return(): Promise<IteratorResult<T, void>> {
+      subscription?.unsubscribe();
+      // Pending `next()` promises would otherwise never settle
+      handleComplete();
+
       return Promise.resolve({ value: undefined, done: true });
-    }
-  }
+    },
+    [Symbol.asyncIterator]() {
+      return this;
+    },
+    async [Symbol.asyncDispose]() {
+      subscription?.unsubscribe();
+    },
+  };
 }
 
 /**
@@ -53,10 +107,10 @@ export function makeAsyncIterator<T>(observable: Observable<T>): AsyncIterator<T
  * Example usage:
  * ```ts
  * import { of } from 'rxjs';
- * import { toAsyncIterator } from '@telperion/rx-utils';
+ * import { toAsyncIteratable } from '@telperion/rx-utils';
  *
  * const observable = of(1, 2, 3);
- * const asyncIterable = toAsyncIterator(observable);
+ * const asyncIterable = toAsyncIteratable(observable);
  *
  * for await (const value of asyncIterable) {
  *   console.log(value);
@@ -71,5 +125,5 @@ export function toAsyncIteratable<T>(observable: Observable<T>): AsyncIterable<T
     [Symbol.asyncIterator]() {
       return makeAsyncIterator(observable);
     }
-  }
+  };
 }

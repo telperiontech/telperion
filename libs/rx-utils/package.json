@@ -2,7 +2,6 @@
   "name": "@telperion/rx-utils",
   "version": "0.0.0",
   "dependencies": {
-    "@telperion/js-utils": "^3.5.0",
     "tslib": "*",
     "rxjs": "*"
   },
