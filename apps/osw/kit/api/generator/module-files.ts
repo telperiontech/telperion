@@ -38,9 +38,12 @@ function toModuleFile(sourcePath: string, config: ApiModelConfig): ModuleFile {
 	return { id, sourcePath, kind, baseName, category: segments.length > 1 ? segments[0] : rootCategory(config) };
 }
 
-/** Every importable, non-barrel module of the library, sorted by id */
+/** Every importable, non-barrel module of the library except the excluded ones, sorted by id */
 export function listModuleFiles(config: ApiModelConfig): ModuleFile[] {
+	const excluded = new Set(config.exclude);
+
 	return walk(config.workspaceRoot, sourceRoot(config))
 		.map((path) => toModuleFile(path, config))
+		.filter((module) => !excluded.has(module.id))
 		.sort((a, b) => a.id.localeCompare(b.id));
 }

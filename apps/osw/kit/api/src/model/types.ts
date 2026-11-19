@@ -26,6 +26,28 @@ export interface DocsDeclaration {
 	templates: DocsTag[];
 	returns?: string;
 	see: string[];
+	/** Documented public members of a class, own ones first, then inherited ones */
+	members?: DocsMember[];
+}
+
+export type MemberKind = 'constructor' | 'method' | 'property' | 'accessor';
+
+/** One documented public member of a class (all overloads of a method together) */
+export interface DocsMember {
+	name: string;
+	kind: MemberKind;
+	static: boolean;
+	/** Class that declares the member, when it is inherited */
+	inheritedFrom?: string;
+	/** Printed member signatures (overloads), comments removed */
+	signatures: string[];
+	/** First prose paragraph, plain text */
+	summary: string;
+	/** Full doc comment body as markdown */
+	description: string;
+	params: DocsTag[];
+	templates: DocsTag[];
+	returns?: string;
 }
 
 /** A `proto/` or `static/` module that patches a global with the entry's function */

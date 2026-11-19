@@ -96,16 +96,36 @@ describe('makeAsyncIterator', () => {
 		expect(unsubscribed).toBe(true);
 	});
 
-	it('Symbol.asyncDispose unsubscribes', async () => {
-		let unsubscribed = false;
-		const iterator = makeAsyncIterator(new Observable<number>(() => () => {
-			unsubscribed = true;
-		}));
+	describe('Symbol.asyncDispose', () => {
+		const original = Object.getOwnPropertyDescriptor(Symbol, 'asyncDispose');
+		const setAsyncDispose = (value: symbol | undefined) => Object.defineProperty(Symbol, 'asyncDispose', { value, configurable: true });
 
-		void iterator.next();
-		await iterator[Symbol.asyncDispose]();
+		afterEach(() => {
+			if (original) Object.defineProperty(Symbol, 'asyncDispose', original);
+			else delete (Symbol as { asyncDispose?: symbol }).asyncDispose;
+		});
 
-		expect(unsubscribed).toBe(true);
+		it('unsubscribes where the runtime has it', async () => {
+			const asyncDispose = Symbol('Symbol.asyncDispose');
+			let unsubscribed = false;
+
+			setAsyncDispose(asyncDispose);
+
+			const iterator = makeAsyncIterator(new Observable<number>(() => () => {
+				unsubscribed = true;
+			}));
+
+			void iterator.next();
+			await (iterator as unknown as Record<symbol, () => Promise<void>>)[asyncDispose]();
+
+			expect(unsubscribed).toBe(true);
+		});
+
+		it('is left out where the runtime lacks it', () => {
+			setAsyncDispose(undefined);
+
+			expect(Object.keys(makeAsyncIterator(NEVER))).not.toContain('undefined');
+		});
 	});
 
 	it('is its own async iterable', () => {

@@ -6,10 +6,10 @@ import { RegexParser } from './regex-parser';
 import { jsonParse } from './json-parse';
 
 /**
- * Abstract implementation of ReactiveStorage for browser Web Storage API.
- * Stores data as JSON in localStorage or sessionStorage with app namespacing.
+ * Base class of the Web Storage implementations: saves each store as JSON under `<appName>/<storeName>`
+ * in `storage`. Extend it to back a reactive storage with another `Storage` object.
  *
- * @template S - Storage store name type
+ * @template S - Store name type
  */
 export abstract class AbstractReactiveWebStorage<S extends string = string> extends ReactiveStorage<S> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,6 +18,7 @@ export abstract class AbstractReactiveWebStorage<S extends string = string> exte
   }
 
   protected abstract readonly appName: string;
+  /** The Web Storage object the stores are saved in */
   abstract readonly storage: Storage;
 
   get #keyNameRegex() {
@@ -51,12 +52,25 @@ export abstract class AbstractReactiveWebStorage<S extends string = string> exte
 }
 
 /**
- * Generic reactive web storage wrapper.
- * Allows using any Storage implementation (localStorage, sessionStorage, or custom).
+ * Reactive storage on any `Storage` object you pass in: `localStorage`, `sessionStorage`, or your own
+ * implementation of the Web Storage interface (an in-memory one for tests or server rendering, say).
  *
- * @template S - Storage store name type
+ * Keys and store name rules are those of {@link ReactiveWebLocalStorage}.
+ *
+ * Example usage:
+ * ```ts
+ * import { ReactiveWebStorage } from '@telperion/reactive-storage/reactive-web-storage';
+ *
+ * const storage = new ReactiveWebStorage(window.localStorage, 'my-app');
+ * ```
+ *
+ * @template S - Store name type: a union of string literals restricts the store names you can use
  */
 export class ReactiveWebStorage<S extends string = string> extends AbstractReactiveWebStorage<S> {
+  /**
+   * @param storage - Web Storage object to save the stores in
+   * @param appName - Namespace of this app's keys: each store is saved under `<appName>/<storeName>`. Defaults to `'app'`
+   */
   constructor(
     override readonly storage: Storage,
     override readonly appName = 'app',

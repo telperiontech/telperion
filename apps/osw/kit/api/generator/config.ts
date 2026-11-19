@@ -24,6 +24,8 @@ export interface ApiModelConfig {
 	 * `{ 'static/async-iterator': 'to-async-iteratable' }`. Others are matched by file name.
 	 */
 	extensionBases?: Record<string, string>;
+	/** Module ids (relative to `src`, no extension) of internal helpers that are not entry points, e.g. `['json-parse']` */
+	exclude?: string[];
 }
 
 export const sourceRoot = (config: ApiModelConfig) => `${config.libRoot}/src`;

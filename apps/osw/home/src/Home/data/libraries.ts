@@ -62,10 +62,11 @@ export const libraries: Library[] = [
 		name: '@telperion/reactive-storage',
 		packageName: 'reactive-storage',
 		tagline: 'Observable storage',
-		description: 'Reactive persistence layers built on observable storage patterns.',
+		description: 'localStorage, sessionStorage and cookies as RxJS Observables, with dot-path access to nested values.',
 		ecosystem: 'core',
 		icon: 'database',
 		type: 'npm',
+		docsPath: '/reactive-storage',
 	},
 	{
 		name: '@telperion/elements',

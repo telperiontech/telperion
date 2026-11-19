@@ -1,5 +1,6 @@
 import { CodeBlock, Inline, Markdown } from '@osw/docs';
 import type { DocsDeclaration } from '../model';
+import { MemberList } from './MemberList';
 import { TagTable } from './TagTable';
 
 interface DeclarationDetailsProps {
@@ -8,7 +9,7 @@ interface DeclarationDetailsProps {
 	summaryShown?: boolean;
 }
 
-/** Signatures, parameters, return value and the doc body of one declaration */
+/** Signatures, parameters, return value, the doc body and the documented members of one declaration */
 export function DeclarationDetails({ declaration, summaryShown = false }: DeclarationDetailsProps) {
 	return (
 		<>
@@ -33,6 +34,8 @@ export function DeclarationDetails({ declaration, summaryShown = false }: Declar
 					<Markdown source={declaration.description} labels headingTag="h4" skipLeading={summaryShown ? declaration.summary : undefined} />
 				</div>
 			)}
+
+			<MemberList members={declaration.members} />
 		</>
 	);
 }

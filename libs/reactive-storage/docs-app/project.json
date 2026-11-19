@@ -1,0 +1,17 @@
+{
+  "name": "osw/reactive-storage",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/reactive-storage/docs-app/src",
+  "projectType": "application",
+  "tags": ["scope:osw", "type:docs-app", "framework:react"],
+  "implicitDependencies": ["reactive-storage", "osw/kit/tokens", "osw/kit/api"],
+  "metadata": { "description": "Docs remote; serve, build and generate-model targets are inferred for type:docs-app projects by apps/osw/kit/build/src/nx-plugin. Compiled with swc: the library sources it bundles use legacy decorators" },
+  "targets": {
+    "serve/app": {
+      "options": { "port": 4208 }
+    },
+    "build/app": {
+      "options": { "compiler": "swc" }
+    }
+  }
+}

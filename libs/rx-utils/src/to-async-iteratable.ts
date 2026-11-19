@@ -8,7 +8,7 @@ type Deferred<T> = [resolve: (result: IteratorResult<T, void>) => void, reject: 
  * The Observable is subscribed on the first `next()` call. Values that arrive while nobody is
  * waiting are buffered and handed out in order. Completion resolves every pending and later
  * `next()` with `done: true`, and an error rejects them. `return()`, `throw()` and
- * `Symbol.asyncDispose` unsubscribe.
+ * `Symbol.asyncDispose` (where the runtime has it) unsubscribe.
  *
  * Adapted from RxJS's own `Observable[Symbol.asyncIterator]`
  * (https://github.com/ReactiveX/rxjs/blob/master/packages/observable/src/observable.ts).
@@ -51,8 +51,7 @@ export function makeAsyncIterator<T>(observable: Observable<T>): AsyncGenerator<
       resolve({ value: undefined, done: true });
     }
   };
-
-  return {
+  const iterator = {
     next(): Promise<IteratorResult<T, void>> {
       // Subscribe only once iteration starts
       subscription ??= observable.subscribe({
@@ -95,10 +94,20 @@ export function makeAsyncIterator<T>(observable: Observable<T>): AsyncGenerator<
     [Symbol.asyncIterator]() {
       return this;
     },
-    async [Symbol.asyncDispose]() {
-      subscription?.unsubscribe();
-    },
-  };
+  } as AsyncGenerator<T, void, void>;
+  // Explicit resource management (`await using`) where the runtime has it; looked up dynamically so
+  // older runtimes, and consumers type-checking without the `esnext.disposable` lib, still work
+  const asyncDispose = (Symbol as { asyncDispose?: symbol }).asyncDispose;
+
+  if (asyncDispose) {
+    Object.defineProperty(iterator, asyncDispose, {
+      value: async () => subscription?.unsubscribe(),
+      configurable: true,
+      writable: true,
+    });
+  }
+
+  return iterator;
 }
 
 /**

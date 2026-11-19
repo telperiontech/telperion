@@ -1,12 +1,13 @@
 import type { DocsEntry } from './types';
 
-/** Searchable text per entry: names of every export and patched member, id and summary */
+/** Searchable text per entry: names of every export, documented class member and patched member, id and summary */
 function haystack(entry: DocsEntry): string {
 	return [
 		entry.id,
 		entry.primary.name,
 		entry.primary.summary,
 		...entry.related.map((declaration) => declaration.name),
+		...[entry.primary, ...entry.related].flatMap((declaration) => declaration.members ?? []).map((member) => member.name),
 		...entry.extensions.flatMap((extension) => extension.members.map((member) => `${extension.target}.${member}`)),
 	]
 		.join(' ')

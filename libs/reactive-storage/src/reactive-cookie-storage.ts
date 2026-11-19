@@ -5,57 +5,56 @@ import { ReactiveStorage, ReactiveStorageChangeEvent } from './reactive-storage'
 import { jsonParse } from './json-parse';
 
 /**
- * Options for configuring cookie behavior in ReactiveCookieStorage.
+ * Attributes written with every cookie of a {@link ReactiveCookieStorage}. Unset attributes are
+ * left out of the cookie, so the browser applies its own defaults.
  */
 export interface ReactiveCookieStorageOptions {
-  /** URL path where the cookie is valid. Default: '/' */
+  /** URL path the cookie is sent for, e.g. `'/'` for the whole site. Unset: the path of the current page */
   path?: string;
-  /** Domain where the cookie is valid. Default: current domain */
+  /** Domain the cookie is sent to, e.g. `'example.com'` to include subdomains. Unset: the current host only */
   domain?: string;
-  /** Cookie lifetime in seconds. Default: undefined (session cookie) */
+  /** Lifetime in seconds. With neither `maxAge` nor `expires`, it is a session cookie */
   maxAge?: number;
-  /** Absolute expiration date. Default: undefined */
+  /** Absolute expiry date. With neither `maxAge` nor `expires`, it is a session cookie */
   expires?: Date;
-  /** HTTPS only flag. Default: false */
+  /** Send the cookie over HTTPS only */
   secure?: boolean;
-  /** CSRF protection level. Default: 'lax' */
+  /** Cross-site sending policy. Unset: the browser default, `lax` in current browsers */
   sameSite?: 'strict' | 'lax' | 'none';
 }
 
 /**
- * Reactive wrapper for browser cookies.
- * Provides RxJS-based reactive API for cookie storage with automatic change detection.
+ * Reactive storage on `document.cookie`: for small values the server should see too, or that must expire.
  *
- * **Important Limitations:**
- * - Cookies have a ~4KB size limit per cookie
- * - No native change events - use linker to sync multiple instances
- * - Cannot access httpOnly cookies set by the server
+ * Each store is one cookie named `<appName>_<storeName>` (characters other than letters, digits,
+ * `_` and `-` become `_`), holding the store as URI-encoded JSON. Every cookie is written with
+ * the attributes given in `options`.
  *
- * **Cross-Instance Synchronization:**
- * Link multiple instances using any shared value (symbol, string, object, etc.) to automatically sync changes between them.
+ * - A cookie is limited to 4000 bytes; a larger write is rejected with an error.
+ * - Browsers have no change event for cookies, so only writes made through this instance are observed.
+ *   Pass the same `linker` to several instances to have each one notified of the others' writes.
+ * - `httpOnly` cookies set by the server cannot be read or written from JavaScript.
  *
- * @template S - Storage store name type
+ * Example usage:
+ * ```ts
+ * import { ReactiveCookieStorage } from '@telperion/reactive-storage/reactive-cookie-storage';
  *
- * @example
- * ```typescript
- * // Single instance
- * const storage = new ReactiveCookieStorage('my-app', {
- *   path: '/',
- *   maxAge: 86400,
- *   secure: true,
- *   sameSite: 'strict'
- * });
+ * const storage = new ReactiveCookieStorage('my-app', { path: '/', maxAge: 60 * 60 * 24, sameSite: 'strict' });
  *
- * // Multiple linked instances using a symbol
- * const linker = Symbol('cookie-sync');
- * const storageOne = new ReactiveCookieStorage('my-app', { secure: true }, linker);
- * const storageTwo = new ReactiveCookieStorage('my-app', { secure: false }, linker);
- * // Changes in storageOne will notify storageTwo and vice versa
- *
- * // Or use any other value type
- * const storageA = new ReactiveCookieStorage('my-app', { secure: true }, 'my-linker');
- * const storageB = new ReactiveCookieStorage('my-app', { secure: false }, 'my-linker');
+ * await storage.set('consent', 'analytics', true); // cookie my-app_consent, valid for a day
  * ```
+ *
+ * Linked instances:
+ * ```ts
+ * const linker = Symbol('cookies');
+ * const header = new ReactiveCookieStorage('my-app', { path: '/' }, linker);
+ * const settings = new ReactiveCookieStorage('my-app', { path: '/' }, linker);
+ *
+ * header.get('prefs', 'theme').subscribe(console.log);
+ * await settings.set('prefs', 'theme', 'dark'); // header logs "dark"
+ * ```
+ *
+ * @template S - Store name type: a union of string literals restricts the store names you can use
  */
 export class ReactiveCookieStorage<S extends string = string> extends ReactiveStorage<S> {
   static readonly #MAX_COOKIE_SIZE = 4000; // Conservative 4KB limit
@@ -72,6 +71,11 @@ export class ReactiveCookieStorage<S extends string = string> extends ReactiveSt
   readonly #changes$ = new Subject<ReactiveStorageChangeEvent<S>>();
   readonly #linker?: any;
 
+  /**
+   * @param appName - Prefix of this app's cookie names: each store is saved as `<appName>_<storeName>`. Defaults to `'app'`
+   * @param options - Attributes written with every cookie
+   * @param linker - Any truthy value, e.g. a symbol: instances created with the same linker are notified of each other's writes
+   */
   constructor(
     public readonly appName: string = 'app',
     private readonly options: ReactiveCookieStorageOptions = {},
@@ -90,9 +94,8 @@ export class ReactiveCookieStorage<S extends string = string> extends ReactiveSt
   }
 
   /**
-   * Destroy the storage instance and cleanup resources.
-   * Unregisters from linker group and completes the changes subject.
-   * Call this when you're done using the storage to prevent memory leaks.
+   * Releases the instance: unlinks it from its linker group and stops its change stream.
+   * Call it when the storage is no longer used, so linked instances do not keep it alive.
    */
   destroy(): void {
     // Unregister from linker group

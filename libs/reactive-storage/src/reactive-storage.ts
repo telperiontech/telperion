@@ -12,17 +12,46 @@ const CHANGES = Symbol('Reactive Storage Changes');
 const SET = Symbol('Reactive Storage Set');
 const REMOVE = Symbol('Reactive Storage Remove');
 
+/**
+ * A change to one store, as a storage implementation reports it to {@link ReactiveStorage}.
+ * `value` is the store's new content, or `undefined` when the store was removed.
+ *
+ * @template S - Store name type
+ */
 export interface ReactiveStorageChangeEvent<S = string> {
   storeName: S;
   value: any;
 }
 
 /**
- * Abstract base class for reactive storage implementations.
- * Provides RxJS-based reactive API for storage with support for nested property access.
- * All write operations are queued using FIFO promises to ensure consistency.
+ * Abstract base class of every reactive storage: the shared `get`/`set`/`patch`/`delete`/`push`/`drop` API.
  *
- * @template S - Storage store name type (defaults to string)
+ * Data is organised in named **stores**: one JSON value per store name (one localStorage key, one cookie).
+ * Read and write inside a store with a dot-separated **key path** (`'profile.name'`); an empty key
+ * means the whole store.
+ *
+ * - `get()` returns an Observable that emits the current value right away and again whenever it changes.
+ *   Repeats of the same value (`===`) are skipped, so a primitive at a path emits only when it changes.
+ * - Emitted values are deep-frozen: copy them before changing them.
+ * - Writes return a Promise that resolves once subscribers have been notified. Writes from every
+ *   storage instance run one at a time, first in first out; one that takes longer than a second
+ *   is rejected with a `TimeoutError`.
+ * - Only writes made through the same instance (or, for cookies, linked instances) are observed.
+ *
+ * Example usage:
+ * ```ts
+ * import { ReactiveWebLocalStorage } from '@telperion/reactive-storage/reactive-web-local-storage';
+ *
+ * const storage = new ReactiveWebLocalStorage<'user' | 'settings'>('my-app');
+ *
+ * storage.get<string>('user', 'profile.name').subscribe((name) => console.log(name));
+ * // undefined
+ *
+ * await storage.set('user', 'profile.name', 'Ada');
+ * // Ada
+ * ```
+ *
+ * @template S - Store name type: a union of string literals restricts the store names you can use
  */
 export abstract class ReactiveStorage<S extends string = string> {
   private static FifoGroup = Symbol();
@@ -80,13 +109,20 @@ export abstract class ReactiveStorage<S extends string = string> {
   }
 
   /**
-   * Get an observable that emits the current value and all future changes.
-   * Supports dot notation for nested property access (e.g., 'user.settings.theme').
+   * Observable of a store, or of one value inside it, that emits the current value and then every change.
    *
-   * @template T - Expected return type
-   * @param storeName - Name of the storage store
-   * @param key - Property path using dot notation (empty string for entire store)
-   * @returns Observable that emits current value and all updates
+   * The value is `undefined` while the store or path does not exist. Emitted values are deep-frozen.
+   *
+   * Example usage:
+   * ```ts
+   * storage.get('user').subscribe((user) => console.log(user));           // whole store
+   * storage.get<string>('user', 'profile.name').subscribe(console.log); // one value
+   * ```
+   *
+   * @template T - Type of the value at `key`
+   * @param storeName - Store to read
+   * @param key - Dot-separated path inside the store; empty (default) for the whole store
+   * @returns Observable of the value, which never completes
    */
   get<T = Record<string, any>>(storeName: S, key = ''): Observable<T> {
     return this.#stream$.pipe(
@@ -137,12 +173,21 @@ export abstract class ReactiveStorage<S extends string = string> {
   }
 
   /**
-   * Set a value in storage. Overwrites existing value.
-   * Pass undefined as value to remove the property.
+   * Writes a value at a path, replacing what was there and creating missing parent objects.
    *
-   * @param storeName - Name of the storage store
-   * @param key - Property path using dot notation
-   * @param value - Value to set (undefined removes the value)
+   * The value is stored as JSON, so it must be JSON-serializable. Passing `undefined` removes
+   * the property (or, with an empty key, the whole store).
+   *
+   * Example usage:
+   * ```ts
+   * await storage.set('user', '', { name: 'Ada' });          // whole store
+   * await storage.set('user', 'profile.theme', 'dark');     // { name: 'Ada', profile: { theme: 'dark' } }
+   * ```
+   *
+   * @param storeName - Store to write
+   * @param key - Dot-separated path inside the store; empty for the whole store
+   * @param value - New value; `undefined` removes it
+   * @returns Resolves once subscribers have received the new value
    */
   @FifoPromise({ group: ReactiveStorage.FifoGroup, timeout: 1000 })
   async set(storeName: S, key: string, value: any): Promise<void> {
@@ -165,10 +210,17 @@ export abstract class ReactiveStorage<S extends string = string> {
   }
 
   /**
-   * Delete a value from storage.
+   * Removes a value at a path, or the whole store. Same as `set(storeName, key, undefined)`.
    *
-   * @param storeName - Name of the storage store
-   * @param key - Property path using dot notation (empty string deletes entire store)
+   * Example usage:
+   * ```ts
+   * await storage.delete('user', 'profile.theme'); // one property
+   * await storage.delete('user');                  // the whole store
+   * ```
+   *
+   * @param storeName - Store to change
+   * @param key - Dot-separated path inside the store; empty (default) removes the whole store
+   * @returns Resolves once subscribers have been notified
    */
   @FifoPromise({ group: ReactiveStorage.FifoGroup, timeout: 1000 })
   async delete(storeName: S, key = ''): Promise<void> {
@@ -176,12 +228,17 @@ export abstract class ReactiveStorage<S extends string = string> {
   }
 
   /**
-   * Add items to an array in storage.
-   * Creates array if it doesn't exist.
+   * Appends values to the array at a path, creating the array when there is none.
    *
-   * @param storeName - Name of the storage store
-   * @param key - Path to array property using dot notation
-   * @param values - Values to push into the array
+   * Example usage:
+   * ```ts
+   * await storage.push('todos', 'items', 'Buy milk', 'Walk the dog');
+   * ```
+   *
+   * @param storeName - Store to change
+   * @param key - Dot-separated path of the array inside the store
+   * @param values - Values to append
+   * @returns Resolves once subscribers have been notified
    */
   @FifoPromise({ group: ReactiveStorage.FifoGroup, timeout: 1000 })
   async push(storeName: S, key: string, ...values: any[]): Promise<void> {

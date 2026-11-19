@@ -4,6 +4,7 @@
   { "name": "ts-utils" },
   { "name": "extra-ts-types" },
   { "name": "rx-utils" },
+  { "name": "reactive-storage" },
   { "name": "paintlet" },
   { "name": "elements" }
 ]

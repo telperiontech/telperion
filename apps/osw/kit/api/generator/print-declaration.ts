@@ -36,7 +36,7 @@ export function printFunctions(declarations: ts.FunctionDeclaration[]): string[]
 	);
 }
 
-function isPublicMember(member: ts.ClassElement): boolean {
+export function isPublicMember(member: ts.ClassElement): boolean {
 	if (ts.isClassStaticBlockDeclaration(member) || ts.isSemicolonClassElement(member)) return false;
 
 	if (member.name && (ts.isPrivateIdentifier(member.name) || ts.isComputedPropertyName(member.name))) return false;
@@ -73,13 +73,18 @@ function stripMember(member: ts.ClassElement, checker: ts.TypeChecker): ts.Class
 }
 
 /** Drops implementation members that have overload signatures next to them */
-function withoutImplementations(members: ts.ClassElement[]): ts.ClassElement[] {
+export function withoutImplementations(members: ts.ClassElement[]): ts.ClassElement[] {
 	const key = (member: ts.ClassElement) => (ts.isConstructorDeclaration(member) ? 'constructor' : member.name?.getText());
 	const overloaded = new Set(
 		members.filter((member) => (ts.isMethodDeclaration(member) || ts.isConstructorDeclaration(member)) && !member.body).map(key),
 	);
 
 	return members.filter((member) => !((ts.isMethodDeclaration(member) || ts.isConstructorDeclaration(member)) && member.body && overloaded.has(key(member))));
+}
+
+/** One class member without its body or comments, e.g. `get<T>(storeName: S, key?: string): Observable<T>;` */
+export function printMember(member: ts.ClassElement, checker: ts.TypeChecker): string {
+	return print(stripMember(member, checker), member.getSourceFile());
 }
 
 /** Class shape with public members only and no bodies */

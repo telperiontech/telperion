@@ -55,7 +55,7 @@ Creates an AsyncIterator from an Observable. This function is used internally by
 - The Observable is subscribed on the first `next()` call, not when the iterator is created.
 - Values that arrive while nobody is waiting are buffered and handed out in order.
 - Completion resolves pending and later `next()` calls with `{ done: true }`; an error rejects them.
-- `return()`, `throw()` and `Symbol.asyncDispose` unsubscribe from the source.
+- `return()`, `throw()` and `Symbol.asyncDispose` (where the runtime has it) unsubscribe from the source.
 
 ```typescript
 import { of } from 'rxjs';

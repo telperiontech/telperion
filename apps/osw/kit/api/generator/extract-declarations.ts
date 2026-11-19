@@ -1,5 +1,6 @@
 import * as ts from 'typescript';
-import type { DeclarationKind, DocsDeclaration } from '../src/model/types';
+import type { DeclarationKind, DocsDeclaration, DocsMember } from '../src/model/types';
+import { extractMembers } from './extract-members';
 import { leadingJsDoc, parseJsDoc } from './parse-jsdoc';
 import { printClass, printFunctions, printTypeLike, printVariable } from './print-declaration';
 
@@ -9,6 +10,7 @@ interface RawDeclaration {
 	/** Nodes whose leading comments may hold the doc, in source order */
 	docNodes: ts.Node[];
 	signatures: string[];
+	members?: DocsMember[];
 }
 
 function isExported(node: ts.Statement): boolean {
@@ -29,7 +31,13 @@ function collect(sourceFile: ts.SourceFile, checker: ts.TypeChecker): RawDeclara
 			}
 			functions.get(name)!.push(statement);
 		} else if (ts.isClassDeclaration(statement) && statement.name) {
-			declarations.push({ name: statement.name.text, kind: 'class', docNodes: [statement], signatures: [printClass(statement, checker)] });
+			declarations.push({
+				name: statement.name.text,
+				kind: 'class',
+				docNodes: [statement],
+				signatures: [printClass(statement, checker)],
+				members: extractMembers(statement, checker),
+			});
 		} else if (ts.isVariableStatement(statement)) {
 			for (const declaration of statement.declarationList.declarations) {
 				declarations.push({ name: declaration.name.getText(), kind: 'variable', docNodes: [statement], signatures: [printVariable(declaration, checker)] });
@@ -52,11 +60,11 @@ function collect(sourceFile: ts.SourceFile, checker: ts.TypeChecker): RawDeclara
 	return declarations;
 }
 
-function toDocsDeclaration({ name, kind, docNodes, signatures }: RawDeclaration): DocsDeclaration {
+function toDocsDeclaration({ name, kind, docNodes, signatures, members }: RawDeclaration): DocsDeclaration {
 	const raw = docNodes.map(leadingJsDoc).find(Boolean);
 	const { title, ...doc } = parseJsDoc(raw);
 
-	return { name, kind, title: title ?? name, signatures, ...doc };
+	return { name, kind, title: title ?? name, signatures, ...doc, ...(members?.length ? { members } : {}) };
 }
 
 /** Every exported declaration of a module, documented */
