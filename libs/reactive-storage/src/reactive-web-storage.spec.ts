@@ -27,6 +27,33 @@ describe('ReactiveWebStorage', () => {
 		expect(JSON.parse(localStorage.getItem('spec/user')!)).toEqual({ name: 'Grace' });
 	});
 
+	it.each(['user-settings', 'user.settings', 'user settings', 'a/b', 'ünïcode'])('reads back a store named %j after a reload', async (storeName) => {
+		await new ReactiveWebStorage(localStorage, 'spec').set(storeName, 'theme', 'dark');
+
+		const reloaded = new ReactiveWebStorage(localStorage, 'spec');
+
+		await expect(firstValueFrom(reloaded.get(storeName, 'theme'))).resolves.toBe('dark');
+	});
+
+	it('works with a custom Storage implementation', async () => {
+		/** Keeps its entries private, so only the Storage interface reveals them */
+		class MemoryStorage implements Storage {
+			readonly #entries = new Map<string, string>();
+			get length() { return this.#entries.size; }
+			key(index: number) { return [...this.#entries.keys()][index] ?? null; }
+			getItem(key: string) { return this.#entries.get(key) ?? null; }
+			setItem(key: string, value: string) { this.#entries.set(key, value); }
+			removeItem(key: string) { this.#entries.delete(key); }
+			clear() { this.#entries.clear(); }
+		}
+
+		const memory = new MemoryStorage();
+
+		await new ReactiveWebStorage(memory, 'spec').set('user', 'name', 'Ada');
+
+		await expect(firstValueFrom(new ReactiveWebStorage(memory, 'spec').get('user', 'name'))).resolves.toBe('Ada');
+	});
+
 	it('emits a removal made through delete()', async () => {
 		const storage = new ReactiveWebStorage(localStorage, 'spec');
 

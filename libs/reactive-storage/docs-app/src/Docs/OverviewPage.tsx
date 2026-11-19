@@ -14,10 +14,13 @@ await storage.set("settings", "theme", "dark"); // the subscriber runs again wit
 const paths = `await storage.set("user", "", { name: "Ada" });          // the whole store
 await storage.set("user", "profile.theme", "dark");     // creates "profile" on the way
 await storage.push("user", "tags", "admin");            // appends, creating the array
+await storage.patch("user", "", { age: 36 });           // merges into the object
 
-storage.get("user");                 // { name: "Ada", profile: { theme: "dark" }, tags: ["admin"] }
+storage.get("user");                 // { name: "Ada", profile: { theme: "dark" }, tags: ["admin"], age: 36 }
 storage.get("user", "profile.theme"); // "dark"
-await storage.delete("user", "tags");`;
+
+await storage.drop("user", "tags", "admin");            // removes the first equal item
+await storage.delete("user", "profile");                // removes the property`;
 const notes = [
 	['Current value first', 'get() emits the current value as soon as you subscribe, then every change. Missing stores and paths are undefined.'],
 	['Frozen values', 'Emitted values are deep-frozen. Copy before you change them; write the new value back with set().'],

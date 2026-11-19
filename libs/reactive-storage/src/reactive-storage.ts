@@ -2,8 +2,9 @@
 
 import { Observable, distinctUntilChanged, firstValueFrom, from, lastValueFrom, map, startWith, switchMap, take } from "rxjs";
 import { compact } from "@telperion/js-utils/array/compact";
-import { remove } from "@telperion/js-utils/array/remove";
+import { compact as compactObject } from "@telperion/js-utils/object/compact";
 import { deepFreeze } from "@telperion/js-utils/object/deep-freeze";
+import { jsonEqual } from "@telperion/js-utils/object/json-equal";
 import { shareLast } from "@telperion/rx-utils/operators/share-last";
 import { FifoPromise } from "@telperion/ts-utils/fifo-promise";
 
@@ -126,7 +127,8 @@ export abstract class ReactiveStorage<S extends string = string> {
    */
   get<T = Record<string, any>>(storeName: S, key = ''): Observable<T> {
     return this.#stream$.pipe(
-      map(allData => ReactiveStorage.extractData(allData, `${storeName}.${key}`)),
+      // The store by name first: store names may contain dots, key paths are split on them
+      map(allData => ReactiveStorage.extractData(allData[storeName], key)),
       distinctUntilChanged()
     );
   }
@@ -195,18 +197,29 @@ export abstract class ReactiveStorage<S extends string = string> {
   }
 
   /**
-   * Merge a partial object into existing value.
-   * Only works with object values.
+   * Merges the properties of an object into the object at a path (one level deep, like `Object.assign`).
    *
-   * @param storeName - Name of the storage store
-   * @param key - Property path using dot notation
-   * @param value - Partial object to merge with existing value
+   * Properties of `value` that are `null` or `undefined` are skipped, so they never erase stored ones;
+   * use `delete` for that. When there is no object at the path yet, `value` starts a new one.
+   *
+   * Example usage:
+   * ```ts
+   * await storage.set('user', '', { name: 'Ada', age: 36 });
+   * await storage.patch('user', '', { age: 37, email: 'ada@example.com' });
+   * // { name: 'Ada', age: 37, email: 'ada@example.com' }
+   * ```
+   *
+   * @param storeName - Store to change
+   * @param key - Dot-separated path of the object inside the store; empty for the whole store
+   * @param value - Properties to merge in
+   * @returns Resolves once subscribers have been notified
    */
   @FifoPromise({ group: ReactiveStorage.FifoGroup, timeout: 1000 })
-  async patch(storeName: S, key: string, value: any): Promise<void> {
-    const existing = await firstValueFrom(this.get<any[]>(storeName, key));
+  async patch(storeName: S, key: string, value: Record<string, any>): Promise<void> {
+    const existing = await firstValueFrom(this.get<unknown>(storeName, key));
+    const base = typeof existing === 'object' && existing !== null && !Array.isArray(existing) ? existing : {};
 
-    await this.#set(storeName, key, Object.assign({}, existing, compact(value)));
+    await this.#set(storeName, key, { ...base, ...compactObject(value) });
   }
 
   /**
@@ -248,16 +261,35 @@ export abstract class ReactiveStorage<S extends string = string> {
   }
 
   /**
-   * Remove a specific value from an array in storage.
+   * Removes the first item of the array at a path that equals `value`.
    *
-   * @param storeName - Name of the storage store
-   * @param key - Path to array property using dot notation
-   * @param value - Value to remove from the array
+   * Items are compared by content, as JSON: objects match when they have the same properties and
+   * values, in any order. Nothing happens when there is no array at the path or no item matches.
+   *
+   * Example usage:
+   * ```ts
+   * await storage.set('todos', 'items', [{ id: 1, text: 'Buy milk' }, { id: 2, text: 'Walk the dog' }]);
+   * await storage.drop('todos', 'items', { id: 1, text: 'Buy milk' });
+   * // [{ id: 2, text: 'Walk the dog' }]
+   * ```
+   *
+   * @param storeName - Store to change
+   * @param key - Dot-separated path of the array inside the store
+   * @param value - Item to remove
+   * @returns Resolves once subscribers have been notified
    */
   @FifoPromise({ group: ReactiveStorage.FifoGroup, timeout: 1000 })
   async drop(storeName: S, key: string, value: any): Promise<void> {
-    const existing = await firstValueFrom(this.get<any[]>(storeName, key));
+    const existing = await firstValueFrom(this.get<unknown>(storeName, key));
 
-    await this.#set(storeName, key, remove(existing, value));
+    if (!Array.isArray(existing)) return;
+
+    // Compare with the value as it would be stored (e.g. without `undefined` properties)
+    const stored = value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+    const index = existing.findIndex((item) => jsonEqual(item, stored));
+
+    if (index < 0) return;
+
+    await this.#set(storeName, key, existing.filter((_, position) => position !== index));
   }
 }

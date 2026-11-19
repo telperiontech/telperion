@@ -2,7 +2,6 @@ import { Subject } from 'rxjs';
 import { makeAsyncIterator } from '@telperion/rx-utils/to-async-iteratable';
 
 import { ReactiveStorage, ReactiveStorageChangeEvent } from "./reactive-storage";
-import { RegexParser } from './regex-parser';
 import { jsonParse } from './json-parse';
 
 /**
@@ -21,17 +20,16 @@ export abstract class AbstractReactiveWebStorage<S extends string = string> exte
   /** The Web Storage object the stores are saved in */
   abstract readonly storage: Storage;
 
-  get #keyNameRegex() {
-    return RegexParser(`^${this.appName}\\/\\w+$`);
-  }
-
   #changes$ = new Subject<ReactiveStorageChangeEvent<S>>();
 
 	protected async [ReactiveStorage.Props.GET_ALL]() {
-		const keys = Object.keys(this.storage).filter(key => this.#keyNameRegex.test(key));
+		const prefix = `${this.appName}/`;
+		// Through the Storage interface, so custom Storage implementations are read too
+		const keys = Array.from({ length: this.storage.length }, (_, index) => this.storage.key(index))
+			.filter((key): key is string => !!key && key.startsWith(prefix) && key.length > prefix.length);
 
     return Object.fromEntries(keys.map(key => [
-      key.split('/')[1],
+      key.slice(prefix.length),
       AbstractReactiveWebStorage.#parse(this.storage.getItem(key)!)
     ]));
 	}
@@ -55,7 +53,7 @@ export abstract class AbstractReactiveWebStorage<S extends string = string> exte
  * Reactive storage on any `Storage` object you pass in: `localStorage`, `sessionStorage`, or your own
  * implementation of the Web Storage interface (an in-memory one for tests or server rendering, say).
  *
- * Keys and store name rules are those of {@link ReactiveWebLocalStorage}.
+ * Keys are those of {@link ReactiveWebLocalStorage}: `<appName>/<storeName>`.
  *
  * Example usage:
  * ```ts

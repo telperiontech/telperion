@@ -23,7 +23,7 @@
   "dependencies": {
     "tslib": "*",
     "rxjs": "*",
-    "@telperion/js-utils": "^3.5.0",
+    "@telperion/js-utils": "^3.9.0",
     "@telperion/rx-utils": "^1.7.0",
     "@telperion/ts-utils": "^1.1.0"
   },

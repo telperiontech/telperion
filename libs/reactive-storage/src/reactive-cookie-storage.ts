@@ -26,9 +26,9 @@ export interface ReactiveCookieStorageOptions {
 /**
  * Reactive storage on `document.cookie`: for small values the server should see too, or that must expire.
  *
- * Each store is one cookie named `<appName>_<storeName>` (characters other than letters, digits,
- * `_` and `-` become `_`), holding the store as URI-encoded JSON. Every cookie is written with
- * the attributes given in `options`.
+ * Each store is one cookie named `<appName>_<storeName>`, holding the store as URI-encoded JSON.
+ * Characters a cookie name cannot hold are percent-encoded in both parts (`user.settings` stays,
+ * `user settings` becomes `user%20settings`). Every cookie is written with the attributes given in `options`.
  *
  * - A cookie is limited to 4000 bytes; a larger write is rejected with an error.
  * - Browsers have no change event for cookies, so only writes made through this instance are observed.
@@ -151,11 +151,20 @@ export class ReactiveCookieStorage<S extends string = string> extends ReactiveSt
   }
 
   /**
-   * Convert store name to cookie name by prefixing with app name.
-   * Sanitizes to only allow alphanumeric, underscore, and hyphen.
+   * Cookie-name-safe form of an app or store name that decodes back to it: URI encoding, plus
+   * `(` and `)`, which it leaves but cookie names forbid. Letters, digits, `_` and `-` stay as they are.
    */
+  static #encodeName(name: string): string {
+    return encodeURIComponent(name).replace(/[()]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+  }
+
+  /** `<appName>_<storeName>`, each part encoded with {@link ReactiveCookieStorage.#encodeName} */
   #getCookieName(storeName: S): string {
-    return `${this.appName}_${storeName}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+    return `${this.#cookiePrefix}${ReactiveCookieStorage.#encodeName(storeName)}`;
+  }
+
+  get #cookiePrefix(): string {
+    return `${ReactiveCookieStorage.#encodeName(this.appName)}_`;
   }
 
   /**
@@ -193,12 +202,20 @@ export class ReactiveCookieStorage<S extends string = string> extends ReactiveSt
    */
   #getAppCookies(): Record<string, string> {
     const allCookies = this.#parseCookies();
-    const prefix = `${this.appName}_`;
+    const prefix = this.#cookiePrefix;
     const appCookies: Record<string, string> = {};
 
     for (const [cookieName, value] of Object.entries(allCookies)) {
-      if (cookieName.startsWith(prefix)) {
-        const storeName = cookieName.slice(prefix.length);
+      if (cookieName.startsWith(prefix) && cookieName.length > prefix.length) {
+        const encoded = cookieName.slice(prefix.length);
+        let storeName: string;
+
+        try {
+          storeName = decodeURIComponent(encoded);
+        } catch {
+          storeName = encoded; // Not written by this library
+        }
+
         appCookies[storeName] = value;
       }
     }

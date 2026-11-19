@@ -4,6 +4,7 @@
   "description": "Javascript utility functions for web development",
   "keywords": [
     "object",
+    "json equal",
     "deep clone",
     "array",
     "async",
@@ -110,6 +111,7 @@
     "object/compact",
     "object/deepest",
     "object/deep-freeze",
+    "object/json-equal",
     "object/map",
     "promise/",
     "promise/proto/revert",

@@ -3,7 +3,10 @@ import type { ReactiveStorage } from '@telperion/reactive-storage/reactive-stora
 import { DEMO_STORE } from './demo-storage';
 import { actionClass, fieldClass } from './styles';
 
-type WriteMethod = 'set' | 'push' | 'delete';
+type WriteMethod = 'set' | 'patch' | 'push' | 'drop' | 'delete';
+
+/** Methods that take a value, in button order */
+const VALUE_METHODS = ['patch', 'push', 'drop'] as const;
 
 /** What a write did, for the "last call" line: the code and how it ended */
 export interface WriteCall {
@@ -49,9 +52,9 @@ export function WritePanel({ storage, onCall }: WritePanelProps) {
 		setBusy(true);
 
 		try {
-			if (method === 'set') await storage.set(DEMO_STORE, key, value);
-			else if (method === 'push') await storage.push(DEMO_STORE, key, value);
-			else await storage.delete(DEMO_STORE, key);
+			if (method === 'delete') await storage.delete(DEMO_STORE, key);
+			else if (method === 'patch') await storage.patch(DEMO_STORE, key, value as Record<string, unknown>);
+			else await storage[method](DEMO_STORE, key, value);
 
 			onCall({ code });
 		} catch (error) {
@@ -74,7 +77,9 @@ export function WritePanel({ storage, onCall }: WritePanelProps) {
 			</div>
 			<div className="flex flex-wrap gap-2">
 				<button type="button" disabled={busy} onClick={() => run('set')} className={actionClass(true)}>set</button>
-				<button type="button" disabled={busy} onClick={() => run('push')} className={actionClass()}>push</button>
+				{VALUE_METHODS.map((method) => (
+					<button key={method} type="button" disabled={busy} onClick={() => run(method)} className={actionClass()}>{method}</button>
+				))}
 				<button type="button" disabled={busy} onClick={() => run('delete')} className={actionClass()}>delete</button>
 			</div>
 		</div>

@@ -4,8 +4,7 @@ import { AbstractReactiveWebStorage } from "./reactive-web-storage";
  * Reactive storage on `localStorage`: data stays until it is removed, across tabs and browser restarts.
  *
  * Each store is one localStorage key, `<appName>/<storeName>`, holding the store as JSON.
- * Existing keys of the same app are read when the first value is requested. Store names must be
- * word characters (`[A-Za-z0-9_]`): other names are saved but not read back after a reload.
+ * Existing keys of the same app are read when the first value is requested.
  *
  * Changes made in other tabs, or by other instances, are not observed.
  *

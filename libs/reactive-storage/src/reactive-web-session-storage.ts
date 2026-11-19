@@ -3,8 +3,8 @@ import { AbstractReactiveWebStorage } from "./reactive-web-storage";
 /**
  * Reactive storage on `sessionStorage`: data belongs to the tab and is cleared when the tab is closed.
  *
- * Works exactly like {@link ReactiveWebLocalStorage}, with the same `<appName>/<storeName>` keys
- * and store name rules; only the underlying storage differs.
+ * Works exactly like {@link ReactiveWebLocalStorage}, with the same `<appName>/<storeName>` keys;
+ * only the underlying storage differs.
  *
  * Example usage:
  * ```ts

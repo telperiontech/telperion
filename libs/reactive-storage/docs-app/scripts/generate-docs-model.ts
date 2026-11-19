@@ -19,5 +19,5 @@ generateApiModel({
 		storages: { title: 'Storages', description: 'Observable wrappers for localStorage, sessionStorage, any Web Storage and cookies, plus the base class they share.' },
 	},
 	// Internal helpers, not in the package's exports
-	exclude: ['json-parse', 'regex-parser'],
+	exclude: ['json-parse'],
 });

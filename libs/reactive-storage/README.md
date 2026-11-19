@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/%40telperion%2Freactive-storage.svg)](https://badge.fury.io/js/%40telperion%2Freactive-storage)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Reactive RxJS-based wrapper for browser storage APIs (localStorage and sessionStorage). Provides an Observable-based API for real-time storage updates with support for nested property access and automatic synchronization.
+Reactive RxJS-based wrapper for browser storage APIs (localStorage and sessionStorage). Provides an Observable-based API for real-time storage updates with support for nested property access. Changes made through an instance (or, for cookies, through linked instances) reach all of its subscribers.
 
 ## Features
 
@@ -100,12 +100,12 @@ const storage = new ReactiveCookieStorage(
 - `options` (optional): Cookie configuration options
 
 **Options:**
-- `path` (string): URL path where cookie is valid. Default: `'/'`
+- `path` (string): URL path where cookie is valid. Default: not set (the browser uses the current page's path)
 - `domain` (string): Domain where cookie is valid. Default: current domain
 - `maxAge` (number): Cookie lifetime in seconds. Default: `undefined` (session cookie)
 - `expires` (Date): Absolute expiration date. Default: `undefined`
 - `secure` (boolean): HTTPS only flag. Default: `false`
-- `sameSite` ('strict' | 'lax' | 'none'): CSRF protection level. Default: `'lax'`
+- `sameSite` ('strict' | 'lax' | 'none'): CSRF protection level. Default: not set (the browser default, `lax` in current browsers)
 
 **Third Parameter (optional):**
 - `linker` (any): Value to link multiple instances for cross-instance synchronization. Can be a Symbol, string, number, object, or any other value.
@@ -202,7 +202,7 @@ await storage.set('user', 'profile.name', undefined);
 
 #### `patch(storeName: string, key: string, value: any): Promise<void>`
 
-Merge a partial object into existing value. Only works with objects.
+Merge the properties of an object into the object at a path, one level deep. `null` and `undefined` properties are skipped; when there is no object yet, the value starts a new one.
 
 **Example:**
 ```typescript
@@ -240,7 +240,7 @@ await storage.push('todos', 'items', 'Task 2', 'Task 3');
 
 #### `drop(storeName: string, key: string, value: any): Promise<void>`
 
-Remove a specific value from an array in storage.
+Remove the first item of an array in storage that equals the value. Items are compared by content (as JSON), so objects match when they have the same properties and values.
 
 **Example:**
 ```typescript
@@ -441,7 +441,7 @@ This library serves as the foundation for framework-specific integrations:
 3. **Change Tracking**: Internal Subject emits changes that update all subscribers
 4. **FIFO Queue**: Write operations are queued using `@FifoPromise` decorator to prevent race conditions
 5. **Immutability**: All emitted values are deep-frozen to prevent accidental mutations
-6. **Native Events**: localStorage uses the storage event for automatic cross-tab synchronization
+6. **Scope**: Only changes made through the same instance are observed; changes from other tabs or other instances are not
 
 ### Cookie Storage
 

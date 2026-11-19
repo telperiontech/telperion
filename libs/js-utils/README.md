@@ -348,6 +348,16 @@ const obj = { a: 1, b: 2, c: 3 };
 map(obj, value => value * 2); // { a: 2, b: 4, c: 6 }
 ```
 
+#### [JSON Equal](https://open-source.telperion.tr/js-utils/object/json-equal)
+Compares two JSON-compatible values structurally (key order ignored, array order kept). Not a general deep equality: `Date`, `Map` and `Set` are compared only by their own keys
+
+```typescript
+import { jsonEqual } from "@telperion/js-utils/object";
+
+jsonEqual({ a: 1, b: [1, 2] }, { b: [1, 2], a: 1 }); // true
+jsonEqual([1, 2], [2, 1]); // false
+```
+
 #### [Deepest](https://open-source.telperion.tr/js-utils/modules/_object_deepest_.html)
 Get deepest value in an object chain
 
