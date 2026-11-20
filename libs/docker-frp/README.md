@@ -1,6 +1,6 @@
 # Docker FRP - Fast Reverse Proxy Container
 
-[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-docker--frp-blue)](https://github.com/thalesrc/thalesrc/pkgs/container/docker-frp)
+[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-docker--frp-blue)](https://github.com/telperiontech/telperion/pkgs/container/docker-frp)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![FRP Version](https://img.shields.io/badge/frp-v0.65.0-brightgreen.svg)](https://github.com/fatedier/frp)
 
@@ -39,13 +39,13 @@ docker run -p 7000:7000 -p 7500:7500 -p 8080:8080 -p 8443:8443 \
   -e DASHBOARD_USER=admin \
   -e DASHBOARD_PASSWORD=secure123 \
   -e AUTH_TOKEN=my_secure_token \
-  thalesrc/docker-frp:latest
+  telperiontech/docker-frp:latest
 
 # Server without client authentication (open access)
 docker run -p 7000:7000 -p 7500:7500 -p 8080:8080 -p 8443:8443 \
   -e DASHBOARD_USER=admin \
   -e DASHBOARD_PASSWORD=secure123 \
-  thalesrc/docker-frp:latest
+  telperiontech/docker-frp:latest
 
 # Server with custom vhost ports
 docker run -p 7000:7000 -p 7500:7500 -p 80:8080 -p 443:8443 \
@@ -53,7 +53,7 @@ docker run -p 7000:7000 -p 7500:7500 -p 80:8080 -p 443:8443 \
   -e DASHBOARD_PASSWORD=secure123 \
   -e VHOST_HTTP_PORT=8080 \
   -e VHOST_HTTPS_PORT=8443 \
-  thalesrc/docker-frp:latest
+  telperiontech/docker-frp:latest
 
 ### 🌐 Access Points:**
 - **Server Dashboard:** http://localhost:7500 (admin/admin)
@@ -71,7 +71,7 @@ docker run -p 7400:7400 \
   -e AUTH_TOKEN=my_secure_token \
   -e ADMIN_USER=admin \
   -e ADMIN_PASSWORD=secure123 \
-  thalesrc/docker-frp:latest
+  telperiontech/docker-frp:latest
 
 # Start client without authentication (if server doesn't require auth)
 docker run -p 7400:7400 \
@@ -79,7 +79,7 @@ docker run -p 7400:7400 \
   -e SERVER_ADDR=your.server.com \
   -e ADMIN_USER=admin \
   -e ADMIN_PASSWORD=secure123 \
-  thalesrc/docker-frp:latest
+  telperiontech/docker-frp:latest
 
 # Access admin UI at: http://localhost:7400
 ```
@@ -89,20 +89,20 @@ docker run -p 7400:7400 \
 ### Pre-built Images
 ```bash
 # Latest version (both server and client)
-docker pull thalesrc/docker-frp:latest
+docker pull telperiontech/docker-frp:latest
 
 # Server-only image (smaller)
-docker pull thalesrc/docker-frp:server
+docker pull telperiontech/docker-frp:server
 
 # Client-only image (with admin UI)
-docker pull thalesrc/docker-frp:client
+docker pull telperiontech/docker-frp:client
 ```
 
 ### Build from Source
 ```bash
 # Clone this repository
-git clone https://github.com/thalesrc/thalesrc.git
-cd thalesrc/libs/docker-frp
+git clone https://github.com/telperiontech/telperion.git
+cd telperion/libs/docker-frp
 
 # Build all variants
 nx run docker-frp:build-all
@@ -136,7 +136,7 @@ mkdir -p ./frp-configs
 docker run -p 7000:7000 -p 7500:7500 -p 8080:8080 -p 8443:8443 \
   -v ./frp-configs:/app/configs \
   -e DASHBOARD_PASSWORD=secure123 \
-  thalesrc/docker-frp:server
+  telperiontech/docker-frp:server
 
 # Client with persistent config  
 docker run -p 7400:7400 \
@@ -144,7 +144,7 @@ docker run -p 7400:7400 \
   -e MODE=client \
   -e SERVER_ADDR=your.server.com \
   -e ADMIN_PASSWORD=secure123 \
-  thalesrc/docker-frp:client
+  telperiontech/docker-frp:client
 ```
 
 #### Configuration Files:
@@ -192,7 +192,7 @@ version: '3.8'
 
 services:
   frp-server:
-    image: thalesrc/docker-frp:server
+    image: telperiontech/docker-frp:server
     ports:
       - "7000:7000"  # FRP server port
       - "7500:7500"  # Dashboard
@@ -209,7 +209,7 @@ services:
     restart: unless-stopped
 
   frp-client:
-    image: thalesrc/docker-frp:client
+    image: telperiontech/docker-frp:client
     ports:
       - "7400:7400"  # Admin UI
     environment:
@@ -240,7 +240,7 @@ version: '3.8'
 
 services:
   frp-server:
-    image: thalesrc/docker-frp:server
+    image: telperiontech/docker-frp:server
     ports:
       - "7000:7000"
       - "7500:7500"
@@ -285,7 +285,7 @@ spec:
     spec:
       containers:
       - name: frp-server
-        image: thalesrc/docker-frp:server
+        image: telperiontech/docker-frp:server
         ports:
         - containerPort: 7000
         - containerPort: 7500
@@ -336,7 +336,7 @@ docker run -d \
   -e TLS_CERT_FILE=/certs/server.crt \
   -e TLS_KEY_FILE=/certs/server.key \
   -e AUTH_TOKEN=super_secure_token \
-  thalesrc/docker-frp:server
+  telperiontech/docker-frp:server
 ```
 
 #### Client with Custom Config
@@ -370,7 +370,7 @@ docker run -d \
   -v $(pwd)/frpc.toml:/app/custom-config.toml:ro \
   -e MODE=client \
   -e CONFIG_FILE=/app/custom-config.toml \
-  thalesrc/docker-frp:client
+  telperiontech/docker-frp:client
 ```
 
 ## 🌐 Admin UI Usage
@@ -526,7 +526,7 @@ curl http://localhost:7400
 ### Debug Mode
 ```bash
 # Run with debug logging
-docker run -e LOG_LEVEL=debug thalesrc/docker-frp
+docker run -e LOG_LEVEL=debug telperiontech/docker-frp
 
 # Access container shell
 docker exec -it container_name /bin/bash
@@ -589,10 +589,10 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/thalesrc/thalesrc/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/thalesrc/thalesrc/discussions)
-- **Documentation**: [Project Wiki](https://github.com/thalesrc/thalesrc/wiki)
+- **Issues**: [GitHub Issues](https://github.com/telperiontech/telperion/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/telperiontech/telperion/discussions)
+- **Documentation**: [Project Wiki](https://github.com/telperiontech/telperion/wiki)
 
 ---
 
-**Made with ❤️ by the Thalesrc Team**
+**Made with ❤️ by the Telperion Team**

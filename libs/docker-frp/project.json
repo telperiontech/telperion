@@ -17,16 +17,16 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker build -t thalesrc/docker-frp:latest .",
+        "command": "docker build -t telperiontech/docker-frp:latest .",
         "cwd": "libs/docker-frp"
       },
       "configurations": {
         "server": {
-          "command": "docker build --build-arg BUILD_MODE=server -t thalesrc/docker-frp:server .",
+          "command": "docker build --build-arg BUILD_MODE=server -t telperiontech/docker-frp:server .",
           "cwd": "libs/docker-frp"
         },
         "client": {
-          "command": "docker build --build-arg BUILD_MODE=client -t thalesrc/docker-frp:client .",
+          "command": "docker build --build-arg BUILD_MODE=client -t telperiontech/docker-frp:client .",
           "cwd": "libs/docker-frp"
         }
       }
@@ -44,14 +44,14 @@
     "run-server": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker run -p 7000:7000 -p 7500:7500 -e MODE=server thalesrc/docker-frp:server",
+        "command": "docker run -p 7000:7000 -p 7500:7500 -e MODE=server telperiontech/docker-frp:server",
         "cwd": "libs/docker-frp"
       }
     },
     "run-client": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker run -p 3000:3000 -e MODE=client thalesrc/docker-frp:client",
+        "command": "docker run -p 3000:3000 -e MODE=client telperiontech/docker-frp:client",
         "cwd": "libs/docker-frp"
       }
     }
