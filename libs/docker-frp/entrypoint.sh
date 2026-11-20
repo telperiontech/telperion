@@ -99,6 +99,13 @@ setup_config() {
     fi
 }
 
+# Function to print a config file with secret values masked.
+# Only the printed copy is altered; the file on disk is never modified.
+print_masked_config() {
+    local config_file=$1
+    sed -E 's/^([[:space:]]*(token|auth\.token|password|webServer\.password|adminPasswd)[[:space:]]*=).*/\1 "***"/' "$config_file"
+}
+
 # Determine mode
 MODE=${MODE:-server}
 
@@ -147,7 +154,7 @@ token = \"$AUTH_TOKEN\""
         setup_config "s"
 
         echo "Final configuration:"
-        cat /app/configs/frps.toml
+        print_masked_config /app/configs/frps.toml
 
         # Start FRP server directly from configs
         exec frps -c /app/configs/frps.toml
@@ -193,7 +200,7 @@ token = \"$AUTH_TOKEN\""
         setup_config "c"
 
         echo "Final configuration:"
-        cat /app/configs/frpc.toml
+        print_masked_config /app/configs/frpc.toml
 
         # Start FRP client directly from configs
         echo "Starting FRP client..."

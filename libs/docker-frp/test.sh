@@ -43,11 +43,11 @@ cleanup() {
     log_info "Cleaning up test resources..."
 
     # Stop and remove test containers
-    docker stop frp-server-test frp-client-test frp-test-server frp-volume-test 2>/dev/null || true
-    docker rm frp-server-test frp-client-test frp-test-server frp-volume-test 2>/dev/null || true
+    docker stop frp-server-test frp-client-test frp-test-server frp-volume-test frp-secret-server-test frp-secret-client-test 2>/dev/null || true
+    docker rm frp-server-test frp-client-test frp-test-server frp-volume-test frp-secret-server-test frp-secret-client-test 2>/dev/null || true
 
-    # Remove test configs directory
-    rm -rf ./test-configs 2>/dev/null || true
+    # Remove test configs directories
+    rm -rf ./test-configs ./test-secret-configs 2>/dev/null || true
 
     # Remove test images if cleanup is enabled
     if [ "$CLEANUP_ON_SUCCESS" = "true" ] && [ $exit_code -eq 0 ]; then
@@ -269,6 +269,74 @@ test_volume_persistence() {
     rm -rf ./test-configs
 }
 
+# Test that secrets never appear in container output
+test_secrets_not_logged() {
+    log_test "Testing that secrets are masked in container output..."
+
+    local token="leak-check-token-$$"
+    local dashboard_password="leak-check-dashboard-$$"
+    local admin_password="leak-check-admin-$$"
+
+    mkdir -p ./test-secret-configs
+
+    docker run -d --name frp-secret-server-test \
+        -v "$(pwd)/test-secret-configs:/app/configs" \
+        -e MODE=server \
+        -e AUTH_TOKEN="$token" \
+        -e DASHBOARD_PASSWORD="$dashboard_password" \
+        "${TEST_TAG}:server"
+
+    docker run -d --name frp-secret-client-test \
+        -e MODE=client \
+        -e SERVER_ADDR=127.0.0.1 \
+        -e AUTH_TOKEN="$token" \
+        -e ADMIN_PASSWORD="$admin_password" \
+        "${TEST_TAG}:client"
+
+    sleep 5
+
+    show_logs_if_verbose frp-secret-server-test
+    show_logs_if_verbose frp-secret-client-test
+
+    local server_logs client_logs
+    server_logs=$(docker logs frp-secret-server-test 2>&1)
+    client_logs=$(docker logs frp-secret-client-test 2>&1)
+
+    # The config must still be printed, with masked values
+    if ! echo "$server_logs" | grep -q '^token = "\*\*\*"' || ! echo "$client_logs" | grep -q '^token = "\*\*\*"'; then
+        log_error "Final configuration output does not show masked token"
+        echo "$server_logs"; echo "$client_logs"
+        return 1
+    fi
+
+    for secret in "$token" "$dashboard_password"; do
+        if echo "$server_logs" | grep -qF "$secret"; then
+            log_error "Server container output leaks a secret"
+            return 1
+        fi
+    done
+    for secret in "$token" "$admin_password"; do
+        if echo "$client_logs" | grep -qF "$secret"; then
+            log_error "Client container output leaks a secret"
+            return 1
+        fi
+    done
+    log_success "Secrets are masked in container output"
+
+    # Masking must only affect the printed copy, never the config file
+    if grep -qF "token = \"$token\"" ./test-secret-configs/frps.toml; then
+        log_success "Config file on disk still contains the real token"
+    else
+        log_error "Config file on disk was modified by masking"
+        cat ./test-secret-configs/frps.toml
+        return 1
+    fi
+
+    docker stop frp-secret-server-test frp-secret-client-test 2>/dev/null || true
+    docker rm frp-secret-server-test frp-secret-client-test 2>/dev/null || true
+    rm -rf ./test-secret-configs
+}
+
 # Test help functionality
 test_help_functionality() {
     log_test "Testing help functionality..."
@@ -296,6 +364,7 @@ main() {
     test_server_container
     test_client_container
     test_volume_persistence
+    test_secrets_not_logged
     test_help_functionality
 
     log_success "All tests passed! 🎉"
