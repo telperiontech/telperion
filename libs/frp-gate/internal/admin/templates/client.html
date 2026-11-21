@@ -1,0 +1,47 @@
+{{define "content"}}
+{{$c := .Data.Client}}
+<h1>{{$c.Name}} {{if $c.Disabled}}<span class="tag off">disabled</span>{{else}}<span class="tag on">active</span>{{end}}</h1>
+{{with $c.Note}}<p>{{.}}</p>{{end}}
+
+{{if .Data.Token}}
+<section class="card secret">
+  <h2>Token (shown once)</h2>
+  <pre>{{.Data.Token}}</pre>
+</section>
+{{end}}
+
+<section class="card">
+  <h2>frpc.toml</h2>
+  <pre>{{.Data.Snippet}}</pre>
+  {{if not .Data.Token}}<p class="hint">The token is not stored in readable form. Rotate it to get a new one.</p>{{end}}
+</section>
+
+<section>
+  <h2>Grants</h2>
+  {{with .Data.Grants}}
+  <table>
+    <thead><tr><th>Via</th><th>Allows</th></tr></thead>
+    <tbody>{{range .}}<tr><td>{{.SubjectKind}} {{.Subject}}</td><td><code>{{.Target}}</code></td></tr>{{end}}</tbody>
+  </table>
+  {{else}}<p>No grants: this client cannot log in. Add it to a group or give it a grant.</p>{{end}}
+  {{with .Data.Groups}}<p>Groups: {{join . ", "}}</p>{{end}}
+</section>
+
+<section>
+  <h2>Connected now</h2>
+  {{range .Data.Sessions}}
+    <p>on <strong>{{.Instance}}</strong> since {{ago .FirstSeen}}, last heartbeat {{ago .LastSeen}}</p>
+    <ul>{{range .Proxies}}<li><code>{{.Name}}</code> {{.Type}} {{range .Domains}}<code>{{.}}</code> {{end}}{{if .RemotePort}}port {{.RemotePort}}{{end}}</li>{{end}}</ul>
+  {{else}}<p>Not connected.{{if not $c.LastLoginAt.IsZero}} Last login {{ago $c.LastLoginAt}} from {{$c.LastLoginAddr}} ({{$c.LastLoginHost}}, frpc {{$c.LastLoginVersion}}).{{end}}</p>{{end}}
+</section>
+
+<section class="actions">
+  {{if $c.Disabled}}
+  <form method="post" action="/clients/{{$c.Name}}/enable"><button>Enable</button></form>
+  {{else}}
+  <form method="post" action="/clients/{{$c.Name}}/disable"><button>Disable</button></form>
+  {{end}}
+  <form method="post" action="/clients/{{$c.Name}}/rotate" onsubmit="return confirm('Issue a new token? The old one stops working.')"><button>Rotate token</button></form>
+  <form method="post" action="/clients/{{$c.Name}}/delete" onsubmit="return confirm('Delete this client and its direct grants?')"><button class="danger">Delete</button></form>
+</section>
+{{end}}

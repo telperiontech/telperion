@@ -1,0 +1,56 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "frp-gate",
+  "projectType": "library",
+  "tags": [
+    "docker",
+    "frp",
+    "go",
+    "gateway",
+    "multi-tenant",
+    "reverse-proxy",
+    "tunnel",
+    "caddy",
+    "tls"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t telperiontech/frp-gate:latest .",
+        "cwd": "libs/frp-gate"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build --target test --progress plain .",
+        "cwd": "libs/frp-gate"
+      }
+    },
+    "test-integration": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash test/integration/run.sh",
+        "cwd": "libs/frp-gate",
+        "env": {
+          "FRP_VERSION": "0.65.0"
+        }
+      },
+      "configurations": {
+        "latest-frp": {
+          "env": {
+            "FRP_VERSION": "0.72.0"
+          }
+        }
+      }
+    },
+    "run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker run --rm -p 7600:7600 -p 7601:7601 -e FRP_GATE_ADMIN_PASSWORD=change-me-please -v frp-gate-dev:/data telperiontech/frp-gate:latest",
+        "cwd": "libs/frp-gate"
+      }
+    }
+  }
+}

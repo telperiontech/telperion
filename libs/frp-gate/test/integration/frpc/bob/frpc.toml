@@ -1,0 +1,22 @@
+# bob: has his own name, and tries to take one under alice's label.
+serverAddr = "frps"
+serverPort = 7000
+user = "bob"
+metadatas.token = "{{ .Envs.FRP_TOKEN }}"
+loginFailExit = false
+transport.heartbeatInterval = 5
+transport.heartbeatTimeout = 20
+
+[[proxies]]
+name = "own"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["api.bob.dev.test.example"]
+
+[[proxies]]
+name = "steal"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["x.alice.dev.test.example"]

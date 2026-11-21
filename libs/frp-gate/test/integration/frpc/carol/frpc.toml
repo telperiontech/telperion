@@ -1,0 +1,15 @@
+# carol: leaves heartbeats at frpc's defaults (off with tcpMux). frps must
+# drop her after transport.heartbeatTimeout, which shows that revocation does
+# not depend on the client's cooperation.
+serverAddr = "frps"
+serverPort = 7000
+user = "carol"
+metadatas.token = "{{ .Envs.FRP_TOKEN }}"
+loginFailExit = false
+
+[[proxies]]
+name = "web"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["app.carol.dev.test.example"]

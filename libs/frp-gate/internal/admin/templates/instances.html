@@ -1,0 +1,43 @@
+{{define "content"}}
+<h1>Servers (frps)</h1>
+
+{{with .Data.Snippet}}
+<section class="card secret">
+  <h2>frps.toml for {{$.Data.Created}} (key shown once)</h2>
+  <pre>{{.}}</pre>
+</section>
+{{end}}
+
+<form method="post" action="/instances" class="card">
+  <h2>Add a server</h2>
+  <label>Name <input name="name" required placeholder="main"></label>
+  <label>Public address for frpc <input name="server_addr" placeholder="gateway.example.com:7000"></label>
+  {{with .W.Zones}}
+  <fieldset><legend>Zones it serves</legend>
+    {{range .}}<label class="inline"><input type="checkbox" name="zones" value="{{.Domain}}"> {{.Domain}}</label>{{end}}
+  </fieldset>
+  {{end}}
+  <button>Add server</button>
+  <p class="hint">frps reaches frp-gate at <code>{{.Data.PluginAddr}}</code> (FRP_GATE_PLUGIN_ADDR). The plugin URL carries a secret key that identifies the server.</p>
+</form>
+
+{{range .W.Instances}}
+{{$in := .}}
+<section class="card">
+  <h2>{{.Name}}</h2>
+  <p>frpc connects to <code>{{or .ServerAddr "(not set)"}}</code></p>
+  <form method="post" action="/instances/{{.Name}}/zones">
+    <fieldset><legend>Zones</legend>
+      {{range $.W.Zones}}<label class="inline"><input type="checkbox" name="zones" value="{{.Domain}}"{{if has $in.ZoneIDs .ID}} checked{{end}}> {{.Domain}}</label>{{else}}<span class="hint">Add zones first.</span>{{end}}
+    </fieldset>
+    <button>Save zones</button>
+  </form>
+  <div class="actions">
+    <form method="post" action="/instances/{{.Name}}/rotate" onsubmit="return confirm('Issue a new key? frps keeps failing until its frps.toml is updated.')"><button>Rotate key</button></form>
+    <form method="post" action="/instances/{{.Name}}/delete" onsubmit="return confirm('Delete this server and its port grants?')"><button class="danger">Delete</button></form>
+  </div>
+</section>
+{{else}}
+<p>No servers yet. Set FRP_GATE_INSTANCE_KEY to create one at start-up, or add one here.</p>
+{{end}}
+{{end}}

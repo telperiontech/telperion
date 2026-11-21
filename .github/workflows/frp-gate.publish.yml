@@ -1,0 +1,123 @@
+name: FRP Gate / Publish
+
+# Runs when a GitHub release with a tag like frp-gate-v1.2.3 is published,
+# e.g. `gh release create frp-gate-v1.2.3 --title ... --notes ...`.
+on:
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: telperiontech/frp-gate
+
+jobs:
+  build-and-publish:
+    if: startsWith(github.event.release.tag_name, 'frp-gate-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set package version env variable
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${TAG#frp-gate-v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tag '$TAG' is not frp-gate-vX.Y.Z"
+            exit 1
+          fi
+          echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: libs/frp-gate/Dockerfile
+          failure-threshold: error
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run unit tests
+        run: docker build --target test --progress plain libs/frp-gate
+
+      # Real frps + frpc + frp-gate: the frp version docker-frp ships, then the latest checked one.
+      - name: Run integration tests (frp 0.65.0)
+        run: bash libs/frp-gate/test/integration/run.sh
+        env:
+          FRP_VERSION: 0.65.0
+
+      - name: Run integration tests (frp 0.72.0)
+        run: bash libs/frp-gate/test/integration/run.sh
+        env:
+          FRP_VERSION: 0.72.0
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.PACKAGE_VERSION }}
+          labels: |
+            org.opencontainers.image.title=Telperion frp-gate
+            org.opencontainers.image.description=Multi-tenant gateway for frp: server plugin, Caddy on-demand TLS ask and admin UI
+            org.opencontainers.image.vendor=Telperion
+            org.opencontainers.image.version=${{ env.PACKAGE_VERSION }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}/tree/main/libs/frp-gate
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}/tree/main/libs/frp-gate
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
+          annotations: |
+            org.opencontainers.image.title=Telperion frp-gate
+            org.opencontainers.image.description=Multi-tenant gateway for frp: server plugin, Caddy on-demand TLS ask and admin UI
+            org.opencontainers.image.vendor=Telperion
+            org.opencontainers.image.version=${{ env.PACKAGE_VERSION }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}/tree/main/libs/frp-gate
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}/tree/main/libs/frp-gate
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: libs/frp-gate
+          file: libs/frp-gate/Dockerfile
+          target: runtime
+          push: true
+          build-args: |
+            VERSION=${{ env.PACKAGE_VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=frp-gate
+          cache-to: type=gha,mode=max,scope=frp-gate
+
+      - name: Create release summary
+        run: |
+          {
+            echo "## 🐳 Published frp-gate"
+            echo ""
+            echo "**Version:** \`${PACKAGE_VERSION}\`"
+            echo "**Platforms:** \`linux/amd64\`, \`linux/arm64\`"
+            echo ""
+            echo "- \`${REGISTRY}/${IMAGE_NAME}:${PACKAGE_VERSION}\`"
+            echo "- \`${REGISTRY}/${IMAGE_NAME}:latest\`"
+            echo ""
+            echo "Documentation: [libs/frp-gate/README.md](${{ github.server_url }}/${{ github.repository }}/tree/main/libs/frp-gate)"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,29 @@
+{{define "layout"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · frp-gate</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+{{if .Active}}
+<nav>
+  <strong>frp-gate</strong>
+  <a href="/status"{{if eq .Active "status"}} class="active"{{end}}>Connected</a>
+  <a href="/clients"{{if eq .Active "clients"}} class="active"{{end}}>Clients</a>
+  <a href="/groups"{{if eq .Active "groups"}} class="active"{{end}}>Groups</a>
+  <a href="/grants"{{if eq .Active "grants"}} class="active"{{end}}>Grants</a>
+  <a href="/zones"{{if eq .Active "zones"}} class="active"{{end}}>Zones</a>
+  <a href="/instances"{{if eq .Active "instances"}} class="active"{{end}}>Servers</a>
+  <form method="post" action="/logout" class="logout"><button>Log out</button></form>
+</nav>
+{{end}}
+<main>
+{{if .OK}}<p class="msg ok">{{.OK}}</p>{{end}}
+{{if .Err}}<p class="msg err">{{.Err}}</p>{{end}}
+{{template "content" .}}
+</main>
+</body>
+</html>
+{{end}}

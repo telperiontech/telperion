@@ -1,0 +1,35 @@
+{{define "content"}}
+<h1>Groups</h1>
+<form method="post" action="/groups" class="card">
+  <h2>Add a group</h2>
+  <label>Name <input name="name" required placeholder="videochat"></label>
+  <button>Add group</button>
+  <p class="hint">Grants given to a group apply to every member, e.g. <code>*.{client}.&lt;zone&gt;</code>.</p>
+</form>
+
+{{range .Data.Groups}}
+{{$g := .}}
+<section class="card">
+  <h2>{{.Name}}</h2>
+  {{with .Members}}
+  <ul class="members">
+    {{range .}}
+    <li><a href="/clients/{{.}}">{{.}}</a>
+      <form method="post" action="/groups/{{$g.Name}}/members/{{.}}/delete" class="inline"><button class="small">remove</button></form>
+    </li>
+    {{end}}
+  </ul>
+  {{else}}<p class="hint">No members.</p>{{end}}
+  <form method="post" action="/groups/{{.Name}}/members" class="row">
+    <select name="client" required>
+      <option value="">add a client…</option>
+      {{range $.W.Clients}}<option value="{{.Name}}">{{.Name}}</option>{{end}}
+    </select>
+    <button>Add</button>
+  </form>
+  <form method="post" action="/groups/{{.Name}}/delete" onsubmit="return confirm('Delete this group and its grants?')"><button class="danger">Delete group</button></form>
+</section>
+{{else}}
+<p>No groups yet.</p>
+{{end}}
+{{end}}

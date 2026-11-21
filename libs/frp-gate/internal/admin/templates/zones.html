@@ -1,0 +1,27 @@
+{{define "content"}}
+<h1>Zones</h1>
+<form method="post" action="/zones" class="card">
+  <h2>Add a zone</h2>
+  <label>Base domain <input name="domain" required placeholder="dev.videochat.example.com"></label>
+  <button>Add zone</button>
+  <p class="hint">Point <code>*.&lt;zone&gt;</code> at the gateway in DNS, then attach the zone to a server.</p>
+</form>
+
+{{with .W.Zones}}
+<table>
+  <thead><tr><th>Domain</th><th>Served by</th><th></th></tr></thead>
+  <tbody>
+  {{range .}}
+  {{$z := .}}
+  <tr>
+    <td><code>{{.Domain}}</code></td>
+    <td>{{range $.Data.Instances}}{{$in := .}}{{range .Zones}}{{if eq . $z.Domain}}<span class="tag">{{$in.Name}}</span> {{end}}{{end}}{{end}}</td>
+    <td><form method="post" action="/zones/{{.Domain}}/delete" onsubmit="return confirm('Delete this zone?')"><button class="danger">Delete</button></form></td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p>No zones yet.</p>
+{{end}}
+{{end}}

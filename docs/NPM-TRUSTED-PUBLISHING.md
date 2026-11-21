@@ -45,7 +45,7 @@ Not yet confirmed:
 | @thalesrc/react-utils | react-utils.publish.yml | repository_dispatch | v4 | missing |
 | @telperion/ts-utils | ts-utils.publish.yml | repository_dispatch | v4 | missing |
 
-Not affected: `docker-frp`, `osw-home`, `osw-shell` and `auto-proxy` do not publish to npm.
+Not affected: `docker-frp`, `frp-gate`, `osw-home`, `osw-shell` and `auto-proxy` do not publish to npm.
 
 ## Migration steps
 

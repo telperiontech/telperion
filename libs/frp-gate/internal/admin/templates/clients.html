@@ -1,0 +1,33 @@
+{{define "content"}}
+<h1>Clients</h1>
+<form method="post" action="/clients" class="card">
+  <h2>Add a client</h2>
+  <label>Name <input name="name" required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" placeholder="sahin, home-pi" title="lowercase letters, digits and '-'"></label>
+  <label>Note <input name="note" placeholder="optional"></label>
+  {{with .W.Groups}}
+  <fieldset><legend>Groups</legend>
+    {{range .}}<label class="inline"><input type="checkbox" name="groups" value="{{.Name}}"> {{.Name}}</label>{{end}}
+  </fieldset>
+  {{end}}
+  <button>Add client</button>
+  <p class="hint">The name is the frpc <code>user</code> and fills <code>{client}</code> in host patterns.</p>
+</form>
+
+{{with .W.Clients}}
+<table>
+  <thead><tr><th>Name</th><th>Status</th><th>Last login</th><th>Note</th></tr></thead>
+  <tbody>
+  {{range .}}
+  <tr>
+    <td><a href="/clients/{{.Name}}">{{.Name}}</a></td>
+    <td>{{if .Disabled}}<span class="tag off">disabled</span>{{else}}<span class="tag on">active</span>{{end}}</td>
+    <td title="{{stamp .LastLoginAt}}">{{ago .LastLoginAt}}{{if .LastLoginAddr}} from {{.LastLoginAddr}}{{end}}</td>
+    <td>{{.Note}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p>No clients yet.</p>
+{{end}}
+{{end}}

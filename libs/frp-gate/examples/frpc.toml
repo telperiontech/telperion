@@ -1,0 +1,28 @@
+# A client's frpc.toml. frp-gate's admin UI shows a filled-in copy when the
+# client is created. Keep the token out of logs and git: put it in an
+# environment variable and let frpc read it.
+serverAddr = "gateway.example.com"
+serverPort = 7000
+user = "sahin"                                # the client name in frp-gate
+metadatas.token = "{{ .Envs.FRP_GATE_TOKEN }}" # the client token (fg_...)
+
+# frp-gate revokes access through heartbeats. Without these lines frps drops
+# the connection after its heartbeatTimeout.
+transport.heartbeatInterval = 15
+transport.heartbeatTimeout = 60
+
+[[proxies]]
+name = "web"
+type = "http"
+localPort = 3000
+# Must be covered by a grant, e.g. *.{client}.dev.example.com.
+customDomains = ["app.pc.sahin.dev.example.com"]
+# frps does not pass on X-Forwarded-Proto from Caddy; tell the app it is HTTPS.
+requestHeaders.set.x-forwarded-proto = "https"
+
+# A port grant (tcp 25565 on this server) allows:
+# [[proxies]]
+# name = "minecraft"
+# type = "tcp"
+# localPort = 25565
+# remotePort = 25565

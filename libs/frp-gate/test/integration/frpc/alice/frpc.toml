@@ -1,0 +1,22 @@
+# alice: a well-behaved client with an http name and a tcp port.
+serverAddr = "frps"
+serverPort = 7000
+user = "alice"
+metadatas.token = "{{ .Envs.FRP_TOKEN }}"
+loginFailExit = false
+transport.heartbeatInterval = 5
+transport.heartbeatTimeout = 20
+
+[[proxies]]
+name = "web"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["app.alice.dev.test.example"]
+
+[[proxies]]
+name = "tcp"
+type = "tcp"
+localIP = "backend"
+localPort = 80
+remotePort = 6001

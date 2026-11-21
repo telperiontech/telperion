@@ -1,0 +1,28 @@
+{{define "content"}}
+<h1>Connected now</h1>
+<p class="hint">Sessions that sent a heartbeat recently. <a href="/status">Refresh</a></p>
+{{with .Data.Sessions}}
+<table>
+  <thead><tr><th>Client</th><th>Server</th><th>Proxies</th><th>Connected</th><th>Last heartbeat</th></tr></thead>
+  <tbody>
+  {{range .}}
+  <tr>
+    <td><a href="/clients/{{.Client}}">{{.Client}}</a></td>
+    <td>{{.Instance}}</td>
+    <td>
+      {{range .Proxies}}
+        <div><code>{{.Name}}</code> <span class="tag">{{.Type}}</span>
+        {{if .Domains}}{{range .Domains}} <code>{{.}}</code>{{end}}{{end}}
+        {{if .RemotePort}} port <code>{{.RemotePort}}</code>{{end}}</div>
+      {{else}}<span class="hint">none</span>{{end}}
+    </td>
+    <td title="{{stamp .FirstSeen}}">{{ago .FirstSeen}}</td>
+    <td title="{{stamp .LastSeen}}">{{ago .LastSeen}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p>No client is connected.</p>
+{{end}}
+{{end}}

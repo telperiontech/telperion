@@ -1,0 +1,19 @@
+# frps for frp-gate. Written once; frp-gate never changes it.
+bindPort = 7000
+
+# Caddy terminates TLS and forwards every on-demand name here.
+vhostHTTPPort = 8080
+
+# Only needed if you grant tcp/udp ports; keep it in sync with the grants.
+# allowPorts = [{ start = 6000, end = 6010 }]
+
+# frp-gate is the authority for logins: do not set auth.token.
+# Heartbeats must run even with tcpMux (the default turns them off), so a
+# disabled client is dropped within this many seconds.
+transport.heartbeatTimeout = 60
+
+[[httpPlugins]]
+name = "frp-gate"
+addr = "frp-gate:7600"
+path = "/frps/{{ .Envs.FRP_GATE_INSTANCE_KEY }}"
+ops = ["Login", "NewProxy", "CloseProxy", "Ping", "NewWorkConn"]

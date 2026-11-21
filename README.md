@@ -185,6 +185,13 @@ Comprehensive Docker container for Fast Reverse Proxy (FRP) with both server and
 
 **Highlights**: FRP server/client, Web admin UI, Multi-protocol, Easy setup, Multi-platform support
 
+#### [frp-gate](libs/frp-gate)
+[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-frp--gate-blue)](https://github.com/telperiontech/telperion/pkgs/container/frp-gate)
+
+Multi-tenant gateway for frp. One frps is shared by many clients, and each client may only claim the host names and ports it was granted. It works as an frps server plugin, answers Caddy's on-demand TLS `ask`, and has a small admin UI and JSON API.
+
+**Highlights**: Per-client tokens, Host patterns like `*.{client}.<zone>`, Fast revocation, Caddy on-demand TLS, SQLite, amd64/arm64
+
 ---
 
 ## 🚀 Quick Start
@@ -289,7 +296,8 @@ thalesrc/
 │   ├── node-utils/            # Node.js utilities
 │   ├── nx-utils/              # Nx executors
 │   ├── auto-proxy/            # Auto proxy Docker image
-│   └── docker-frp/            # FRP Docker image
+│   ├── docker-frp/            # FRP Docker image
+│   └── frp-gate/              # Multi-tenant frp gateway (Go)
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json

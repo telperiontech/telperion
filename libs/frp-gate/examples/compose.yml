@@ -1,0 +1,44 @@
+# A complete gateway: Caddy (HTTPS) + frps + frp-gate.
+# Copy this folder to the server, create .env from .env.example, then:
+#   docker compose up -d
+services:
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  frps:
+    image: ghcr.io/telperiontech/docker-frp:1.2.0-server
+    restart: unless-stopped
+    environment:
+      # Read by frps.toml through {{ .Envs.FRP_GATE_INSTANCE_KEY }}.
+      FRP_GATE_INSTANCE_KEY: ${FRP_GATE_INSTANCE_KEY:?set it in .env}
+    ports:
+      - "7000:7000"           # frpc connects here
+      # - "6000-6010:6000-6010" # only if you grant tcp/udp ports
+    volumes:
+      - ./frps:/app/configs:ro
+    depends_on: [frp-gate]
+
+  frp-gate:
+    image: ghcr.io/telperiontech/frp-gate:latest # pin a version in production
+    restart: unless-stopped
+    environment:
+      FRP_GATE_ADMIN_PASSWORD: ${FRP_GATE_ADMIN_PASSWORD:?set it in .env}
+      FRP_GATE_INSTANCE_KEY: ${FRP_GATE_INSTANCE_KEY:?set it in .env}
+      FRP_GATE_INSTANCE_SERVER_ADDR: ${FRP_GATE_PUBLIC_ADDR:-gateway.example.com:7000}
+    volumes:
+      - frp_gate_data:/data
+    # No published ports: Caddy and frps reach it on the compose network.
+
+volumes:
+  caddy_data:
+  caddy_config:
+  frp_gate_data:

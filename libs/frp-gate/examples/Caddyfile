@@ -1,0 +1,25 @@
+{
+	# Used for ACME account notices. Change it.
+	email admin@example.com
+
+	# Caddy asks frp-gate before it gets a certificate for an unknown name.
+	on_demand_tls {
+		ask http://frp-gate:7600/tls/ask
+	}
+}
+
+# Admin UI and API. frp-gate has its own login; add basic_auth or an IP
+# allow-list here if you want a second layer.
+gate.example.com {
+	reverse_proxy frp-gate:7601
+}
+
+# Every other name: certificate on demand (HTTP-01 / TLS-ALPN), then frps
+# routes by Host header to the right client. Sites with explicit names (like
+# the one above) always win over this catch-all.
+https:// {
+	tls {
+		on_demand
+	}
+	reverse_proxy frps:8080
+}

@@ -1,0 +1,55 @@
+{{define "subjects"}}
+<select name="subject" required>
+  <option value="">client or group…</option>
+  {{with .W.Groups}}<optgroup label="Groups">{{range .}}<option value="group:{{.Name}}">{{.Name}}</option>{{end}}</optgroup>{{end}}
+  {{with .W.Clients}}<optgroup label="Clients">{{range .}}<option value="client:{{.Name}}">{{.Name}}</option>{{end}}</optgroup>{{end}}
+</select>
+{{end}}
+
+{{define "content"}}
+<h1>Grants</h1>
+
+<div class="grid">
+<form method="post" action="/grants" class="card">
+  <h2>Host names</h2>
+  <input type="hidden" name="kind" value="host">
+  <label>For {{template "subjects" .}}</label>
+  <label>Zone
+    <select name="zone" required>{{range .W.Zones}}<option value="{{.Domain}}">{{.Domain}}</option>{{end}}</select>
+  </label>
+  <label>Pattern <input name="pattern" required value="*.{client}"></label>
+  <p class="hint">Relative to the zone. <code>{client}</code> is the client's name; a leading <code>*</code> means one or more labels of any depth. <code>*.{client}</code> lets every client use <code>app.pc.&lt;name&gt;.&lt;zone&gt;</code>. Use <code>@</code> for the zone itself.</p>
+  <button>Add host grant</button>
+</form>
+
+<form method="post" action="/grants" class="card">
+  <h2>Ports</h2>
+  <input type="hidden" name="kind" value="port">
+  <label>For {{template "subjects" .}}</label>
+  <label>Server
+    <select name="instance" required>{{range .W.Instances}}<option value="{{.Name}}">{{.Name}}</option>{{end}}</select>
+  </label>
+  <label>Protocol <select name="proto"><option>tcp</option><option>udp</option></select></label>
+  <label>Port or range <input name="ports" required placeholder="25565 or 6000-6010"></label>
+  <p class="hint">Also allow these ports in frps <code>allowPorts</code> and in the firewall.</p>
+  <button>Add port grant</button>
+</form>
+</div>
+
+{{with .Data.Grants}}
+<table>
+  <thead><tr><th>For</th><th>Allows</th><th></th></tr></thead>
+  <tbody>
+  {{range .}}
+  <tr>
+    <td>{{.SubjectKind}} {{if eq .SubjectKind "client"}}<a href="/clients/{{.Subject}}">{{.Subject}}</a>{{else}}<strong>{{.Subject}}</strong>{{end}}</td>
+    <td><code>{{.Target}}</code></td>
+    <td><form method="post" action="/grants/{{.ID}}/delete" onsubmit="return confirm('Remove this grant?')"><button class="danger">Remove</button></form></td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p>No grants yet.</p>
+{{end}}
+{{end}}

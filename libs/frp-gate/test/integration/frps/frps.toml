@@ -1,0 +1,13 @@
+# frps for the integration test. No auth.token: frp-gate is the authority.
+bindPort = 7000
+vhostHTTPPort = 8080
+allowPorts = [{ start = 6000, end = 6010 }]
+
+# Short timeout so the test does not wait long; production uses 60.
+transport.heartbeatTimeout = 20
+
+[[httpPlugins]]
+name = "frp-gate"
+addr = "frp-gate:7600"
+path = "/frps/{{ .Envs.FRP_GATE_INSTANCE_KEY }}"
+ops = ["Login", "NewProxy", "CloseProxy", "Ping", "NewWorkConn"]

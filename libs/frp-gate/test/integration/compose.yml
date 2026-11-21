@@ -1,0 +1,67 @@
+# Integration test stack: real frps + frpc (docker-frp images built with
+# FRP_VERSION) talking to frp-gate. Driven by run.sh; not for production.
+name: frp-gate-it
+
+x-frp-build: &frp-build
+  context: ../../../docker-frp
+  args:
+    FRP_VERSION: ${FRP_VERSION:-0.65.0}
+
+services:
+  frp-gate:
+    build:
+      context: ../..
+    image: frp-gate-it/frp-gate
+    environment:
+      FRP_GATE_ADMIN_PASSWORD: ${FRP_GATE_ADMIN_PASSWORD:?}
+      FRP_GATE_INSTANCE_KEY: ${FRP_GATE_INSTANCE_KEY:?}
+      FRP_GATE_INSTANCE_SERVER_ADDR: frps:7000
+      FRP_GATE_LOG_LEVEL: debug
+      FRP_GATE_SESSION_TIMEOUT: 15s
+    ports:
+      - "127.0.0.1:17600:7600"
+      - "127.0.0.1:17601:7601"
+
+  frps:
+    build:
+      <<: *frp-build
+      target: server
+    image: frp-gate-it/frps:${FRP_VERSION:-0.65.0}
+    environment:
+      FRP_GATE_INSTANCE_KEY: ${FRP_GATE_INSTANCE_KEY:?}
+    volumes:
+      - ./frps:/app/configs:ro
+    ports:
+      - "127.0.0.1:18080:8080"
+      - "127.0.0.1:16001:6001"
+    depends_on: [frp-gate]
+
+  backend:
+    image: traefik/whoami:v1.10.3
+
+  frpc-alice:
+    build:
+      <<: *frp-build
+      target: client
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.65.0}
+    environment:
+      FRP_TOKEN: ${ALICE_TOKEN:-unset}
+    volumes:
+      - ./frpc/alice:/app/configs:ro
+    depends_on: [frps, backend]
+
+  frpc-bob:
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.65.0}
+    environment:
+      FRP_TOKEN: ${BOB_TOKEN:-unset}
+    volumes:
+      - ./frpc/bob:/app/configs:ro
+    depends_on: [frpc-alice]
+
+  frpc-carol:
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.65.0}
+    environment:
+      FRP_TOKEN: ${CAROL_TOKEN:-unset}
+    volumes:
+      - ./frpc/carol:/app/configs:ro
+    depends_on: [frpc-alice]
