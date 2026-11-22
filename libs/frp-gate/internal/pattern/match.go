@@ -6,7 +6,7 @@ import "github.com/telperiontech/telperion/libs/frp-gate/internal/names"
 // {client} binds to ("" when the pattern has no placeholder).
 //
 // host must be normalised (see names.Domain). It may be an frp wildcard
-// request such as "*.api.sahin.dev.example.com"; such a request stands for
+// request such as "*.api.alice.dev.example.com"; such a request stands for
 // every name of one or more labels below its suffix, and is covered only if
 // the pattern covers all of them.
 func (p Pattern) Capture(host string) (client string, ok bool) {

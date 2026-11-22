@@ -6,7 +6,7 @@ import (
 )
 
 // Group bundles clients so grants can be given to all of them at once
-// (e.g. every member of project "videochat" gets *.{client}.<zone>).
+// (e.g. every member of project "webapp" gets *.{client}.<zone>).
 type Group struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`

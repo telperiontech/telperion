@@ -99,17 +99,17 @@ func errText(err error) string {
 
 // homeYAML is the example from the README.
 const homeYAML = `
-zones: [alisah.in, dev.videochat.telperion.tr]
+zones: [example.org, dev.webapp.example.net]
 instances:
-  default: { server_addr: gate.alisah.in:7000, zones: [alisah.in, dev.videochat.telperion.tr] }
-groups: [videochat]
+  default: { server_addr: gate.example.org:7000, zones: [example.org, dev.webapp.example.net] }
+groups: [webapp]
 clients:
   home-pi:
     note: Pi frpc
     token_env: FRP_GATE_TOKEN_HOME_PI
     groups: []
 grants:
-  - { client: home-pi, kind: host, zone: alisah.in, pattern: "*" }
+  - { client: home-pi, kind: host, zone: example.org, pattern: "*" }
   - { client: home-pi, kind: port, instance: default, proto: tcp, ports: "25565" }
-  - { group: videochat, kind: host, zone: dev.videochat.telperion.tr, pattern: "*.{client}" }
+  - { group: webapp, kind: host, zone: dev.webapp.example.net, pattern: "*.{client}" }
 `

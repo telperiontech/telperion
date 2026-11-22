@@ -20,17 +20,17 @@ func openTest(t *testing.T) *Store {
 func TestClientsAndConflicts(t *testing.T) {
 	ctx := context.Background()
 	s := openTest(t)
-	c, err := s.CreateClient(ctx, "sahin", "h1", "")
+	c, err := s.CreateClient(ctx, "alice", "h1", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.CreateClient(ctx, "sahin", "h2", ""); !errors.Is(err, ErrConflict) {
+	if _, err := s.CreateClient(ctx, "alice", "h2", ""); !errors.Is(err, ErrConflict) {
 		t.Fatalf("duplicate name: %v", err)
 	}
 	if err := s.SetClientDisabled(ctx, c.ID, true); err != nil {
 		t.Fatal(err)
 	}
-	got, err := s.ClientByName(ctx, "sahin")
+	got, err := s.ClientByName(ctx, "alice")
 	if err != nil || !got.Disabled {
 		t.Fatalf("got %+v, %v", got, err)
 	}

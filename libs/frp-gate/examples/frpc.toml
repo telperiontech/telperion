@@ -3,7 +3,7 @@
 # environment variable and let frpc read it.
 serverAddr = "gateway.example.com"
 serverPort = 7000
-user = "sahin"                                # the client name in frp-gate
+user = "alice"                                # the client name in frp-gate
 metadatas.token = "{{ .Envs.FRP_GATE_TOKEN }}" # the client token (fg_...)
 
 # frp-gate revokes access through heartbeats. Without these lines frps drops
@@ -16,7 +16,7 @@ name = "web"
 type = "http"
 localPort = 3000
 # Must be covered by a grant, e.g. *.{client}.dev.example.com.
-customDomains = ["app.pc.sahin.dev.example.com"]
+customDomains = ["app.pc.alice.dev.example.com"]
 # frps does not pass on X-Forwarded-Proto from Caddy; tell the app it is HTTPS.
 requestHeaders.set.x-forwarded-proto = "https"
 

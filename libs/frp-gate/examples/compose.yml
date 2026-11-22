@@ -37,7 +37,7 @@ services:
       # Applied at every start; `frp-gate apply` applies it on demand.
       FRP_GATE_CONFIG: /config/frp-gate.yaml
       # Client tokens referenced by token_env in frp-gate.yaml.
-      FRP_GATE_TOKEN_SAHIN: ${FRP_GATE_TOKEN_SAHIN:?set it in .env}
+      FRP_GATE_TOKEN_ALICE: ${FRP_GATE_TOKEN_ALICE:?set it in .env}
       FRP_GATE_TOKEN_HOME_PI: ${FRP_GATE_TOKEN_HOME_PI:?set it in .env}
     volumes:
       - ./frp-gate.yaml:/config/frp-gate.yaml:ro

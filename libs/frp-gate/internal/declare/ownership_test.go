@@ -60,7 +60,7 @@ func TestUIObjectsAreLeftAlone(t *testing.T) {
 func TestAdoptExisting(t *testing.T) {
 	st, ctx := newStore(t)
 	svc := &admin.Service{Store: st}
-	if _, err := svc.CreateZone(ctx, "alisah.in"); err != nil {
+	if _, err := svc.CreateZone(ctx, "example.org"); err != nil {
 		t.Fatal(err)
 	}
 	c, err := st.CreateClient(ctx, "home-pi", token.Hash(piToken), "Pi frpc")
@@ -68,7 +68,7 @@ func TestAdoptExisting(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := apply(t, st, ctx, homeYAML, true)
-	mustContain(t, got, "= zone alisah.in", "= client home-pi")
+	mustContain(t, got, "= zone example.org", "= client home-pi")
 	for _, l := range got {
 		if l == "~ client home-pi: token changed" {
 			t.Error("same token reported as changed")
@@ -91,15 +91,15 @@ func TestServiceRefusesManaged(t *testing.T) {
 
 	refused := map[string]error{
 		"delete client":   svc.DeleteClient(ctx, "home-pi"),
-		"delete zone":     svc.DeleteZone(ctx, "alisah.in"),
-		"delete group":    svc.DeleteGroup(ctx, "videochat"),
-		"add member":      svc.SetMember(ctx, "videochat", "home-pi", true),
+		"delete zone":     svc.DeleteZone(ctx, "example.org"),
+		"delete group":    svc.DeleteGroup(ctx, "webapp"),
+		"add member":      svc.SetMember(ctx, "webapp", "home-pi", true),
 		"instance zones":  svc.SetInstanceZones(ctx, "default", nil),
 		"delete instance": svc.DeleteInstance(ctx, "default"),
 		"delete grant":    svc.DeleteGrant(ctx, gs[0].ID),
 	}
 	_, _, refused["rotate token"] = svc.RotateClientToken(ctx, "home-pi")
-	_, _, refused["new client in managed group"] = svc.CreateClient(ctx, "bob", "", []string{"videochat"})
+	_, _, refused["new client in managed group"] = svc.CreateClient(ctx, "bob", "", []string{"webapp"})
 	for what, err := range refused {
 		if !errors.As(err, new(admin.ManagedError)) {
 			t.Errorf("%s: want ManagedError, got %v", what, err)

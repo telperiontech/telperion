@@ -25,7 +25,7 @@ func TestExportRoundTrip(t *testing.T) {
 	if _, err := svc.CreateGrant(ctx, admin.GrantInput{Client: "alice", Kind: "port", Instance: "default", Proto: "udp", Ports: "6000-6010"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := svc.CreateGrant(ctx, admin.GrantInput{Client: "alice", Kind: "host", Zone: "alisah.in", Pattern: "@"}); err != nil {
+	if _, err := svc.CreateGrant(ctx, admin.GrantInput{Client: "alice", Kind: "host", Zone: "example.org", Pattern: "@"}); err != nil {
 		t.Fatal(err)
 	}
 

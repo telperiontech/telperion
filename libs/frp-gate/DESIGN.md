@@ -54,7 +54,7 @@ frps' own check uses one shared `auth.token`, which is useless for per-client id
   no custom headers (`pkg/plugin/server/http.go` only adds `X-Frp-Reqid`). The path therefore both
   identifies the frps instance and authenticates it. An unknown key gets 404, which frps treats as
   a rejection.
-- frpc's `user` also prefixes proxy names (`sahin.web`), so proxy names cannot collide between
+- frpc's `user` also prefixes proxy names (`alice.web`), so proxy names cannot collide between
   clients.
 
 ## Revocation
@@ -114,7 +114,7 @@ non-cooperating one within 60 s.
 Only `customDomains` is accepted; a proxy with `subdomain` is refused with a message saying to use
 the full name. Reasons, from `pkg/config/v1/validation/proxy.go`:
 
-- `subdomain` cannot contain `.` or `*`. It is one label, so `app.pc.sahin.<zone>` cannot be
+- `subdomain` cannot contain `.` or `*`. It is one label, so `app.pc.alice.<zone>` cannot be
   written with it.
 - `subDomainHost` is one global frps value, so it cannot serve several zones.
 - When `subDomainHost` is set, frps **rejects** `customDomains` under it. Enabling it would break
@@ -147,14 +147,14 @@ Unknown ops (for example NewUserConn, if configured) are allowed unchanged.
 
 Caddy asks `GET /tls/ask?domain=<name>` before getting a certificate for a name no site claims.
 The spec asked for "200 if granted to an active client". That alone is risky: with `*.{client}`
-grants, anyone can make Caddy request certificates for random names (`x1.sahin…`, `x2.sahin…`),
+grants, anyone can make Caddy request certificates for random names (`x1.alice…`, `x2.alice…`),
 and Let's Encrypt allows only 50 certificates per registered domain per week. One script could
 block issuance for the whole domain.
 
 So the default `claimed` mode also requires that an enabled grantee **used** the name in an
 accepted proxy within `FRP_GATE_CLAIM_RETENTION` (30 days). NewProxy records names, and every
 accepted Ping refreshes the names of the session's live proxies, so renewals of names in use keep
-working. A claim of a wildcard (`*.pc.sahin.<zone>`) covers names below it. `granted` mode is
+working. A claim of a wildcard (`*.pc.alice.<zone>`) covers names below it. `granted` mode is
 available.
 
 ## Caddy

@@ -17,12 +17,12 @@ func TestWrite(t *testing.T) {
 	m.Ask(true, "")
 
 	var b strings.Builder
-	m.Write(&b, map[string]int{"home-pi": 1, "sahin": 0, `we"ird`: 2})
+	m.Write(&b, map[string]int{"home-pi": 1, "alice": 0, `we"ird`: 2})
 	out := b.String()
 	for _, want := range []string{
 		`frp_gate_build_info{version="1.1.0"} 1`,
 		`frp_gate_sessions_connected{client="home-pi"} 1`,
-		`frp_gate_sessions_connected{client="sahin"} 0`,
+		`frp_gate_sessions_connected{client="alice"} 0`,
 		`frp_gate_sessions_connected{client="we\"ird"} 2`,
 		`frp_gate_plugin_ops_total{op="Login",result="allow",reason=""} 2`,
 		`frp_gate_plugin_ops_total{op="Ping",result="reject",reason="disabled"} 1`,

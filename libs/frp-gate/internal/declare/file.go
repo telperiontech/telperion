@@ -19,14 +19,14 @@ import (
 
 // File is the YAML document.
 //
-//	zones: [alisah.in]
+//	zones: [example.org]
 //	instances:
-//	  default: { server_addr: gate.alisah.in:7000, zones: [alisah.in] }
-//	groups: [videochat]
+//	  default: { server_addr: gate.example.org:7000, zones: [example.org] }
+//	groups: [webapp]
 //	clients:
 //	  home-pi: { note: Pi frpc, token_env: FRP_GATE_TOKEN_HOME_PI, groups: [] }
 //	grants:
-//	  - { client: home-pi, kind: host, zone: alisah.in, pattern: "*" }
+//	  - { client: home-pi, kind: host, zone: example.org, pattern: "*" }
 type File struct {
 	Zones     []string                `yaml:"zones,omitempty"`
 	Instances map[string]InstanceSpec `yaml:"instances,omitempty"`

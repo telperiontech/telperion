@@ -58,24 +58,24 @@ func TestParsePorts(t *testing.T) {
 
 func TestCreateGrantValidation(t *testing.T) {
 	svc, ctx := newService(t)
-	if _, _, err := svc.CreateClient(ctx, "sahin", "", nil); err != nil {
+	if _, _, err := svc.CreateClient(ctx, "alice", "", nil); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := svc.CreateZone(ctx, "dev.example.com"); err != nil {
 		t.Fatal(err)
 	}
-	g, err := svc.CreateGrant(ctx, GrantInput{Client: "sahin", Kind: "host", Zone: "dev.example.com", Pattern: "*.{client}"})
+	g, err := svc.CreateGrant(ctx, GrantInput{Client: "alice", Kind: "host", Zone: "dev.example.com", Pattern: "*.{client}"})
 	if err != nil || g.Pattern != "*.{client}.dev.example.com" {
 		t.Fatalf("got %+v, %v", g, err)
 	}
 	bad := []GrantInput{
 		{Kind: "host", Zone: "dev.example.com", Pattern: "x"},                       // no subject
-		{Client: "sahin", Group: "g", Kind: "host"},                                 // both
+		{Client: "alice", Group: "g", Kind: "host"},                                 // both
 		{Client: "nobody", Kind: "host", Zone: "dev.example.com", Pattern: "x"},     // unknown client
-		{Client: "sahin", Kind: "host", Zone: "other.example.com", Pattern: "x"},    // unknown zone
-		{Client: "sahin", Kind: "host", Zone: "dev.example.com", Pattern: "a.*.b"},  // "*" not leftmost
-		{Client: "sahin", Kind: "port", Instance: "main", Proto: "tcp", Ports: "1"}, // unknown instance
-		{Client: "sahin", Kind: "magic"},
+		{Client: "alice", Kind: "host", Zone: "other.example.com", Pattern: "x"},    // unknown zone
+		{Client: "alice", Kind: "host", Zone: "dev.example.com", Pattern: "a.*.b"},  // "*" not leftmost
+		{Client: "alice", Kind: "port", Instance: "main", Proto: "tcp", Ports: "1"}, // unknown instance
+		{Client: "alice", Kind: "magic"},
 	}
 	for _, in := range bad {
 		if _, err := svc.CreateGrant(ctx, in); err == nil {
@@ -88,11 +88,11 @@ func TestCreateGrantValidation(t *testing.T) {
 
 func TestCreateClientWithGroups(t *testing.T) {
 	svc, ctx := newService(t)
-	if _, err := svc.CreateGroup(ctx, "videochat"); err != nil {
+	if _, err := svc.CreateGroup(ctx, "webapp"); err != nil {
 		t.Fatal(err)
 	}
-	c, tok, err := svc.CreateClient(ctx, "Ertan", "laptop", []string{"videochat"})
-	if err != nil || c.Name != "ertan" || !strings.HasPrefix(tok, token.ClientPrefix) || !token.Equal(tok, c.TokenHash) {
+	c, tok, err := svc.CreateClient(ctx, "Bob", "laptop", []string{"webapp"})
+	if err != nil || c.Name != "bob" || !strings.HasPrefix(tok, token.ClientPrefix) || !token.Equal(tok, c.TokenHash) {
 		t.Fatalf("got %+v %q %v", c, tok, err)
 	}
 	ids, _ := svc.Store.GroupIDsOfClient(ctx, c.ID)

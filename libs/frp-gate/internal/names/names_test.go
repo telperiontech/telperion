@@ -6,7 +6,7 @@ import (
 )
 
 func TestLabel(t *testing.T) {
-	for in, want := range map[string]string{"Sahin": "sahin", " home-pi ": "home-pi", "a1": "a1"} {
+	for in, want := range map[string]string{"Alice": "alice", " home-pi ": "home-pi", "a1": "a1"} {
 		got, err := Label("client", in)
 		if err != nil || got != want {
 			t.Errorf("Label(%q) = %q, %v; want %q", in, got, err, want)

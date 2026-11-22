@@ -18,13 +18,13 @@ func TestResolveHomeExample(t *testing.T) {
 	if d.Instances[0].KeyHash != "" {
 		t.Error("instance without a key source must keep its key")
 	}
-	if g := d.Grants[0]; g.Pattern != "*.alisah.in" || g.String() != "client home-pi: host *.alisah.in" {
+	if g := d.Grants[0]; g.Pattern != "*.example.org" || g.String() != "client home-pi: host *.example.org" {
 		t.Errorf("grant 0: %+v %s", g, g)
 	}
 	if g := d.Grants[1]; g.PortFrom != 25565 || g.String() != "client home-pi: tcp 25565 on default" {
 		t.Errorf("grant 1: %s", g)
 	}
-	if g := d.Grants[2]; g.Pattern != "*.{client}.dev.videochat.telperion.tr" {
+	if g := d.Grants[2]; g.Pattern != "*.{client}.dev.webapp.example.net" {
 		t.Errorf("grant 2: %s", g)
 	}
 }

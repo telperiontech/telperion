@@ -14,23 +14,23 @@ instances:
   # key_env here. A second frps would need key_env, key_file or key_sha256.
   default: { server_addr: gateway.example.com:7000, zones: [dev.example.com] }
 
-groups: [videochat]
+groups: [webapp]
 
 clients:
-  sahin:
+  alice:
     note: laptop
-    groups: [videochat]
+    groups: [webapp]
     # The token is read from frp-gate's environment and never printed. Make
     # one with: echo "fg_$(openssl rand -hex 26)"
-    token_env: FRP_GATE_TOKEN_SAHIN
+    token_env: FRP_GATE_TOKEN_ALICE
   home-pi:
     note: Raspberry Pi frpc
     token_env: FRP_GATE_TOKEN_HOME_PI    # or token_file: /run/secrets/..., or token_sha256: <hex>
     # disabled: true                     # only applied when written; the UI's Disable survives otherwise
 
 grants:
-  # Every member of videochat gets <anything>.<own name>.dev.example.com.
-  - { group: videochat, kind: host, zone: dev.example.com, pattern: "*.{client}" }
+  # Every member of webapp gets <anything>.<own name>.dev.example.com.
+  - { group: webapp, kind: host, zone: dev.example.com, pattern: "*.{client}" }
   # home-pi may use any name in the zone and tcp port 25565 (also open it in
   # frps allowPorts and the firewall: frp-gate cannot check those).
   - { client: home-pi, kind: host, zone: dev.example.com, pattern: "*" }

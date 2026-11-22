@@ -30,7 +30,7 @@ need the Docker socket.
                     │   └─HTTP──▶ frps :8080 ──plugin────┘            │
                     │              ▲ :7000                             │
                     └──────────────┼───────────────────────────────────┘
-       frpc (user=sahin, token) ───┘      admin ──HTTPS──▶ Caddy ──▶ frp-gate :7601
+       frpc (user=alice, token) ───┘      admin ──HTTPS──▶ Caddy ──▶ frp-gate :7601
 ```
 
 ## Contents
@@ -78,8 +78,8 @@ A complete stack (Caddy + frps from [docker-frp](../docker-frp) + frp-gate) is i
    created. Then `docker compose up -d` and open the firewall for 80, 443 and 7000. frp-gate applies
    `frp-gate.yaml` at every start.
 5. On the client machine, run frpc with [`frpc.toml`](examples/frpc.toml) and that client's token in
-   `FRP_GATE_TOKEN`. `https://app.pc.sahin.dev.example.com` works; `app.ertan.dev.example.com` is
-   refused for `sahin`.
+   `FRP_GATE_TOKEN`. `https://app.pc.alice.dev.example.com` works; `app.bob.dev.example.com` is
+   refused for `alice`.
 
 Later changes: edit `frp-gate.yaml`, then `docker compose exec frp-gate frp-gate apply` (or restart
 frp-gate). See [Declarative config](#declarative-config).
@@ -163,7 +163,7 @@ A client identifies itself with the frpc `user` (the client name) and its token 
 ```toml
 serverAddr = "gateway.example.com"
 serverPort = 7000
-user = "sahin"
+user = "alice"
 metadatas.token = "{{ .Envs.FRP_GATE_TOKEN }}" # or the token itself
 
 transport.heartbeatInterval = 15
@@ -173,7 +173,7 @@ transport.heartbeatTimeout = 60
 name = "web"
 type = "http"
 localPort = 3000
-customDomains = ["app.pc.sahin.dev.example.com"]
+customDomains = ["app.pc.alice.dev.example.com"]
 requestHeaders.set.x-forwarded-proto = "https"
 ```
 
@@ -181,7 +181,7 @@ requestHeaders.set.x-forwarded-proto = "https"
   `transport.heartbeatTimeout = 60`) drops a session that sends none, so leaving these lines out
   means the client is cut off every minute.
 - **Use `customDomains` with full names.** `subdomain` is refused (see
-  [DESIGN.md](DESIGN.md#subdomain-or-customdomains)). frp wildcards such as `*.pc.sahin.dev.example.com`
+  [DESIGN.md](DESIGN.md#subdomain-or-customdomains)). frp wildcards such as `*.pc.alice.dev.example.com`
   work if the whole wildcard is granted.
 - **Proxy types:** `http`, `https`, `tcpmux` (names) and `tcp`, `udp` (an explicit `remotePort`).
   `stcp`, `xtcp` and `sudp` are refused in v1.
@@ -196,10 +196,10 @@ requestHeaders.set.x-forwarded-proto = "https"
 
 | Concept | What it is |
 | --- | --- |
-| **Zone** | A base domain pointed at the gateway, e.g. `dev.videochat.example.com`. |
+| **Zone** | A base domain pointed at the gateway, e.g. `dev.webapp.example.com`. |
 | **Server** | An frps that uses frp-gate as its plugin, and the zones it may serve. |
-| **Client** | A named token holder: a person or machine (`sahin`, `ertan`, `home-pi`). The name is the frpc `user`. Tokens are random, shown once and stored as a SHA-256 hash. Clients can be disabled, re-enabled, given a new token, or deleted. |
-| **Group** | A set of clients, e.g. everyone on project `videochat`. |
+| **Client** | A named token holder: a person or machine (`alice`, `bob`, `home-pi`). The name is the frpc `user`. Tokens are random, shown once and stored as a SHA-256 hash. Clients can be disabled, re-enabled, given a new token, or deleted. |
+| **Group** | A set of clients, e.g. everyone on project `webapp`. |
 | **Grant** | What a client, or every member of a group, may claim: host names matching a pattern in a zone, or a tcp/udp port or range on a server. |
 
 **Port grants and frps `allowPorts`.** frps does not tell frp-gate which ports its `allowPorts`
@@ -213,10 +213,10 @@ the port grants. The UI shows the same note next to port grants.
 A pattern is written relative to its zone (or in full). Labels are literal, `{client}`, or (only
 leftmost) `*`:
 
-| Pattern in zone `dev.example.com` | `sahin` may use | `sahin` may not use |
+| Pattern in zone `dev.example.com` | `alice` may use | `alice` may not use |
 | --- | --- | --- |
-| `*.{client}` | `app.sahin…`, `api.pc.sahin…`, `*.pc.sahin…` | `sahin.dev.example.com`, `app.ertan…` |
-| `{client}` | `sahin.dev.example.com` | `app.sahin…` |
+| `*.{client}` | `app.alice…`, `api.pc.alice…`, `*.pc.alice…` | `alice.dev.example.com`, `app.bob…` |
+| `{client}` | `alice.dev.example.com` | `app.alice…` |
 | `status` | `status.dev.example.com` (anyone holding this grant) | anything else |
 | `@` | `dev.example.com` itself | |
 
@@ -251,19 +251,19 @@ The whole setup (zones, servers, groups, clients and grants) can be written in o
 kept in git next to the rest of the gateway. Example: [`examples/frp-gate.yaml`](examples/frp-gate.yaml).
 
 ```yaml
-zones: [alisah.in, dev.videochat.telperion.tr]
+zones: [example.org, dev.webapp.example.net]
 instances:
-  default: { server_addr: gate.alisah.in:7000, zones: [alisah.in, dev.videochat.telperion.tr] }
-groups: [videochat]
+  default: { server_addr: gate.example.org:7000, zones: [example.org, dev.webapp.example.net] }
+groups: [webapp]
 clients:
   home-pi:
     note: Pi frpc
     token_env: FRP_GATE_TOKEN_HOME_PI      # or token_file, or token_sha256
     groups: []
 grants:
-  - { client: home-pi, kind: host, zone: alisah.in, pattern: "*" }
+  - { client: home-pi, kind: host, zone: example.org, pattern: "*" }
   - { client: home-pi, kind: port, instance: default, proto: tcp, ports: "25565" }
-  - { group: videochat, kind: host, zone: dev.videochat.telperion.tr, pattern: "*.{client}" }
+  - { group: webapp, kind: host, zone: dev.webapp.example.net, pattern: "*.{client}" }
 ```
 
 | Key | Meaning |
@@ -289,8 +289,8 @@ can rebuild the database.
 
 ```console
 $ docker exec frp-gate frp-gate apply --dry-run
-+ client ertan
-~ group videochat: + member ertan
++ client bob
+~ group webapp: + member bob
 ~ client home-pi: note "Pi frpc" → "Pi 5 frpc"
 - grant client home-pi: tcp 25565 on default
 Dry run: 4 change(s) would be made. Nothing was changed.
@@ -420,10 +420,10 @@ works.
 ```bash
 api() { curl -fsS -u "admin:$FRP_GATE_ADMIN_PASSWORD" -H 'Content-Type: application/json' "https://gate.example.com/api/v1/$@"; }
 api zones -d '{"domain":"dev.example.com"}'
-api grants -d '{"group":"videochat","kind":"host","zone":"dev.example.com","pattern":"*.{client}"}'
+api grants -d '{"group":"webapp","kind":"host","zone":"dev.example.com","pattern":"*.{client}"}'
 api grants -d '{"client":"home-pi","kind":"port","instance":"default","proto":"tcp","ports":"25565"}'
-api clients -d '{"name":"ertan","groups":["videochat"]}'
-api clients/ertan/disable -X POST
+api clients -d '{"name":"bob","groups":["webapp"]}'
+api clients/bob/disable -X POST
 ```
 
 ## Several frps instances

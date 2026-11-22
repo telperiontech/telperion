@@ -31,7 +31,7 @@ func TestWireFormat(t *testing.T) {
 	zone, _ := st.CreateZone(ctx, "dev.example.com")
 	_ = st.SetInstanceZones(ctx, inst.ID, []int64{zone.ID})
 	tok := token.New(token.ClientPrefix)
-	c, _ := st.CreateClient(ctx, "sahin", token.Hash(tok), "")
+	c, _ := st.CreateClient(ctx, "alice", token.Hash(tok), "")
 	_, _ = st.CreateGrant(ctx, store.Grant{ClientID: c.ID, Kind: store.KindHost, ZoneID: zone.ID, Pattern: "*.{client}.dev.example.com"})
 
 	mux := http.NewServeMux()
@@ -50,21 +50,21 @@ func TestWireFormat(t *testing.T) {
 		_ = json.NewDecoder(resp.Body).Decode(&out)
 		return resp.StatusCode, out
 	}
-	user := `{"user":"sahin","metas":{"token":"` + tok + `"},"run_id":"r1"}`
+	user := `{"user":"alice","metas":{"token":"` + tok + `"},"run_id":"r1"}`
 
-	code, res := call("/frps/"+key, plugin.OpLogin, `{"version":"0.65.0","user":"sahin","metas":{"token":"`+tok+`"},"client_address":"1.2.3.4:1"}`)
+	code, res := call("/frps/"+key, plugin.OpLogin, `{"version":"0.65.0","user":"alice","metas":{"token":"`+tok+`"},"client_address":"1.2.3.4:1"}`)
 	if code != 200 || res.Reject || !res.Unchange {
 		t.Fatalf("login: %d %+v", code, res)
 	}
-	code, res = call("/frps/"+key, plugin.OpNewProxy, `{"user":`+user+`,"proxy_name":"sahin.web","proxy_type":"http","custom_domains":["a.sahin.dev.example.com"]}`)
+	code, res = call("/frps/"+key, plugin.OpNewProxy, `{"user":`+user+`,"proxy_name":"alice.web","proxy_type":"http","custom_domains":["a.alice.dev.example.com"]}`)
 	if code != 200 || res.Reject {
 		t.Fatalf("own proxy: %d %+v", code, res)
 	}
-	_, res = call("/frps/"+key, plugin.OpNewProxy, `{"user":`+user+`,"proxy_name":"sahin.x","proxy_type":"http","custom_domains":["a.ertan.dev.example.com"]}`)
+	_, res = call("/frps/"+key, plugin.OpNewProxy, `{"user":`+user+`,"proxy_name":"alice.x","proxy_type":"http","custom_domains":["a.bob.dev.example.com"]}`)
 	if !res.Reject || !strings.Contains(res.RejectReason, "not granted") {
 		t.Fatalf("foreign proxy: %+v", res)
 	}
-	_, res = call("/frps/"+key, plugin.OpNewUserConn, `{"user":`+user+`,"proxy_name":"sahin.web"}`)
+	_, res = call("/frps/"+key, plugin.OpNewUserConn, `{"user":`+user+`,"proxy_name":"alice.web"}`)
 	if res.Reject {
 		t.Fatalf("unhandled op rejected: %+v", res)
 	}

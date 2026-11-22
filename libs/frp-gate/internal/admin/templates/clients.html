@@ -2,7 +2,7 @@
 <h1>Clients</h1>
 <form method="post" action="/clients" class="card">
   <h2>Add a client</h2>
-  <label>Name <input name="name" required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" placeholder="sahin, home-pi" title="lowercase letters, digits and '-'"></label>
+  <label>Name <input name="name" required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])?" placeholder="alice, home-pi" title="lowercase letters, digits and '-'"></label>
   <label>Note <input name="note" placeholder="optional"></label>
   {{with .W.Groups}}
   <fieldset><legend>Groups</legend>

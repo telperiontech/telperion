@@ -4,8 +4,8 @@
 // {client} (one label, replaced by the requesting client's name) or, as the
 // leftmost label only, "*" (one or more labels of any depth). Examples:
 //
-//	*.{client}.dev.example.com   app.sahin.dev..., api.pc.sahin.dev...
-//	{client}.dev.example.com     sahin.dev... only
+//	*.{client}.dev.example.com   app.alice.dev..., api.pc.alice.dev...
+//	{client}.dev.example.com     alice.dev... only
 //	status.example.com           exactly that name
 package pattern
 

@@ -24,15 +24,15 @@ func TestCapture(t *testing.T) {
 		host, client string
 		ok           bool
 	}{
-		{"app.sahin.dev.example.com", "sahin", true},
-		{"api.laptop.ertan.dev.example.com", "ertan", true},
-		{"a.b.c.sahin.dev.example.com", "sahin", true},
-		{"sahin.dev.example.com", "", false}, // "*" needs at least one label
+		{"app.alice.dev.example.com", "alice", true},
+		{"api.laptop.bob.dev.example.com", "bob", true},
+		{"a.b.c.alice.dev.example.com", "alice", true},
+		{"alice.dev.example.com", "", false}, // "*" needs at least one label
 		{"dev.example.com", "", false},
-		{"app.sahin.dev.example.org", "", false},
-		{"app.sahin.prod.example.com", "", false},
-		{"*.sahin.dev.example.com", "sahin", true},    // all of *.sahin... is granted
-		{"*.pc.sahin.dev.example.com", "sahin", true}, // deeper wildcard too
+		{"app.alice.dev.example.org", "", false},
+		{"app.alice.prod.example.com", "", false},
+		{"*.alice.dev.example.com", "alice", true},    // all of *.alice... is granted
+		{"*.pc.alice.dev.example.com", "alice", true}, // deeper wildcard too
 		{"*.dev.example.com", "", false},              // would cover other clients
 		{"*.example.com", "", false},
 	}
@@ -55,10 +55,10 @@ func TestCaptureExactAndPlaceholderOnly(t *testing.T) {
 		}
 	}
 	single := MustParse("{client}.example.com")
-	if c, ok := single.Capture("sahin.example.com"); !ok || c != "sahin" {
+	if c, ok := single.Capture("alice.example.com"); !ok || c != "alice" {
 		t.Errorf("got %q %v", c, ok)
 	}
-	if _, ok := single.Capture("a.sahin.example.com"); ok {
+	if _, ok := single.Capture("a.alice.example.com"); ok {
 		t.Error("placeholder matched two labels")
 	}
 	if _, ok := single.Capture("*.example.com"); ok {
@@ -78,10 +78,10 @@ func TestCaptureRepeatedPlaceholder(t *testing.T) {
 
 func TestCovers(t *testing.T) {
 	p := MustParse("*.{client}.dev.example.com")
-	if !p.Covers("app.sahin.dev.example.com", "sahin") {
+	if !p.Covers("app.alice.dev.example.com", "alice") {
 		t.Error("own name not covered")
 	}
-	if p.Covers("app.ertan.dev.example.com", "sahin") {
+	if p.Covers("app.bob.dev.example.com", "alice") {
 		t.Error("foreign name covered")
 	}
 	shared := MustParse("*.shared.example.com")
@@ -98,13 +98,13 @@ func TestWithin(t *testing.T) {
 	if p.Within("other.example.com") || p.Within("x.dev.example.com") {
 		t.Error("pattern within a foreign zone")
 	}
-	if MustParse("{client}.example.com").Within("sahin.example.com") {
+	if MustParse("{client}.example.com").Within("alice.example.com") {
 		t.Error("placeholder label counted as literal zone label")
 	}
 }
 
 func TestExpand(t *testing.T) {
-	if got := MustParse("*.{client}.dev.example.com").Expand("sahin"); got != "*.sahin.dev.example.com" {
+	if got := MustParse("*.{client}.dev.example.com").Expand("alice"); got != "*.alice.dev.example.com" {
 		t.Errorf("got %q", got)
 	}
 }
