@@ -1,0 +1,9 @@
+user = "home-pi"
+metadatas.token = "{{ .Envs.FRP_GATE_TOKEN_HOME_PI }}"
+auth.token = "prefix-{{ .Envs.PART }}"
+"quoted.password" = "quoted-key-secret"
+# token = "commented-out-secret"
+#webServer.password = "also-commented"
+# A comment without a key = value pair stays as it is.
+description = "a token = inside a string is not a key"
+heartbeatTimeout = 60

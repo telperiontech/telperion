@@ -15,7 +15,11 @@ func (s *Service) CreateZone(ctx context.Context, domain string) (store.Zone, er
 	if err != nil {
 		return store.Zone{}, inputError{err.Error()}
 	}
-	return s.Store.CreateZone(ctx, d)
+	z, err := s.Store.CreateZone(ctx, d)
+	if err == nil {
+		s.record(ctx, "zone.create", z.Domain, "")
+	}
+	return z, err
 }
 
 // DeleteZone removes a zone without grants.
@@ -24,11 +28,15 @@ func (s *Service) DeleteZone(ctx context.Context, domain string) error {
 	if err != nil {
 		return err
 	}
+	if z.Managed {
+		return ManagedError{Kind: "zone", Name: z.Domain, What: "deleted"}
+	}
 	if err := s.Store.DeleteZone(ctx, z.ID); errors.Is(err, store.ErrInUse) {
 		return badInput("zone %s still has grants; delete them first", z.Domain)
 	} else if err != nil {
 		return err
 	}
+	s.record(ctx, "zone.delete", z.Domain, "")
 	return nil
 }
 

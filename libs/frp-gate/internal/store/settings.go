@@ -11,7 +11,7 @@ import (
 // (e.g. the admin session signing key, so sessions survive restarts).
 func (s *Store) Secret(ctx context.Context, key string, size int) ([]byte, error) {
 	var v []byte
-	err := s.db.QueryRowContext(ctx, "SELECT value FROM settings WHERE key = ?", key).Scan(&v)
+	err := s.q.QueryRowContext(ctx, "SELECT value FROM settings WHERE key = ?", key).Scan(&v)
 	if err == nil {
 		return v, nil
 	}
@@ -22,7 +22,7 @@ func (s *Store) Secret(ctx context.Context, key string, size int) ([]byte, error
 	if _, err := rand.Read(v); err != nil {
 		return nil, err
 	}
-	if _, err := s.db.ExecContext(ctx, "INSERT INTO settings (key, value) VALUES (?, ?)", key, v); err != nil {
+	if _, err := s.q.ExecContext(ctx, "INSERT INTO settings (key, value) VALUES (?, ?)", key, v); err != nil {
 		return nil, err
 	}
 	return v, nil

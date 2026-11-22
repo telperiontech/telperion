@@ -124,6 +124,8 @@ func (s *Server) userMessage(err error) string {
 	switch {
 	case errors.As(err, &in):
 		return in.msg
+	case errors.As(err, new(ManagedError)):
+		return err.Error()
 	case errors.Is(err, store.ErrNotFound):
 		return "Not found."
 	case errors.Is(err, store.ErrConflict):

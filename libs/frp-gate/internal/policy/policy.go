@@ -23,13 +23,14 @@ const (
 // Decision is the answer to one frps plugin operation.
 type Decision struct {
 	Allow  bool
-	Reason string
+	Reason string // for frpc and the log; may name clients and hosts
+	Code   string // short and fixed, for metrics labels (e.g. "bad_token")
 }
 
 func allow() Decision { return Decision{Allow: true} }
 
-func deny(format string, args ...any) Decision {
-	return Decision{Reason: fmt.Sprintf(format, args...)}
+func deny(code, format string, args ...any) Decision {
+	return Decision{Reason: fmt.Sprintf(format, args...), Code: code}
 }
 
 // Policy holds what decisions depend on.

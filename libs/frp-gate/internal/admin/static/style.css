@@ -47,3 +47,5 @@ pre { padding: .75rem; overflow-x: auto; white-space: pre; }
 .msg.ok { color: var(--ok); } .msg.err { color: var(--err); }
 .members { list-style: none; padding: 0; } .members li { margin: .25rem 0; }
 .login { max-width: 22rem; margin: 15vh auto; }
+.tag.managed { color: var(--accent); border-color: var(--accent); }
+.note { border-left: 3px solid var(--line); padding-left: .6rem; }

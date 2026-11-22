@@ -43,11 +43,14 @@ cleanup() {
     log_info "Cleaning up test resources..."
 
     # Stop and remove test containers
-    docker stop frp-server-test frp-client-test frp-test-server frp-volume-test frp-secret-server-test frp-secret-client-test 2>/dev/null || true
-    docker rm frp-server-test frp-client-test frp-test-server frp-volume-test frp-secret-server-test frp-secret-client-test 2>/dev/null || true
+    local containers="frp-server-test frp-client-test frp-test-server frp-volume-test frp-secret-server-test
+        frp-secret-client-test frp-mask-client-test frp-mask-server-test frp-mounted-test frp-health-server-test
+        frp-health-client-test frp-health-plain-test frp-health-bad-test"
+    # shellcheck disable=SC2086
+    docker rm -f $containers >/dev/null 2>&1 || true
 
     # Remove test configs directories
-    rm -rf ./test-configs ./test-secret-configs 2>/dev/null || true
+    rm -rf ./test-configs ./test-secret-configs ./test-health-config.toml 2>/dev/null || true
 
     # Remove test images if cleanup is enabled
     if [ "$CLEANUP_ON_SUCCESS" = "true" ] && [ $exit_code -eq 0 ]; then
@@ -337,6 +340,190 @@ test_secrets_not_logged() {
     rm -rf ./test-secret-configs
 }
 
+# Test the masking script on sample configs (test/mask/*.toml → *.expected).
+# Runs inside the image, so BusyBox awk is what is tested.
+test_mask_samples() {
+    log_test "Testing secret masking on sample configs..."
+
+    local sample expected got failed=0
+    for sample in test/mask/*.toml; do
+        expected="${sample%.toml}.expected"
+        got=$(docker run --rm -i --entrypoint /app/mask-config.sh "${TEST_TAG}:latest" < "$sample")
+        if [ "$got" = "$(cat "$expected")" ]; then
+            log_success "Masked as expected: $sample"
+        else
+            log_error "Masking differs from $expected:"
+            diff <(echo "$got") "$expected" || true
+            failed=1
+        fi
+    done
+    return $failed
+}
+
+# start_with_config NAME IMAGE CONFIG_FILE [docker run args...]: start a
+# container with CONFIG_FILE copied in as /app/configs/frp?.toml (a "mounted"
+# config), without bind mounts so it also works from Git Bash.
+start_with_config() {
+    local name=$1 image=$2 config=$3; shift 3
+    local target=frps.toml
+    case "$image" in *:client) target=frpc.toml ;; esac
+    docker create --name "$name" "$@" "$image" >/dev/null
+    docker cp "$config" "$name:/app/configs/$target" >/dev/null
+    docker start "$name" >/dev/null
+}
+
+# Test that literal secrets in a mounted config never reach docker logs
+test_mounted_config_masked() {
+    log_test "Testing that mounted configs are printed masked..."
+
+    start_with_config frp-mask-client-test "${TEST_TAG}:client" test/mask/frpc-frp-gate.toml
+    start_with_config frp-mask-server-test "${TEST_TAG}:server" test/mask/frps-plugin.toml
+    sleep 3
+
+    local logs
+    logs=$(docker logs frp-mask-client-test 2>&1; docker logs frp-mask-server-test 2>&1)
+    local secret leaked=0
+    for secret in fg_abcdefghijklmnopqrstuvwxyz hunter2-admin single-quoted-secret \
+        dash-secret shared-auth-token 0123456789abcdef0123456789abcdef; do
+        if echo "$logs" | grep -qF "$secret"; then
+            log_error "docker logs leak a secret: $secret"
+            leaked=1
+        fi
+    done
+    if ! echo "$logs" | grep -qF 'path = "/frps/{{ .Envs.FRP_GATE_INSTANCE_KEY }}"'; then
+        log_error "A {{ .Envs.X }} placeholder was masked; it should stay readable"
+        leaked=1
+    fi
+    docker rm -f frp-mask-client-test frp-mask-server-test >/dev/null 2>&1 || true
+    [ $leaked -eq 0 ] && log_success "Mounted configs are printed with secrets masked"
+    return $leaked
+}
+
+# Test that a generated config refuses the default/empty password, while a
+# mounted config starts without any password variables.
+test_unsafe_defaults() {
+    log_test "Testing refusal of unsafe default passwords..."
+
+    local out failed=0
+    if out=$(docker run --rm -e MODE=server "${TEST_TAG}:server" 2>&1); then
+        log_error "Server started without DASHBOARD_PASSWORD"; failed=1
+    elif echo "$out" | grep -q "DASHBOARD_PASSWORD is not set"; then
+        log_success "Server refuses a generated config without DASHBOARD_PASSWORD"
+    else
+        log_error "Server failed without the expected message:"; echo "$out"; failed=1
+    fi
+
+    if out=$(docker run --rm -e MODE=server -e DASHBOARD_PASSWORD=admin "${TEST_TAG}:server" 2>&1); then
+        log_error "Server started with DASHBOARD_PASSWORD=admin"; failed=1
+    elif echo "$out" | grep -q 'DASHBOARD_PASSWORD is still "admin"'; then
+        log_success "Server refuses DASHBOARD_PASSWORD=admin"
+    else
+        log_error "Server failed without the expected message:"; echo "$out"; failed=1
+    fi
+
+    if out=$(docker run --rm -e MODE=client -e SERVER_ADDR=127.0.0.1 "${TEST_TAG}:client" 2>&1); then
+        log_error "Client started without ADMIN_PASSWORD"; failed=1
+    elif echo "$out" | grep -q "ADMIN_PASSWORD is not set"; then
+        log_success "Client refuses a generated config without ADMIN_PASSWORD"
+    else
+        log_error "Client failed without the expected message:"; echo "$out"; failed=1
+    fi
+
+    start_with_config frp-mounted-test "${TEST_TAG}:server" test/mask/frps-plugin.toml
+    sleep 3
+    if docker ps -q -f name=frp-mounted-test | grep -q . && \
+        docker logs frp-mounted-test 2>&1 | grep -q "Using existing configuration"; then
+        log_success "A mounted config starts without any password variables"
+    else
+        log_error "A mounted config no longer starts as is"
+        docker logs frp-mounted-test 2>&1 || true
+        failed=1
+    fi
+    docker rm -f frp-mounted-test >/dev/null 2>&1 || true
+    return $failed
+}
+
+# wait_health NAME STATUS SECONDS: wait until the container's health is STATUS.
+wait_health() {
+    local status
+    for _ in $(seq "$3"); do
+        status=$(docker inspect -f '{{.State.Health.Status}}' "$1" 2>/dev/null || true)
+        [ "$status" = "$2" ] && return 0
+        sleep 1
+    done
+    echo "health of $1 is '$status', expected '$2'"
+    docker inspect -f '{{range .State.Health.Log}}{{.Output}}{{end}}' "$1" 2>/dev/null || true
+    return 1
+}
+
+# Test the image HEALTHCHECK
+test_healthcheck() {
+    log_test "Testing HEALTHCHECK..."
+
+    local failed=0
+    local fast=(--health-interval=2s --health-start-period=2s --health-retries=2)
+
+    docker run -d --name frp-health-server-test "${fast[@]}" \
+        -e DASHBOARD_PASSWORD=healthpass "${TEST_TAG}:server" >/dev/null
+    if wait_health frp-health-server-test healthy 30; then
+        log_success "Server reports healthy (frps running, bind port answers)"
+    else
+        failed=1
+    fi
+
+    # frpc with the admin UI from the generated config: port 7400 is probed.
+    docker run -d --name frp-health-client-test "${fast[@]}" \
+        -e SERVER_ADDR=127.0.0.1 -e ADMIN_PASSWORD=healthpass "${TEST_TAG}:client" >/dev/null
+    if wait_health frp-health-client-test healthy 30; then
+        log_success "Client with admin UI reports healthy"
+    else
+        failed=1
+    fi
+
+    # frpc without webServer (mounted config): only the process is checked.
+    local cfg
+    cfg=./test-health-config.toml
+    printf 'serverAddr = "127.0.0.1"\nserverPort = 7000\nloginFailExit = false\n' > "$cfg"
+    start_with_config frp-health-plain-test "${TEST_TAG}:client" "$cfg" "${fast[@]}"
+    rm -f "$cfg"
+    if wait_health frp-health-plain-test healthy 30; then
+        log_success "Client without admin UI reports healthy"
+    else
+        failed=1
+    fi
+
+    # The probe must fail when the configured bind port does not answer:
+    # frps keeps listening on 7000 while the file now says 7999.
+    cfg=./test-health-config.toml
+    printf 'bindPort = 7000\n' > "$cfg"
+    start_with_config frp-health-bad-test "${TEST_TAG}:server" "$cfg"
+    rm -f "$cfg"
+    sleep 2
+    if docker exec frp-health-bad-test sh -c \
+        'sed -i "s/7000/7999/" /app/configs/frps.toml && /app/healthcheck.sh' >/dev/null 2>&1; then
+        log_error "Health check passed although the bind port does not answer"
+        failed=1
+    else
+        log_success "Health check fails when the bind port does not answer"
+    fi
+
+    docker rm -f frp-health-server-test frp-health-client-test frp-health-plain-test frp-health-bad-test >/dev/null 2>&1 || true
+    return $failed
+}
+
+# Test that the build info replaced the old start-time "Build:" line
+test_build_info() {
+    log_test "Testing build info..."
+    local out
+    out=$(docker run --rm "${TEST_TAG}:latest" --help 2>&1)
+    if echo "$out" | grep -q "^Version: docker-frp .*, frp .*, built " && ! echo "$out" | grep -q "^Build:"; then
+        log_success "Startup banner shows the build info"
+    else
+        log_error "Startup banner has no build info"; echo "$out" | head -5
+        return 1
+    fi
+}
+
 # Test help functionality
 test_help_functionality() {
     log_test "Testing help functionality..."
@@ -365,6 +552,11 @@ main() {
     test_client_container
     test_volume_persistence
     test_secrets_not_logged
+    test_mask_samples
+    test_mounted_config_masked
+    test_unsafe_defaults
+    test_healthcheck
+    test_build_info
     test_help_functionality
 
     log_success "All tests passed! 🎉"

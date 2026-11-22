@@ -20,7 +20,7 @@ func (p *Policy) NewProxy(ctx context.Context, inst store.Instance, in *plugin.N
 	grants, err := p.grantsOn(ctx, inst, c)
 	if err != nil {
 		p.Log.Error("grant lookup failed", "err", err)
-		return deny("internal error")
+		return deny("internal", "internal error")
 	}
 	px, d := checkProxy(c, grants, &in.NewProxy)
 	if !d.Allow {
@@ -54,31 +54,31 @@ func checkProxy(c store.Client, grants []store.Grant, np *msg.NewProxy) (store.P
 	switch np.ProxyType {
 	case "http", "https", "tcpmux":
 		if np.SubDomain != "" {
-			return px, deny("proxy %q: subdomain is not supported, use customDomains with the full name", np.ProxyName)
+			return px, deny("subdomain", "proxy %q: subdomain is not supported, use customDomains with the full name", np.ProxyName)
 		}
 		if len(np.CustomDomains) == 0 {
-			return px, deny("proxy %q: customDomains is required", np.ProxyName)
+			return px, deny("no_domains", "proxy %q: customDomains is required", np.ProxyName)
 		}
 		for _, raw := range np.CustomDomains {
 			host, err := names.Domain(raw, true)
 			if err != nil {
-				return px, deny("proxy %q: %v", np.ProxyName, err)
+				return px, deny("bad_name", "proxy %q: %v", np.ProxyName, err)
 			}
 			if !hostAllowed(c, grants, host) {
-				return px, deny("proxy %q: %s is not granted to client %q", np.ProxyName, host, c.Name)
+				return px, deny("host_not_granted", "proxy %q: %s is not granted to client %q", np.ProxyName, host, c.Name)
 			}
 			px.Domains = append(px.Domains, host)
 		}
 	case "tcp", "udp":
 		if np.RemotePort == 0 {
-			return px, deny("proxy %q: remotePort must be set explicitly", np.ProxyName)
+			return px, deny("port_unset", "proxy %q: remotePort must be set explicitly", np.ProxyName)
 		}
 		if !portAllowed(grants, np.ProxyType, np.RemotePort) {
-			return px, deny("proxy %q: %s port %d is not granted to client %q", np.ProxyName, np.ProxyType, np.RemotePort, c.Name)
+			return px, deny("port_not_granted", "proxy %q: %s port %d is not granted to client %q", np.ProxyName, np.ProxyType, np.RemotePort, c.Name)
 		}
 		px.RemotePort = np.RemotePort
 	default:
-		return px, deny("proxy %q: type %q is not allowed by frp-gate", np.ProxyName, np.ProxyType)
+		return px, deny("type_not_allowed", "proxy %q: type %q is not allowed by frp-gate", np.ProxyName, np.ProxyType)
 	}
 	return px, allow()
 }

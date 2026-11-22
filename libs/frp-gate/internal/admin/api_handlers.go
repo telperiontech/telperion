@@ -230,5 +230,5 @@ func (s *Server) apiGrantDelete(w http.ResponseWriter, r *http.Request) {
 		s.apiResult(w, 0, nil, badInput("grant id must be a number"))
 		return
 	}
-	s.apiResult(w, http.StatusOK, nil, s.svc.Store.DeleteGrant(r.Context(), id))
+	s.apiResult(w, http.StatusOK, nil, s.svc.DeleteGrant(r.Context(), id))
 }

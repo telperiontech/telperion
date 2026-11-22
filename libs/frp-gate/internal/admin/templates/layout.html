@@ -16,6 +16,7 @@
   <a href="/grants"{{if eq .Active "grants"}} class="active"{{end}}>Grants</a>
   <a href="/zones"{{if eq .Active "zones"}} class="active"{{end}}>Zones</a>
   <a href="/instances"{{if eq .Active "instances"}} class="active"{{end}}>Servers</a>
+  <a href="/audit"{{if eq .Active "audit"}} class="active"{{end}}>Audit</a>
   <form method="post" action="/logout" class="logout"><button>Log out</button></form>
 </nav>
 {{end}}
@@ -26,4 +27,8 @@
 </main>
 </body>
 </html>
+{{end}}
+
+{{define "portnote"}}
+<p class="hint note"><strong>frps <code>allowPorts</code> is checked by frps, not by frp-gate.</strong> frps does not tell frp-gate which ports it allows, so a port grant cannot be checked against it: a granted port outside <code>allowPorts</code> is still refused by frps (frpc logs <code>port not allowed</code>). Keep <code>allowPorts</code> and the firewall in line with the port grants.</p>
 {{end}}

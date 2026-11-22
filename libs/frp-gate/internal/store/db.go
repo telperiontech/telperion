@@ -21,16 +21,28 @@ var (
 	ErrInUse = errors.New("still in use")
 )
 
+// querier is what *sql.DB and *sql.Tx have in common.
+type querier interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
+
 // Store wraps the database. All methods are safe for concurrent use.
+// Inside WithTx, a Store runs every query in that transaction.
 type Store struct {
 	db  *sql.DB
+	q   querier // db, or the transaction of WithTx
 	now func() time.Time
 }
 
 // Open opens (creating if needed) the database at path and migrates it.
 // Use ":memory:" for tests.
 func Open(path string) (*Store, error) {
-	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)"
+	// _txlock=immediate: a transaction takes the write lock when it starts, so
+	// a second process (frp-gate apply) waits for busy_timeout instead of
+	// failing when it upgrades a read transaction.
+	dsn := "file:" + path + "?_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_txlock=immediate"
 	if path != ":memory:" {
 		dsn += "&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
 	}
@@ -41,7 +53,7 @@ func Open(path string) (*Store, error) {
 	// One connection: writes are tiny and this avoids SQLITE_BUSY between
 	// connections (and keeps a ":memory:" database alive).
 	db.SetMaxOpenConns(1)
-	s := &Store{db: db, now: time.Now}
+	s := &Store{db: db, q: db, now: time.Now}
 	if err := s.migrate(context.Background()); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
@@ -57,6 +69,44 @@ func (s *Store) Close() error { return s.db.Close() }
 
 // Ping checks the database is usable (health check).
 func (s *Store) Ping(ctx context.Context) error { return s.db.PingContext(ctx) }
+
+// WithTx runs fn with a Store whose queries all run in one transaction. The
+// transaction commits if fn returns nil and rolls back otherwise. Nested
+// calls join the outer transaction.
+func (s *Store) WithTx(ctx context.Context, fn func(tx *Store) error) error {
+	if _, inTx := s.q.(*sql.Tx); inTx {
+		return fn(s)
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	if err := fn(&Store{db: s.db, q: tx, now: s.now}); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	return tx.Commit()
+}
+
+// Backup writes a consistent copy of the database to path (VACUUM INTO). It
+// works while frp-gate runs; path must not exist yet.
+func (s *Store) Backup(ctx context.Context, path string) error {
+	_, err := s.db.ExecContext(ctx, "VACUUM INTO ?", path)
+	return err
+}
+
+// managedTables are the tables whose rows can be owned by the config file.
+var managedTables = map[string]bool{
+	"zones": true, "instances": true, "clients": true, "client_groups": true, "grants": true,
+}
+
+// SetManaged marks a row as owned by the config file (or releases it).
+func (s *Store) SetManaged(ctx context.Context, table string, id int64, managed bool) error {
+	if !managedTables[table] {
+		return fmt.Errorf("table %q has no managed flag", table)
+	}
+	return affected(s.q.ExecContext(ctx, "UPDATE "+table+" SET managed = ? WHERE id = ?", managed, id))
+}
 
 func (s *Store) unix() int64 { return s.now().Unix() }
 

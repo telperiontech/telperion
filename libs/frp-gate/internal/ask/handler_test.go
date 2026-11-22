@@ -6,11 +6,15 @@ import (
 	"log/slog"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/telperiontech/telperion/libs/frp-gate/internal/policy"
 )
 
 type fake map[string]bool
 
-func (f fake) Ask(_ context.Context, host string) (bool, string) { return f[host], "no" }
+func (f fake) Ask(_ context.Context, host string) policy.Decision {
+	return policy.Decision{Allow: f[host], Reason: "no", Code: "test"}
+}
 
 func TestHandler(t *testing.T) {
 	h := &Handler{Decider: fake{"ok.example.com": true}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}

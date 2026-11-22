@@ -24,17 +24,19 @@
 {{range .W.Instances}}
 {{$in := .}}
 <section class="card">
-  <h2>{{.Name}}</h2>
+  <h2>{{.Name}}{{if .Managed}} <span class="tag managed">managed</span>{{end}}</h2>
+  {{if .Managed}}<p class="hint">Declared in the config file with its zones{{if .SecretManaged}} and plugin key{{end}}. Change it there and apply.</p>{{end}}
   <p>frpc connects to <code>{{or .ServerAddr "(not set)"}}</code></p>
-  <form method="post" action="/instances/{{.Name}}/zones">
+  {{if not .Managed}}<form method="post" action="/instances/{{.Name}}/zones">
     <fieldset><legend>Zones</legend>
       {{range $.W.Zones}}<label class="inline"><input type="checkbox" name="zones" value="{{.Domain}}"{{if has $in.ZoneIDs .ID}} checked{{end}}> {{.Domain}}</label>{{else}}<span class="hint">Add zones first.</span>{{end}}
     </fieldset>
     <button>Save zones</button>
-  </form>
+  </form>{{else}}
+  <p>Zones: {{range $.W.Zones}}{{if has $in.ZoneIDs .ID}}<code>{{.Domain}}</code> {{end}}{{end}}</p>{{end}}
   <div class="actions">
-    <form method="post" action="/instances/{{.Name}}/rotate" onsubmit="return confirm('Issue a new key? frps keeps failing until its frps.toml is updated.')"><button>Rotate key</button></form>
-    <form method="post" action="/instances/{{.Name}}/delete" onsubmit="return confirm('Delete this server and its port grants?')"><button class="danger">Delete</button></form>
+    {{if not .SecretManaged}}<form method="post" action="/instances/{{.Name}}/rotate" onsubmit="return confirm('Issue a new key? frps keeps failing until its frps.toml is updated.')"><button>Rotate key</button></form>{{end}}
+    {{if not .Managed}}<form method="post" action="/instances/{{.Name}}/delete" onsubmit="return confirm('Delete this server and its port grants?')"><button class="danger">Delete</button></form>{{end}}
   </div>
 </section>
 {{else}}

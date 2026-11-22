@@ -21,14 +21,19 @@ func (s *Service) CreateInstance(ctx context.Context, name, serverAddr string, z
 		return store.Instance{}, "", err
 	}
 	key := token.New(token.InstancePrefix)
-	in, err := s.Store.CreateInstance(ctx, name, token.Hash(key), strings.TrimSpace(serverAddr))
+	var in store.Instance
+	err = s.Store.WithTx(ctx, func(tx *store.Store) error {
+		var err error
+		if in, err = tx.CreateInstance(ctx, name, token.Hash(key), strings.TrimSpace(serverAddr)); err != nil {
+			return err
+		}
+		return tx.SetInstanceZones(ctx, in.ID, ids)
+	})
 	if err != nil {
-		return in, "", err
-	}
-	if err := s.Store.SetInstanceZones(ctx, in.ID, ids); err != nil {
-		return in, "", err
+		return store.Instance{}, "", err
 	}
 	in.ZoneIDs = ids
+	s.record(ctx, "instance.create", in.Name, strings.Join(zones, ","))
 	return in, key, nil
 }
 
@@ -43,21 +48,36 @@ func (s *Service) SetInstanceZones(ctx context.Context, name string, zones []str
 	if err != nil {
 		return err
 	}
+	if in.Managed {
+		return ManagedError{Kind: "server", Name: in.Name, What: "given other zones"}
+	}
 	ids, err := s.zoneIDs(ctx, zones)
 	if err != nil {
 		return err
 	}
-	return s.Store.SetInstanceZones(ctx, in.ID, ids)
+	if err := s.Store.SetInstanceZones(ctx, in.ID, ids); err != nil {
+		return err
+	}
+	s.record(ctx, "instance.zones", in.Name, strings.Join(zones, ","))
+	return nil
 }
 
-// RotateInstanceKey replaces an frps plugin key and returns the new one.
+// RotateInstanceKey replaces an frps plugin key and returns the new one. A
+// key declared in the config file is not rotated here.
 func (s *Service) RotateInstanceKey(ctx context.Context, name string) (store.Instance, string, error) {
 	in, err := s.Instance(ctx, name)
 	if err != nil {
 		return in, "", err
 	}
+	if in.SecretManaged {
+		return in, "", ManagedError{Kind: "the key of server", Name: in.Name, What: "rotated"}
+	}
 	key := token.New(token.InstancePrefix)
-	return in, key, s.Store.SetInstanceKey(ctx, in.ID, token.Hash(key))
+	if err := s.Store.SetInstanceKey(ctx, in.ID, token.Hash(key)); err != nil {
+		return in, "", err
+	}
+	s.record(ctx, "instance.rotate", in.Name, "key rotated")
+	return in, key, nil
 }
 
 // DeleteInstance removes an frps.
@@ -66,7 +86,14 @@ func (s *Service) DeleteInstance(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
-	return s.Store.DeleteInstance(ctx, in.ID)
+	if in.Managed {
+		return ManagedError{Kind: "server", Name: in.Name, What: "deleted"}
+	}
+	if err := s.Store.DeleteInstance(ctx, in.ID); err != nil {
+		return err
+	}
+	s.record(ctx, "instance.delete", in.Name, "")
+	return nil
 }
 
 // EnsureInstance makes sure an frps with this name uses this key (from the
@@ -81,11 +108,17 @@ func (s *Service) EnsureInstance(ctx context.Context, name, key, serverAddr stri
 	}
 	in, err := s.Store.InstanceByName(ctx, name)
 	if errors.Is(err, store.ErrNotFound) {
-		_, err = s.Store.CreateInstance(ctx, name, token.Hash(key), serverAddr)
+		if _, err = s.Store.CreateInstance(ctx, name, token.Hash(key), serverAddr); err == nil {
+			s.record(ctx, "instance.create", name, "from FRP_GATE_INSTANCE_KEY")
+		}
 		return err
 	}
 	if err != nil {
 		return err
 	}
-	return s.Store.SetInstanceKey(ctx, in.ID, token.Hash(key))
+	if err := s.Store.SetInstanceKey(ctx, in.ID, token.Hash(key)); err != nil {
+		return err
+	}
+	s.record(ctx, "instance.rotate", name, "key set from FRP_GATE_INSTANCE_KEY")
+	return nil
 }

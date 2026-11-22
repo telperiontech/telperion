@@ -4,6 +4,7 @@ go 1.25
 
 require (
 	github.com/fatedier/frp v0.65.0
+	go.yaml.in/yaml/v3 v3.0.6
 	modernc.org/sqlite v1.38.2
 )
 

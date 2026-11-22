@@ -11,6 +11,7 @@ import (
 
 	plugin "github.com/fatedier/frp/pkg/plugin/server"
 
+	"github.com/telperiontech/telperion/libs/frp-gate/internal/metrics"
 	"github.com/telperiontech/telperion/libs/frp-gate/internal/policy"
 	"github.com/telperiontech/telperion/libs/frp-gate/internal/store"
 	"github.com/telperiontech/telperion/libs/frp-gate/internal/token"
@@ -24,9 +25,10 @@ const maxBody = 1 << 20
 // Handler answers plugin calls on POST /frps/{key}. The key in the path
 // identifies (and authenticates) the frps instance.
 type Handler struct {
-	Store  *store.Store
-	Policy *policy.Policy
-	Log    *slog.Logger
+	Store   *store.Store
+	Policy  *policy.Policy
+	Log     *slog.Logger
+	Metrics *metrics.Metrics // optional
 }
 
 type request struct {
@@ -40,6 +42,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	inst, err := h.Store.InstanceByKeyHash(ctx, token.Hash(r.PathValue("key")))
 	if errors.Is(err, store.ErrNotFound) {
 		h.Log.Warn("plugin call with unknown instance key", "remote", r.RemoteAddr)
+		h.Metrics.PluginOp("other", false, "unknown_instance")
 		http.Error(w, "unknown instance", http.StatusNotFound)
 		return
 	}
@@ -58,6 +61,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid "+req.Op+" content", http.StatusBadRequest)
 		return
 	}
+	h.Metrics.PluginOp(req.Op, d.Allow, d.Code)
 	if d.Allow {
 		h.Log.Debug("allow", "instance", inst.Name, "op", req.Op, "user", user)
 	} else {

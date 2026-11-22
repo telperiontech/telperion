@@ -18,22 +18,22 @@ const MetaToken = "token"
 // disabled or deleted client is refused at its next Ping or work connection.
 func (p *Policy) authenticate(ctx context.Context, user string, metas map[string]string) (store.Client, Decision) {
 	if user == "" {
-		return store.Client{}, deny(`frpc "user" must be set to the client name`)
+		return store.Client{}, deny("missing_user", `frpc "user" must be set to the client name`)
 	}
 	secret := metas[MetaToken]
 	if secret == "" {
-		return store.Client{}, deny(`frpc "metadatas.token" must be set to the client token`)
+		return store.Client{}, deny("missing_token", `frpc "metadatas.token" must be set to the client token`)
 	}
 	c, err := p.Store.ClientByName(ctx, user)
 	if errors.Is(err, store.ErrNotFound) || (err == nil && !token.Equal(secret, c.TokenHash)) {
-		return store.Client{}, deny("unknown client or invalid token")
+		return store.Client{}, deny("bad_token", "unknown client or invalid token")
 	}
 	if err != nil {
 		p.Log.Error("client lookup failed", "err", err)
-		return store.Client{}, deny("internal error")
+		return store.Client{}, deny("internal", "internal error")
 	}
 	if c.Disabled {
-		return store.Client{}, deny("client %q is disabled", c.Name)
+		return store.Client{}, deny("disabled", "client %q is disabled", c.Name)
 	}
 	return c, allow()
 }
@@ -70,10 +70,10 @@ func (p *Policy) Login(ctx context.Context, inst store.Instance, in *plugin.Logi
 	grants, err := p.grantsOn(ctx, inst, c)
 	if err != nil {
 		p.Log.Error("grant lookup failed", "err", err)
-		return deny("internal error")
+		return deny("internal", "internal error")
 	}
 	if len(grants) == 0 {
-		return deny("client %q has no grants on this server", c.Name)
+		return deny("no_grants", "client %q has no grants on this server", c.Name)
 	}
 	if err := p.Store.RecordLogin(ctx, c.ID, in.ClientAddress, in.Version, in.Hostname); err != nil {
 		p.Log.Warn("record login failed", "err", err)

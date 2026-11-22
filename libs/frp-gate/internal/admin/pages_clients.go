@@ -72,12 +72,13 @@ func (s *Server) showClient(w http.ResponseWriter, r *http.Request, c store.Clie
 		}
 	}
 	s.render(w, r, "client", pageData{Title: c.Name, Active: "clients", W: wd, OK: okMsg, Data: map[string]any{
-		"Client":   c,
-		"Token":    secret,
-		"Snippet":  frpcSnippet(wd, c, secret, grants),
-		"Grants":   wd.grantViews(grants),
-		"Groups":   groups,
-		"Sessions": wd.sessionViews(mine),
+		"Client":        c,
+		"Token":         secret,
+		"Snippet":       frpcSnippet(wd, c, secret, grants),
+		"Grants":        wd.grantViews(grants),
+		"Groups":        groups,
+		"Sessions":      wd.sessionViews(mine),
+		"HasPortGrants": hasPortGrant(grants),
 	}})
 }
 
@@ -113,4 +114,13 @@ func (s *Server) clientAction(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func hasPortGrant(grants []store.Grant) bool {
+	for _, g := range grants {
+		if g.Kind == store.KindPort {
+			return true
+		}
+	}
+	return false
 }

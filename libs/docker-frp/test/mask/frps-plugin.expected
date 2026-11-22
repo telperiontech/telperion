@@ -1,0 +1,20 @@
+bindPort = 7000
+webServer.password = "***"
+webServer.user = "admin"
+allowPorts = [{ start = 6000, end = 6010 }]
+
+[auth]
+method = "token"
+token = "***"
+
+[[httpPlugins]]
+name = "frp-gate"
+addr = "127.0.0.1:7600"
+path = "/frps/***"
+ops = ["Login", "NewProxy"]
+
+[[httpPlugins]]
+name = "frp-gate-env"
+addr = "127.0.0.1:7600"
+path = "/frps/{{ .Envs.FRP_GATE_INSTANCE_KEY }}"
+ops = ["Login"]

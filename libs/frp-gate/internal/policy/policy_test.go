@@ -195,7 +195,7 @@ func TestPingAfterGrantRemoved(t *testing.T) {
 
 func TestAskClaimed(t *testing.T) {
 	f := newFixture(t)
-	ask := func(h string) bool { ok, _ := f.p.Ask(f.ctx, h); return ok }
+	ask := func(h string) bool { return f.p.Ask(f.ctx, h).Allow }
 	if ask("app.sahin.dev.example.com") {
 		t.Error("unclaimed name approved")
 	}
@@ -226,7 +226,7 @@ func TestAskClaimed(t *testing.T) {
 func TestAskGranted(t *testing.T) {
 	f := newFixture(t)
 	f.p.AskMode = AskGranted
-	ask := func(h string) bool { ok, _ := f.p.Ask(f.ctx, h); return ok }
+	ask := func(h string) bool { return f.p.Ask(f.ctx, h).Allow }
 	if !ask("anything.sahin.dev.example.com") {
 		t.Error("granted name refused")
 	}

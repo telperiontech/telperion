@@ -31,7 +31,7 @@
   </label>
   <label>Protocol <select name="proto"><option>tcp</option><option>udp</option></select></label>
   <label>Port or range <input name="ports" required placeholder="25565 or 6000-6010"></label>
-  <p class="hint">Also allow these ports in frps <code>allowPorts</code> and in the firewall.</p>
+  {{template "portnote" .}}
   <button>Add port grant</button>
 </form>
 </div>
@@ -43,8 +43,8 @@
   {{range .}}
   <tr>
     <td>{{.SubjectKind}} {{if eq .SubjectKind "client"}}<a href="/clients/{{.Subject}}">{{.Subject}}</a>{{else}}<strong>{{.Subject}}</strong>{{end}}</td>
-    <td><code>{{.Target}}</code></td>
-    <td><form method="post" action="/grants/{{.ID}}/delete" onsubmit="return confirm('Remove this grant?')"><button class="danger">Remove</button></form></td>
+    <td><code>{{.Target}}</code>{{if .Managed}} <span class="tag managed">managed</span>{{end}}</td>
+    <td>{{if not .Managed}}<form method="post" action="/grants/{{.ID}}/delete" onsubmit="return confirm('Remove this grant?')"><button class="danger">Remove</button></form>{{end}}</td>
   </tr>
   {{end}}
   </tbody>

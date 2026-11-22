@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/telperiontech/telperion/libs/frp-gate/internal/portrange"
 	"github.com/telperiontech/telperion/libs/frp-gate/internal/store"
 )
 
@@ -70,6 +71,7 @@ type grantView struct {
 	Instance    string `json:"instance,omitempty"`
 	Proto       string `json:"proto,omitempty"`
 	Ports       string `json:"ports,omitempty"`
+	Managed     bool   `json:"managed"`
 }
 
 // Target is a one-line description of what the grant allows.
@@ -81,7 +83,7 @@ func (g grantView) Target() string {
 }
 
 func (w *world) grantView(g store.Grant) grantView {
-	v := grantView{ID: g.ID, Kind: g.Kind, Pattern: g.Pattern, Proto: g.Proto}
+	v := grantView{ID: g.ID, Kind: g.Kind, Pattern: g.Pattern, Proto: g.Proto, Managed: g.Managed}
 	if g.ClientID != 0 {
 		v.SubjectKind, v.Subject = "client", w.clients[g.ClientID].Name
 	} else {
@@ -91,10 +93,7 @@ func (w *world) grantView(g store.Grant) grantView {
 		v.Zone = w.zones[g.ZoneID].Domain
 	} else {
 		v.Instance = w.instances[g.InstanceID].Name
-		v.Ports = fmt.Sprint(g.PortFrom)
-		if g.PortTo != g.PortFrom {
-			v.Ports += fmt.Sprintf("-%d", g.PortTo)
-		}
+		v.Ports = portrange.Format(g.PortFrom, g.PortTo)
 	}
 	return v
 }
@@ -112,12 +111,13 @@ type groupView struct {
 	ID      int64    `json:"id"`
 	Name    string   `json:"name"`
 	Members []string `json:"members"`
+	Managed bool     `json:"managed"`
 }
 
 func (w *world) groupViews() []groupView {
 	out := []groupView{}
 	for _, g := range w.Groups {
-		v := groupView{ID: g.ID, Name: g.Name, Members: []string{}}
+		v := groupView{ID: g.ID, Name: g.Name, Members: []string{}, Managed: g.Managed}
 		for _, id := range g.MemberIDs {
 			v.Members = append(v.Members, w.clients[id].Name)
 		}
@@ -131,12 +131,15 @@ type instanceView struct {
 	Name       string   `json:"name"`
 	ServerAddr string   `json:"server_addr"`
 	Zones      []string `json:"zones"`
+	Managed    bool     `json:"managed"`
+	KeyManaged bool     `json:"key_managed"`
 }
 
 func (w *world) instanceViews() []instanceView {
 	out := []instanceView{}
 	for _, in := range w.Instances {
-		v := instanceView{Name: in.Name, ServerAddr: in.ServerAddr, Zones: []string{}}
+		v := instanceView{Name: in.Name, ServerAddr: in.ServerAddr, Zones: []string{},
+			Managed: in.Managed, KeyManaged: in.SecretManaged}
 		for _, id := range in.ZoneIDs {
 			v.Zones = append(v.Zones, w.zones[id].Domain)
 		}

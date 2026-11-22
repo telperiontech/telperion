@@ -17,6 +17,12 @@ const testPassword = "correct horse battery"
 
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
+	srv, _ := newTestServerStore(t)
+	return srv
+}
+
+func newTestServerStore(t *testing.T) (*httptest.Server, *store.Store) {
+	t.Helper()
 	st, err := store.Open(":memory:")
 	if err != nil {
 		t.Fatal(err)
@@ -31,7 +37,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 	}
 	srv := httptest.NewServer(s)
 	t.Cleanup(srv.Close)
-	return srv
+	return srv, st
 }
 
 func api(t *testing.T, srv *httptest.Server, method, path, body string) (int, map[string]any) {

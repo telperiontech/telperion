@@ -47,16 +47,17 @@ jobs:
       - name: Run unit tests
         run: docker build --target test --progress plain libs/frp-gate
 
-      # Real frps + frpc + frp-gate: the frp version docker-frp ships, then the latest checked one.
-      - name: Run integration tests (frp 0.65.0)
-        run: bash libs/frp-gate/test/integration/run.sh
-        env:
-          FRP_VERSION: 0.65.0
-
+      # Real frps + frpc (docker-frp built from this commit) + frp-gate: the frp
+      # version docker-frp ships, then the oldest one still supported.
       - name: Run integration tests (frp 0.72.0)
         run: bash libs/frp-gate/test/integration/run.sh
         env:
           FRP_VERSION: 0.72.0
+
+      - name: Run integration tests (frp 0.65.0)
+        run: bash libs/frp-gate/test/integration/run.sh
+        env:
+          FRP_VERSION: 0.65.0
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3

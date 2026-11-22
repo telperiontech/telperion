@@ -7,7 +7,9 @@ set -e
 
 echo "🚀 Starting Docker FRP Container..."
 echo "Mode: ${MODE:-server}"
-echo "Build: $(date)"
+if [ -f /app/BUILD_INFO ]; then
+    echo "Version: $(cat /app/BUILD_INFO)"
+fi
 
 # Function to display usage information
 show_usage() {
@@ -23,8 +25,9 @@ show_usage() {
     echo "  BIND_PORT         - FRP server bind port (default: 7000)"
     echo "  DASHBOARD_PORT    - Dashboard web port (default: 7500)"
     echo "  DASHBOARD_USER    - Dashboard username (default: admin)"
-    echo "  DASHBOARD_PASSWORD - Dashboard password (default: admin)"
-    echo "  AUTH_TOKEN        - Authentication token (default: default_token_12345)"
+    echo "  DASHBOARD_PASSWORD - Dashboard password (required for a generated config)"
+    echo "  AUTH_TOKEN        - Authentication token (optional; leave it unset only when"
+    echo "                      frps uses frp-gate as its auth plugin)"
     echo "  LOG_LEVEL         - Log level (default: info)"
     echo "  TLS_ENABLE        - Enable TLS (default: false)"
     echo "  VHOST_HTTP_PORT   - HTTP vhost port (default: 8080)"
@@ -36,22 +39,25 @@ show_usage() {
     echo "  AUTH_TOKEN        - Authentication token (optional)"
     echo "  ADMIN_PORT        - Admin UI port (default: 7400)"
     echo "  ADMIN_USER        - Admin UI username (default: admin)"
-    echo "  ADMIN_PASSWORD    - Admin UI password (default: admin)"
+    echo "  ADMIN_PASSWORD    - Admin UI password (required for a generated config)"
     echo ""
     echo "PERSISTENT CONFIGURATION:"
     echo "  Mount /app/configs as a volume to persist configurations:"
     echo "  docker run -v ./configs:/app/configs telperiontech/docker-frp"
     echo "  • First run: Generates config from template and saves to volume"
-    echo "  • Subsequent runs: Uses existing config from volume"
+    echo "  • Subsequent runs: Uses existing config from volume. It is never"
+    echo "    regenerated: changed env vars do nothing until the file is removed"
     echo "  • Custom configs: Place frps.toml or frpc.toml in mounted volume"
     echo "  • Manual editing: Edit files in mounted volume and restart"
     echo ""
     echo "EXAMPLES:"
     echo "  # Server mode"
-    echo "  docker run -p 7000:7000 -p 7500:7500 -e MODE=server telperiontech/docker-frp"
+    echo "  docker run -p 7000:7000 -p 7500:7500 -e MODE=server \\"
+    echo "    -e DASHBOARD_PASSWORD=change-me telperiontech/docker-frp"
     echo ""
     echo "  # Client mode with admin UI"
-    echo "  docker run -p 7400:7400 -e MODE=client telperiontech/docker-frp"
+    echo "  docker run -p 7400:7400 -e MODE=client -e SERVER_ADDR=frp.example.com \\"
+    echo "    -e ADMIN_PASSWORD=change-me telperiontech/docker-frp"
     echo ""
     echo "  # Server with custom settings"
     echo "  docker run -p 7000:7000 -p 7500:7500 \\"
@@ -69,9 +75,29 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "help" ]; then
     exit 0
 fi
 
+# refuse_unsafe_password NAME: a generated config must not keep the default
+# "admin" (or an empty) password. Mounted or existing configs are not checked.
+refuse_unsafe_password() {
+    local name=$1
+    local value=${!name}
+    if [ -z "$value" ] || [ "$value" = "admin" ]; then
+        if [ -z "$value" ]; then
+            echo "❌ Error: $name is not set."
+        else
+            echo "❌ Error: $name is still \"admin\"."
+        fi
+        echo "   The configuration is generated from the template, so its web UI would"
+        echo "   accept a well-known password. Set $name to a strong value, or mount"
+        echo "   your own configuration file into /app/configs/."
+        exit 1
+    fi
+}
+
 # Function to handle configuration
+# setup_config MODE_LETTER PASSWORD_VAR
 setup_config() {
     local mode=$1
+    local password_var=$2
     local config_file="/app/configs/frp${mode}.toml"
     local template_file="/app/frp${mode}.toml.template"
 
@@ -87,10 +113,12 @@ setup_config() {
         return 0
     else
         echo "🔧 Generating configuration from template"
+        refuse_unsafe_password "$password_var"
         if [ -f "$template_file" ]; then
             envsubst < "$template_file" > "$config_file"
             echo "💾 Saved generated configuration to $config_file"
             echo "ℹ️  You can now edit $config_file and restart to use custom configuration"
+            echo "ℹ️  It is never regenerated: later env changes do nothing until you remove it"
             return 0
         else
             echo "❌ Error: Template $template_file not found"
@@ -99,11 +127,10 @@ setup_config() {
     fi
 }
 
-# Function to print a config file with secret values masked.
+# Prints a config file with secret values masked (see mask-config.sh).
 # Only the printed copy is altered; the file on disk is never modified.
 print_masked_config() {
-    local config_file=$1
-    sed -E 's/^([[:space:]]*(token|auth\.token|password|webServer\.password|adminPasswd)[[:space:]]*=).*/\1 "***"/' "$config_file"
+    /app/mask-config.sh "$1"
 }
 
 # Determine mode
@@ -127,7 +154,7 @@ case "$MODE" in
         export BIND_PORT=${BIND_PORT:-7000}
         export DASHBOARD_PORT=${DASHBOARD_PORT:-7500}
         export DASHBOARD_USER=${DASHBOARD_USER:-admin}
-        export DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-admin}
+        export DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD:-}
         export VHOST_HTTP_PORT=${VHOST_HTTP_PORT:-8080}
         export VHOST_HTTPS_PORT=${VHOST_HTTPS_PORT:-8443}
 
@@ -151,7 +178,7 @@ token = \"$AUTH_TOKEN\""
         echo "  VHost HTTPS Port: $VHOST_HTTPS_PORT"
 
         # Setup configuration
-        setup_config "s"
+        setup_config "s" DASHBOARD_PASSWORD
 
         echo "Final configuration:"
         print_masked_config /app/configs/frps.toml
@@ -177,7 +204,7 @@ token = \"$AUTH_TOKEN\""
         export SERVER_PORT=${SERVER_PORT:-7000}
         export ADMIN_PORT=${ADMIN_PORT:-7400}
         export ADMIN_USER=${ADMIN_USER:-"admin"}
-        export ADMIN_PASSWORD=${ADMIN_PASSWORD:-"admin"}
+        export ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
 
         # Configure authentication section
         if [ -n "$AUTH_TOKEN" ] && [ "$AUTH_TOKEN" != "" ]; then
@@ -197,7 +224,7 @@ token = \"$AUTH_TOKEN\""
         echo "  Admin User: $ADMIN_USER"
 
         # Setup configuration
-        setup_config "c"
+        setup_config "c" ADMIN_PASSWORD
 
         echo "Final configuration:"
         print_masked_config /app/configs/frpc.toml

@@ -24,12 +24,12 @@ func (p *Policy) Ping(ctx context.Context, inst store.Instance, in *plugin.PingC
 	grants, err := p.grantsOn(ctx, inst, c)
 	if err != nil {
 		p.Log.Error("grant lookup failed", "err", err)
-		return deny("internal error")
+		return deny("internal", "internal error")
 	}
 	proxies, err := p.Store.SessionProxies(ctx, inst.ID, runID)
 	if err != nil {
 		p.Log.Error("proxy lookup failed", "err", err)
-		return deny("internal error")
+		return deny("internal", "internal error")
 	}
 	var claimed []string
 	for _, px := range proxies {

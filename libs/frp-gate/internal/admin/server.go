@@ -7,8 +7,10 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/telperiontech/telperion/libs/frp-gate/internal/audit"
 	"github.com/telperiontech/telperion/libs/frp-gate/internal/store"
 )
 
@@ -43,7 +45,7 @@ func New(ctx context.Context, o Options) (*Server, error) {
 		return nil, err
 	}
 	s := &Server{
-		svc:            &Service{Store: o.Store},
+		svc:            &Service{Store: o.Store, Log: o.Log},
 		auth:           &auth{password: o.Password, secret: secret, now: time.Now},
 		pages:          pg,
 		log:            o.Log,
@@ -78,6 +80,7 @@ func (s *Server) routes() http.Handler {
 	ui.HandleFunc("POST /grants", s.grantCreate)
 	ui.HandleFunc("POST /grants/{id}/delete", s.grantDelete)
 	ui.HandleFunc("GET /instances", s.instancesPage)
+	ui.HandleFunc("GET /audit", s.auditPage)
 	ui.HandleFunc("POST /instances", s.instanceCreate)
 	ui.HandleFunc("POST /instances/{name}/{action}", s.instanceAction)
 
@@ -87,8 +90,8 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /logout", s.logout)
 	static, _ := fs.Sub(assets, "static")
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(static)))
-	mux.Handle("/api/", s.auth.requireAPI(s.apiRoutes()))
-	mux.Handle("/", s.auth.requireUI(ui))
+	mux.Handle("/api/", s.auth.requireAPI(withActor(audit.SourceAPI, s.apiRoutes())))
+	mux.Handle("/", s.auth.requireUI(withActor(audit.SourceUI, ui)))
 
 	// Rejects cross-site form posts (CSRF) using Sec-Fetch-Site / Origin.
 	return securityHeaders(http.NewCrossOriginProtection().Handler(mux))
@@ -118,10 +121,29 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.auth.issue(w, r)
+	s.svc.record(audit.WithActor(r.Context(), actorOf(audit.SourceUI, r)), "admin.login", "", "")
 	http.Redirect(w, r, "/status", http.StatusSeeOther)
 }
 
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 	s.auth.clear(w, r)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// withActor tags each request's context with who acts, for the audit log.
+func withActor(source string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r.WithContext(audit.WithActor(r.Context(), actorOf(source, r))))
+	})
+}
+
+// actorOf describes the client of a request: its address, and the address
+// Caddy reports in X-Forwarded-For (informational; it can be forged by
+// whoever reaches the admin listener directly).
+func actorOf(source string, r *http.Request) audit.Actor {
+	who := r.RemoteAddr
+	if xff := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-For"), ",")[0]); xff != "" {
+		who = xff + " via " + r.RemoteAddr
+	}
+	return audit.Actor{Source: source, Who: who}
 }

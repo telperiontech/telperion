@@ -44,14 +44,14 @@
     "run-server": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker run -p 7000:7000 -p 7500:7500 -e MODE=server telperiontech/docker-frp:server",
+        "command": "docker run --rm -p 7000:7000 -p 7500:7500 -e MODE=server -e DASHBOARD_PASSWORD=local-dev-password telperiontech/docker-frp:server",
         "cwd": "libs/docker-frp"
       }
     },
     "run-client": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker run -p 3000:3000 -e MODE=client telperiontech/docker-frp:client",
+        "command": "docker run --rm -p 7400:7400 -e MODE=client -e SERVER_ADDR=host.docker.internal -e ADMIN_PASSWORD=local-dev-password telperiontech/docker-frp:client",
         "cwd": "libs/docker-frp"
       }
     }

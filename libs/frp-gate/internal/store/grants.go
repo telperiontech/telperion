@@ -26,16 +26,17 @@ type Grant struct {
 	Proto      string    `json:"proto,omitempty"`
 	PortFrom   int       `json:"port_from,omitempty"`
 	PortTo     int       `json:"port_to,omitempty"`
+	Managed    bool      `json:"managed"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-const grantCols = "id, client_id, group_id, kind, zone_id, pattern, instance_id, proto, port_from, port_to, created_at"
+const grantCols = "id, client_id, group_id, kind, zone_id, pattern, instance_id, proto, port_from, port_to, created_at, managed"
 
 func scanGrant(row scanner) (Grant, error) {
 	var g Grant
 	var client, group, zone, inst sql.NullInt64
 	var created int64
-	err := row.Scan(&g.ID, &client, &group, &g.Kind, &zone, &g.Pattern, &inst, &g.Proto, &g.PortFrom, &g.PortTo, &created)
+	err := row.Scan(&g.ID, &client, &group, &g.Kind, &zone, &g.Pattern, &inst, &g.Proto, &g.PortFrom, &g.PortTo, &created, &g.Managed)
 	g.ClientID, g.GroupID, g.ZoneID, g.InstanceID = client.Int64, group.Int64, zone.Int64, inst.Int64
 	g.CreatedAt = time.Unix(created, 0)
 	return g, err
@@ -46,7 +47,7 @@ func nullID(id int64) sql.NullInt64 { return sql.NullInt64{Int64: id, Valid: id 
 // CreateGrant stores a validated grant.
 func (s *Store) CreateGrant(ctx context.Context, g Grant) (Grant, error) {
 	now := s.unix()
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q.ExecContext(ctx,
 		"INSERT INTO grants (client_id, group_id, kind, zone_id, pattern, instance_id, proto, port_from, port_to, created_at)"+
 			" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		nullID(g.ClientID), nullID(g.GroupID), g.Kind, nullID(g.ZoneID), g.Pattern,
@@ -76,7 +77,7 @@ func (s *Store) EffectiveGrants(ctx context.Context, clientID int64) ([]Grant, e
 }
 
 func (s *Store) queryGrants(ctx context.Context, q string, args ...any) ([]Grant, error) {
-	rows, err := s.db.QueryContext(ctx, q, args...)
+	rows, err := s.q.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -94,5 +95,11 @@ func (s *Store) queryGrants(ctx context.Context, q string, args ...any) ([]Grant
 
 // DeleteGrant removes a grant.
 func (s *Store) DeleteGrant(ctx context.Context, id int64) error {
-	return affected(s.db.ExecContext(ctx, "DELETE FROM grants WHERE id = ?", id))
+	return affected(s.q.ExecContext(ctx, "DELETE FROM grants WHERE id = ?", id))
+}
+
+// GrantByID returns one grant.
+func (s *Store) GrantByID(ctx context.Context, id int64) (Grant, error) {
+	g, err := scanGrant(s.q.QueryRowContext(ctx, "SELECT "+grantCols+" FROM grants WHERE id = ?", id))
+	return g, mapErr(err)
 }

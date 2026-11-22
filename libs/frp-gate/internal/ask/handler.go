@@ -6,25 +6,30 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/telperiontech/telperion/libs/frp-gate/internal/metrics"
+	"github.com/telperiontech/telperion/libs/frp-gate/internal/policy"
 )
 
 // Decider is implemented by policy.Policy.
 type Decider interface {
-	Ask(ctx context.Context, host string) (bool, string)
+	Ask(ctx context.Context, host string) policy.Decision
 }
 
 // Handler serves the ask endpoint.
 type Handler struct {
 	Decider Decider
 	Log     *slog.Logger
+	Metrics *metrics.Metrics // optional
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	domain := r.URL.Query().Get("domain")
-	ok, reason := h.Decider.Ask(r.Context(), domain)
-	if !ok {
-		h.Log.Info("tls ask refused", "domain", domain, "reason", reason)
-		http.Error(w, reason, http.StatusForbidden)
+	d := h.Decider.Ask(r.Context(), domain)
+	h.Metrics.Ask(d.Allow, d.Code)
+	if !d.Allow {
+		h.Log.Info("tls ask refused", "domain", domain, "reason", d.Reason)
+		http.Error(w, d.Reason, http.StatusForbidden)
 		return
 	}
 	h.Log.Info("tls ask approved", "domain", domain)

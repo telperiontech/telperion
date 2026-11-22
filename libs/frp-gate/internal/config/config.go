@@ -27,6 +27,9 @@ type Config struct {
 	InstanceName       string
 	InstanceKey        string
 	InstanceServerAddr string
+
+	// Optional: a declarative config file applied at every start.
+	ConfigFile string
 }
 
 // Load reads the configuration. getenv is os.Getenv outside tests.
@@ -38,13 +41,14 @@ func Load(getenv func(string) string) (Config, error) {
 		return def
 	}
 	c := Config{
-		DBPath:             env("FRP_GATE_DB", "/data/frp-gate.db"),
+		DBPath:             DBPath(getenv),
 		InternalAddr:       env("FRP_GATE_INTERNAL_ADDR", ":7600"),
 		AdminAddr:          env("FRP_GATE_ADMIN_ADDR", ":7601"),
 		AskMode:            env("FRP_GATE_ASK_MODE", "claimed"),
 		PluginAddr:         env("FRP_GATE_PLUGIN_ADDR", "frp-gate:7600"),
-		InstanceName:       env("FRP_GATE_INSTANCE_NAME", "default"),
+		InstanceName:       InstanceName(getenv),
 		InstanceServerAddr: env("FRP_GATE_INSTANCE_SERVER_ADDR", ""),
+		ConfigFile:         env("FRP_GATE_CONFIG", ""),
 	}
 	var errs []error
 	var err error
@@ -65,13 +69,8 @@ func Load(getenv func(string) string) (Config, error) {
 	if err := c.LogLevel.UnmarshalText([]byte(env("FRP_GATE_LOG_LEVEL", "info"))); err != nil {
 		errs = append(errs, fmt.Errorf("FRP_GATE_LOG_LEVEL: %w", err))
 	}
-	if k, err := secret(getenv, "FRP_GATE_INSTANCE_KEY"); err != nil {
+	if c.InstanceKey, err = InstanceKey(getenv); err != nil {
 		errs = append(errs, err)
-	} else {
-		c.InstanceKey = k
-	}
-	if c.InstanceKey != "" && len(c.InstanceKey) < 32 {
-		errs = append(errs, errors.New("FRP_GATE_INSTANCE_KEY must be at least 32 characters (e.g. openssl rand -hex 32)"))
 	}
 	return c, errors.Join(errs...)
 }
@@ -86,4 +85,33 @@ func secret(getenv func(string) string, name string) (string, error) {
 		return strings.TrimSpace(string(b)), nil
 	}
 	return strings.TrimSpace(getenv(name)), nil
+}
+
+// DBPath is FRP_GATE_DB or its default. The CLI commands (apply, export,
+// backup) need only this, not the admin password.
+func DBPath(getenv func(string) string) string {
+	if v := strings.TrimSpace(getenv("FRP_GATE_DB")); v != "" {
+		return v
+	}
+	return "/data/frp-gate.db"
+}
+
+// InstanceKey reads FRP_GATE_INSTANCE_KEY (or _FILE); "" when unset.
+func InstanceKey(getenv func(string) string) (string, error) {
+	k, err := secret(getenv, "FRP_GATE_INSTANCE_KEY")
+	if err != nil {
+		return "", err
+	}
+	if k != "" && len(k) < 32 {
+		return "", errors.New("FRP_GATE_INSTANCE_KEY must be at least 32 characters (e.g. openssl rand -hex 32)")
+	}
+	return k, nil
+}
+
+// InstanceName is FRP_GATE_INSTANCE_NAME or "default".
+func InstanceName(getenv func(string) string) string {
+	if v := strings.TrimSpace(getenv("FRP_GATE_INSTANCE_NAME")); v != "" {
+		return v
+	}
+	return "default"
 }

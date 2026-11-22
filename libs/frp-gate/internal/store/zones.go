@@ -10,12 +10,13 @@ type Zone struct {
 	ID        int64     `json:"id"`
 	Domain    string    `json:"domain"`
 	CreatedAt time.Time `json:"created_at"`
+	Managed   bool      `json:"managed"`
 }
 
 // CreateZone adds a zone. domain must be normalised.
 func (s *Store) CreateZone(ctx context.Context, domain string) (Zone, error) {
 	now := s.unix()
-	res, err := s.db.ExecContext(ctx, "INSERT INTO zones (domain, created_at) VALUES (?, ?)", domain, now)
+	res, err := s.q.ExecContext(ctx, "INSERT INTO zones (domain, created_at) VALUES (?, ?)", domain, now)
 	if err != nil {
 		return Zone{}, mapErr(err)
 	}
@@ -27,15 +28,15 @@ func (s *Store) CreateZone(ctx context.Context, domain string) (Zone, error) {
 func (s *Store) ZoneByID(ctx context.Context, id int64) (Zone, error) {
 	var z Zone
 	var created int64
-	err := s.db.QueryRowContext(ctx, "SELECT id, domain, created_at FROM zones WHERE id = ?", id).
-		Scan(&z.ID, &z.Domain, &created)
+	err := s.q.QueryRowContext(ctx, "SELECT id, domain, created_at, managed FROM zones WHERE id = ?", id).
+		Scan(&z.ID, &z.Domain, &created, &z.Managed)
 	z.CreatedAt = time.Unix(created, 0)
 	return z, mapErr(err)
 }
 
 // ListZones returns all zones ordered by domain.
 func (s *Store) ListZones(ctx context.Context) ([]Zone, error) {
-	rows, err := s.db.QueryContext(ctx, "SELECT id, domain, created_at FROM zones ORDER BY domain")
+	rows, err := s.q.QueryContext(ctx, "SELECT id, domain, created_at, managed FROM zones ORDER BY domain")
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (s *Store) ListZones(ctx context.Context) ([]Zone, error) {
 	for rows.Next() {
 		var z Zone
 		var created int64
-		if err := rows.Scan(&z.ID, &z.Domain, &created); err != nil {
+		if err := rows.Scan(&z.ID, &z.Domain, &created, &z.Managed); err != nil {
 			return nil, err
 		}
 		z.CreatedAt = time.Unix(created, 0)
@@ -55,15 +56,15 @@ func (s *Store) ListZones(ctx context.Context) ([]Zone, error) {
 
 // DeleteZone removes a zone. It fails with ErrInUse while grants refer to it.
 func (s *Store) DeleteZone(ctx context.Context, id int64) error {
-	return affected(s.db.ExecContext(ctx, "DELETE FROM zones WHERE id = ?", id))
+	return affected(s.q.ExecContext(ctx, "DELETE FROM zones WHERE id = ?", id))
 }
 
 // ZoneByDomain returns the zone with this domain.
 func (s *Store) ZoneByDomain(ctx context.Context, domain string) (Zone, error) {
 	var z Zone
 	var created int64
-	err := s.db.QueryRowContext(ctx, "SELECT id, domain, created_at FROM zones WHERE domain = ?", domain).
-		Scan(&z.ID, &z.Domain, &created)
+	err := s.q.QueryRowContext(ctx, "SELECT id, domain, created_at, managed FROM zones WHERE domain = ?", domain).
+		Scan(&z.ID, &z.Domain, &created, &z.Managed)
 	z.CreatedAt = time.Unix(created, 0)
 	return z, mapErr(err)
 }

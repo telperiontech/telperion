@@ -1,0 +1,24 @@
+{{define "content"}}
+<h1>Audit log</h1>
+<p class="hint">Admin actions through the UI, the API, <code>frp-gate apply</code> and the config file applied at start. Secrets are never recorded.</p>
+{{with .Data.Entries}}
+<table>
+  <thead><tr><th>When</th><th>Via</th><th>Action</th><th>Object</th><th>Detail</th><th>By</th></tr></thead>
+  <tbody>
+  {{range .}}
+  <tr>
+    <td title="{{stamp .At}}">{{ago .At}}</td>
+    <td><span class="tag">{{.Source}}</span></td>
+    <td><code>{{.Action}}</code></td>
+    <td>{{.Object}}</td>
+    <td>{{.Detail}}</td>
+    <td class="hint">{{.Actor}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+{{with $.Data.Next}}<p><a href="/audit?before={{.}}">Older entries</a></p>{{end}}
+{{else}}
+<p>No entries yet.</p>
+{{end}}
+{{end}}

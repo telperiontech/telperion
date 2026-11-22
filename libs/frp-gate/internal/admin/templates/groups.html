@@ -10,16 +10,18 @@
 {{range .Data.Groups}}
 {{$g := .}}
 <section class="card">
-  <h2>{{.Name}}</h2>
+  <h2>{{.Name}}{{if .Managed}} <span class="tag managed">managed</span>{{end}}</h2>
+  {{if .Managed}}<p class="hint">Declared in the config file, with its members (the clients' <code>groups</code>). Change it there and apply.</p>{{end}}
   {{with .Members}}
   <ul class="members">
     {{range .}}
     <li><a href="/clients/{{.}}">{{.}}</a>
-      <form method="post" action="/groups/{{$g.Name}}/members/{{.}}/delete" class="inline"><button class="small">remove</button></form>
+      {{if not $g.Managed}}<form method="post" action="/groups/{{$g.Name}}/members/{{.}}/delete" class="inline"><button class="small">remove</button></form>{{end}}
     </li>
     {{end}}
   </ul>
   {{else}}<p class="hint">No members.</p>{{end}}
+  {{if not .Managed}}
   <form method="post" action="/groups/{{.Name}}/members" class="row">
     <select name="client" required>
       <option value="">add a client…</option>
@@ -28,6 +30,7 @@
     <button>Add</button>
   </form>
   <form method="post" action="/groups/{{.Name}}/delete" onsubmit="return confirm('Delete this group and its grants?')"><button class="danger">Delete group</button></form>
+  {{end}}
 </section>
 {{else}}
 <p>No groups yet.</p>

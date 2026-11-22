@@ -11,24 +11,29 @@ and Caddy **v2.10.2**, by reading their source and running them (`test/integrati
 - frp-gate never manages frps or Caddy (no restarts, no config rewrites, no Docker socket). Their
   config is written once; frp-gate is reached through frp's plugin protocol and Caddy's `ask`.
 - Small: one static binary, SQLite, a 1 GB VPS shared with Caddy and frps.
-- Not in v1: SSO, self-service, metrics, stcp/xtcp/sudp.
+- Rebuildable from git: the setup can be a YAML file applied at start (1.1), so losing the
+  database (or the server) loses nothing that matters.
+- Not built: SSO, self-service, stcp/xtcp/sudp. (Metrics and an audit log came in 1.1.)
 
 ## Components
 
 ```
-cmd/frp-gate         wiring, two listeners, prune loop, healthcheck
+cmd/frp-gate         wiring, two listeners, prune loop; CLI: apply, export, backup, healthcheck
 internal/policy      every decision (Login, NewProxy, Ping, NewWorkConn, CloseProxy, Ask)
 internal/pattern     host patterns: literal labels, {client}, leading *
 internal/frpplugin   frps HTTP plugin protocol, decoded with frp's pkg/plugin/server types
 internal/ask         Caddy on-demand TLS permission endpoint
 internal/admin       html/template UI (plain forms, no JS build) + JSON API, shared Service
+internal/declare     the YAML config: parse, validate, apply (one transaction), export
+internal/metrics     counters + Prometheus text, no client library
+internal/audit       who acts (ui | api | apply | start), carried in the context
 internal/store       SQLite (modernc.org/sqlite, no cgo), schema migrations by user_version
 ```
 
 Two listeners keep the trust boundaries apart:
 
-- **:7600, internal.** `/frps/{key}` (plugin), `/tls/ask` and `/healthz`. Only frps and Caddy
-  need it. It is never published.
+- **:7600, internal.** `/frps/{key}` (plugin), `/tls/ask`, `/healthz` and `/metrics`. Only frps,
+  Caddy and a local Prometheus need it. It is never published.
 - **:7601, admin.** UI and API, password-protected, meant to sit behind Caddy.
 
 ## Authentication: the plugin is the authority
@@ -179,7 +184,10 @@ case):
 SQLite tables: `instances` (frps, key hash), `zones`, `instance_zones`, `clients` (token hash,
 disabled, last login), `client_groups`, `group_members`, `grants` (one of client/group; host:
 zone + full pattern, port: instance + proto + range), `sessions` (instance, run_id, last seen),
-`proxies` (per session), `claims` (name, client, last claimed), `settings` (session signing key).
+`proxies` (per session), `claims` (name, client, last claimed), `settings` (session signing key),
+and since schema 2 (1.1) `audit_log`, plus `managed` on zones, instances, clients, groups and
+grants and `secret_managed` on clients and instances (see [Declarative config](#declarative-config)).
+Migrations only append: a 1.0 database upgrades in place with every row `managed = 0`.
 
 - A host grant stores the full pattern, validated to lie inside its zone. Deleting a zone with
   grants is refused. Deleting a client, group or instance deletes its grants.
@@ -190,7 +198,78 @@ zone + full pattern, port: instance + proto + range), `sessions` (instance, run_
   recorded from the first NewProxy or Ping, and Login records the client's last address, host name
   and frpc version.
 - One SQLite connection (`SetMaxOpenConns(1)`) in WAL mode. Writes are tiny (one per Ping), and
-  this avoids `SQLITE_BUSY`.
+  this avoids `SQLITE_BUSY`. `frp-gate apply`/`export`/`backup` run as a second process on the same
+  file (via `docker exec`). Transactions start with `BEGIN IMMEDIATE` (`_txlock=immediate`), so that
+  process waits up to `busy_timeout` (5 s) for the write lock instead of failing on a lock upgrade.
+
+## Declarative config
+
+The production setup is "rebuild any machine from git". The admin UI alone did not allow that: a
+lost database meant re-creating everything by hand and handing out new tokens. So 1.1 adds a YAML
+file with the same objects (zones, instances, groups, clients, grants), applied at start
+(`FRP_GATE_CONFIG`) and on demand (`frp-gate apply`).
+
+**Ownership.** Rows declared in the file are `managed`. Apply creates and updates them and deletes
+managed rows that left the file; rows made in the UI are never touched. The two kinds coexist, so the
+UI stays useful for ad-hoc clients and the file stays authoritative for what it declares. Grants have
+no name and are matched by content (subject, kind, zone + pattern / instance + proto + range).
+Decisions:
+
+- **The UI refuses edits of managed rows** (`409` in the API) instead of letting the next apply undo
+  them silently. One exception: **disable**. It is the emergency switch and must work when git or
+  the deploy pipeline is out of reach. Apply changes `disabled` only when the file sets it
+  explicitly, so a UI disable is not undone by the next routine apply or restart. The cost: after a
+  database rebuild such a client is enabled again unless the file says `disabled: true`.
+- **Adoption.** A declared object whose name exists as a UI row becomes managed (id, sessions and
+  claims kept). This is what moves a running setup to a file without downtime: `export`, then
+  apply; the dry run shows only `=` lines. The alternative, refusing, would force deleting and
+  re-creating (and new tokens).
+- **Self-contained.** Every reference in the file must resolve within the file. A grant on a zone made
+  only in the UI would work today and break on a rebuild, which is exactly what the file is for.
+- **Secrets.** A client's token comes from `token_env`, `token_file` or `token_sha256` (the hash that
+  `export` writes); a server's key likewise from `key_*`. Only the hash is stored, as before, and the
+  token is never logged, printed or diffed ("token changed"). A declared token is never rotated by
+  apply, so frpc keeps working across a rebuild; the UI does not rotate it either
+  (`secret_managed`). Without a source, a new client gets a random token nobody sees, and the UI may
+  rotate it: apply leaves undeclared tokens alone.
+- **Validation before change.** The whole file is parsed strictly (unknown keys are errors) and
+  validated without touching the database, reporting every problem. Then all changes run in one
+  transaction; anything that fails there (a token already used by a UI client, a managed zone still
+  used by a UI grant) rolls everything back. `--dry-run` runs the same transaction and rolls it back,
+  so the diff is exactly what would happen. An empty file is refused: it would delete every managed
+  row.
+- **An invalid file stops the start.** frp-gate exits with the errors and the database unchanged,
+  like it does for an invalid environment variable. Serving the old state would hide the mistake
+  until the next rebuild, when it would bite with nothing to fall back to. The cost is availability:
+  while frp-gate is down, plugin calls fail and clients are cut off (fail-closed, as in
+  [Revocation](#revocation)); frpc reconnects by itself once frp-gate is back. A dry run before the
+  restart (e.g. in the Ansible role) avoids that.
+- `FRP_GATE_INSTANCE_KEY` is applied first, in the same transaction, both at start and by `apply`.
+  The usual `default` server therefore needs no key in the file; a second frps declares `key_env`.
+
+**Measured** by `test/integration` (frp 0.65.0 and 0.72.0): a client declared only in the file, with
+its token from an environment variable, connects; the API refuses to delete it (409); `export` lists
+it with `token_sha256` and no token; deleting frp-gate's database volume and restarting rebuilds it:
+frps kept the session (the rebuilt frp-gate accepts its Pings), and after restarting its frpc it
+logs in again with the same token. Clients made through the API are gone with the database, as
+expected.
+
+## Audit log and metrics
+
+- `audit_log` rows: time, source (`ui`, `api`, `apply`, `start`), actor (remote address and
+  `X-Forwarded-For`, or the file path), action, object and a detail that never holds a secret. The
+  Service writes them for UI and API actions (the actor travels in the request context), apply
+  writes one per change inside its transaction (so a dry run or a failed apply leaves none). The
+  newest 10,000 are kept. `X-Forwarded-For` is informational: whoever reaches :7601 directly can set
+  it.
+- `/metrics` is hand-written Prometheus text (four metric families; a client library would add more
+  than the rest of frp-gate's dependencies). Labels stay bounded: `op` is one of frps' ops,
+  `reason` is a fixed code added to every policy decision (`Decision.Code`; the human-readable
+  `Reason`, which names hosts and clients, stays in logs and frpc), `client` is a client name.
+  `frp_gate_sessions_connected` lists every client, 0 when not connected, so "home-pi is down" is a
+  plain comparison. Counters are in memory and restart at zero, as Prometheus expects.
+- frps does not report its `allowPorts`, so port grants cannot be checked against it. The UI and
+  README say so next to port grants; no mechanism was added.
 
 ## Admin UI and API
 
@@ -201,6 +280,8 @@ zone + full pattern, port: instance + proto + range), `sessions` (instance, run_
   CSRF is covered by Go 1.25's `http.CrossOriginProtection`. A failed login waits 1 s.
 - Secrets (client tokens, instance keys) are shown once, in the response that created them, and
   never logged.
+- Rows owned by the config file are tagged "managed"; their edit and delete buttons are hidden and
+  the Service refuses those actions (see [Declarative config](#declarative-config)).
 - The JSON API uses Basic auth and addresses objects by name, so it is easy to script. The UI and
   the API share one `Service`, so validation is identical.
 
@@ -209,8 +290,9 @@ zone + full pattern, port: instance + proto + range), `sessions` (instance, run_
 - `Dockerfile`: `src` → `test` (`go vet`, `go test`) → `build` (cross-compiled, `CGO_ENABLED=0`) →
   `runtime` (distroless static, nonroot, ~25 MB). The arm64 image needs no QEMU.
 - `frp-gate.publish.yml` runs on `release: published`, filtered to tags `frp-gate-vX.Y.Z`. It
-  runs hadolint, unit tests and the integration test against frp 0.65.0 and 0.72.0, then pushes
-  amd64 + arm64.
+  runs hadolint, unit tests and the integration test against frp 0.72.0 (docker-frp's default
+  since 1.3.0) and 0.65.0, then pushes amd64 + arm64. The integration test builds frps and frpc
+  from `libs/docker-frp` at the same commit, not from a published image.
 - **Does `push: tags` (used by docker-frp's workflow) fire for `gh release create`?** Yes, when the
   release creates the tag. Release `docker-frp-v1.2.0` was published at 12:30:29Z and its
   `docker-frp.publish.yml` run started at 12:30:31Z with `event: push` (public Actions API). It
@@ -220,8 +302,11 @@ zone + full pattern, port: instance + proto + range), `sessions` (instance, run_
 
 ## Known limits and follow-ups
 
-- docker-frp's masked config print hides `token =` lines but not `metadatas.token =`. A client
-  that writes its token literally into frpc.toml with docker-frp shows it in `docker logs`. The
-  README uses `{{ .Envs.FRP_GATE_TOKEN }}` instead. docker-frp's masking could learn `metadatas.*`.
+- docker-frp up to 1.2.0 printed `metadatas.token = "..."` and the plugin path `/frps/<key>` in
+  `docker logs`. docker-frp 1.3.0 masks every key whose last part contains token, password,
+  passwd, secret or key, and the key in `/frps/<key>`, while keeping `{{ .Envs.X }}` readable.
+  `{{ .Envs.FRP_GATE_TOKEN }}` is still the recommended form.
 - frps does not pass `X-Forwarded-Proto` on; clients set it with `requestHeaders.set`.
-- Admin auth is a single password; no audit log beyond frp-gate's own log lines.
+- Admin auth is a single password, so the audit log records where an action came from, not who.
+- `frp-gate apply` needs the same database file as the server (run it with `docker exec`). It does
+  not go through the API, which keeps the API free of a "replace everything" endpoint.

@@ -18,7 +18,9 @@ jobs:
 
     steps:
       - name: Set package version env variable
-        run: echo "PACKAGE_VERSION=${GITHUB_REF_NAME#docker-frp-v}" >> $GITHUB_ENV
+        run: |
+          echo "PACKAGE_VERSION=${GITHUB_REF_NAME#docker-frp-v}" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -83,6 +85,9 @@ jobs:
           file: libs/docker-frp/Dockerfile
           target: both
           push: true
+          build-args: |
+            VERSION=${{ env.PACKAGE_VERSION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
           tags: ${{ steps.meta-combined.outputs.tags }}
           labels: ${{ steps.meta-combined.outputs.labels }}
           annotations: ${{ steps.meta-combined.outputs.annotations }}
@@ -123,6 +128,9 @@ jobs:
           file: libs/docker-frp/Dockerfile
           target: server
           push: true
+          build-args: |
+            VERSION=${{ env.PACKAGE_VERSION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
           tags: ${{ steps.meta-server.outputs.tags }}
           labels: ${{ steps.meta-server.outputs.labels }}
           annotations: ${{ steps.meta-server.outputs.annotations }}
@@ -163,6 +171,9 @@ jobs:
           file: libs/docker-frp/Dockerfile
           target: client
           push: true
+          build-args: |
+            VERSION=${{ env.PACKAGE_VERSION }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
           tags: ${{ steps.meta-client.outputs.tags }}
           labels: ${{ steps.meta-client.outputs.labels }}
           annotations: ${{ steps.meta-client.outputs.annotations }}
@@ -220,8 +231,8 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Access Points:" >> $GITHUB_STEP_SUMMARY
-          echo "- **Server Dashboard:** http://localhost:7500 (admin/admin)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Client Admin UI:** http://localhost:7400 (admin/admin)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Server Dashboard:** http://localhost:7500 (the user and password you set)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Client Admin UI:** http://localhost:7400 (the user and password you set)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📚 Documentation:" >> $GITHUB_STEP_SUMMARY
           echo "Full documentation available at: [libs/docker-frp/README.md](https://github.com/telperiontech/telperion/tree/main/libs/docker-frp)" >> $GITHUB_STEP_SUMMARY

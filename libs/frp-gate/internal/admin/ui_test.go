@@ -61,7 +61,7 @@ func TestUIFlow(t *testing.T) {
 			t.Errorf("POST %s: %d, body lacks %q", s.path, code, s.want)
 		}
 	}
-	for _, p := range []string{"/status", "/clients", "/clients/sahin", "/zones", "/groups", "/grants", "/instances"} {
+	for _, p := range []string{"/status", "/clients", "/clients/sahin", "/zones", "/groups", "/grants", "/instances", "/audit"} {
 		if code, body := do("GET", p, nil); code != 200 || !strings.Contains(body, "</html>") {
 			t.Errorf("GET %s: %d", p, code)
 		}

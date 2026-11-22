@@ -13,6 +13,7 @@ func (s *Server) apiRoutes() http.Handler {
 	m := http.NewServeMux()
 	const p = "/api/v1/"
 	m.HandleFunc("GET "+p+"status", s.apiStatus)
+	m.HandleFunc("GET "+p+"audit", s.apiAudit)
 
 	m.HandleFunc("GET "+p+"clients", s.apiClients)
 	m.HandleFunc("POST "+p+"clients", s.apiClientCreate)
@@ -77,6 +78,8 @@ func (s *Server) apiResult(w http.ResponseWriter, code int, v any, err error) {
 	switch {
 	case errors.As(err, &in):
 		status = http.StatusBadRequest
+	case errors.As(err, new(ManagedError)):
+		status = http.StatusConflict
 	case errors.Is(err, store.ErrNotFound):
 		status = http.StatusNotFound
 	case errors.Is(err, store.ErrConflict), errors.Is(err, store.ErrInUse):

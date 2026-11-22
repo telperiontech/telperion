@@ -10,7 +10,7 @@ import (
 func (s *Store) TouchClaims(ctx context.Context, clientID int64, hosts []string) error {
 	now := s.unix()
 	for _, h := range hosts {
-		if _, err := s.db.ExecContext(ctx,
+		if _, err := s.q.ExecContext(ctx,
 			"INSERT INTO claims (name, client_id, last_claimed) VALUES (?, ?, ?)"+
 				" ON CONFLICT (name, client_id) DO UPDATE SET last_claimed = excluded.last_claimed",
 			h, clientID, now); err != nil {
@@ -33,7 +33,7 @@ func (s *Store) ClaimantsOf(ctx context.Context, hosts []string, since time.Time
 	args = append(args, since.Unix())
 	q := "SELECT DISTINCT client_id FROM claims WHERE name IN (?" + strings.Repeat(", ?", len(hosts)-1) +
 		") AND last_claimed >= ?"
-	rows, err := s.db.QueryContext(ctx, q, args...)
+	rows, err := s.q.QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,6 @@ func (s *Store) ClaimantsOf(ctx context.Context, hosts []string, since time.Time
 
 // PruneClaims deletes claims older than before.
 func (s *Store) PruneClaims(ctx context.Context, before time.Time) error {
-	_, err := s.db.ExecContext(ctx, "DELETE FROM claims WHERE last_claimed < ?", before.Unix())
+	_, err := s.q.ExecContext(ctx, "DELETE FROM claims WHERE last_claimed < ?", before.Unix())
 	return err
 }

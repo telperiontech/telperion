@@ -7,7 +7,7 @@ import (
 
 // migrations are applied in order; PRAGMA user_version records how many ran.
 // Never edit a released migration: append a new one.
-var migrations = []string{schemaV1}
+var migrations = []string{schemaV1, schemaV2}
 
 func (s *Store) migrate(ctx context.Context) error {
 	var version int

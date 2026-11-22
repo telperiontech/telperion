@@ -1,0 +1,18 @@
+auth = { method = "token", token = "inline-secret" }
+metadatas = { token = "inline-meta-secret", owner = "sahin" }
+webServer = { port = 7400, password = "{{ .Envs.ADMIN_PASSWORD }}" }
+tokens = [
+  "array-secret-1",
+  "array-secret-2", # comment ] with bracket
+]
+after = "visible"
+apiKeys = ["one-line-a", "one-line-b"]
+proxies = [
+  { name = "a", secretKey = "nested-secret", localPort = 1 },
+  { name = "b", type = "tcp" },
+]
+passwordText = """
+multi-line
+secret
+"""
+last = "visible too"

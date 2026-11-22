@@ -34,7 +34,7 @@ func (s *Server) grantCreate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) grantDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err == nil {
-		err = s.svc.Store.DeleteGrant(r.Context(), id)
+		err = s.svc.DeleteGrant(r.Context(), id)
 	}
 	s.redirect(w, r, "/grants", err, "Grant removed. Sessions using it are cut off at their next heartbeat.")
 }

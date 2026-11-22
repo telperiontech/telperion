@@ -14,9 +14,9 @@
   {{range .}}
   {{$z := .}}
   <tr>
-    <td><code>{{.Domain}}</code></td>
+    <td><code>{{.Domain}}</code>{{if .Managed}} <span class="tag managed">managed</span>{{end}}</td>
     <td>{{range $.Data.Instances}}{{$in := .}}{{range .Zones}}{{if eq . $z.Domain}}<span class="tag">{{$in.Name}}</span> {{end}}{{end}}{{end}}</td>
-    <td><form method="post" action="/zones/{{.Domain}}/delete" onsubmit="return confirm('Delete this zone?')"><button class="danger">Delete</button></form></td>
+    <td>{{if not .Managed}}<form method="post" action="/zones/{{.Domain}}/delete" onsubmit="return confirm('Delete this zone?')"><button class="danger">Delete</button></form>{{end}}</td>
   </tr>
   {{end}}
   </tbody>

@@ -1,0 +1,19 @@
+# frpc for frp-gate: literal secrets must not reach docker logs.
+serverAddr = "gate.example.com"
+serverPort = 7000
+user = "home-pi"
+metadatas.token = "fg_abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstu"
+metadatas.note = "kept"
+transport.heartbeatInterval = 15
+
+[webServer]
+addr = "127.0.0.1"
+port = 7400
+user = "admin"
+password = "hunter2-admin" # trailing comment
+
+[[proxies]]
+name = "ssh"
+type = "stcp"
+secretKey = 'single-quoted-secret'
+localPort = 22

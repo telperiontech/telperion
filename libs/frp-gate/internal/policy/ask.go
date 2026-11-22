@@ -10,34 +10,34 @@ import (
 )
 
 // Ask decides whether Caddy may obtain a certificate for host.
-func (p *Policy) Ask(ctx context.Context, host string) (bool, string) {
+func (p *Policy) Ask(ctx context.Context, host string) Decision {
 	h, err := names.Domain(host, false)
 	if err != nil {
-		return false, err.Error()
+		return deny("bad_name", "%v", err)
 	}
 	owners, err := p.grantees(ctx, h)
 	if err != nil {
 		p.Log.Error("ask: grant lookup failed", "err", err)
-		return false, "internal error"
+		return deny("internal", "internal error")
 	}
 	if len(owners) == 0 {
-		return false, "not granted to any enabled client"
+		return deny("not_granted", "not granted to any enabled client")
 	}
 	if p.AskMode == AskGranted {
-		return true, ""
+		return allow()
 	}
 	since := p.Now().Add(-p.ClaimRetention)
 	claimants, err := p.Store.ClaimantsOf(ctx, append([]string{h}, names.WildcardParents(h)...), since)
 	if err != nil {
 		p.Log.Error("ask: claim lookup failed", "err", err)
-		return false, "internal error"
+		return deny("internal", "internal error")
 	}
 	for _, id := range claimants {
 		if owners[id] {
-			return true, ""
+			return allow()
 		}
 	}
-	return false, "granted but not used by a proxy recently"
+	return deny("not_claimed", "granted but not used by a proxy recently")
 }
 
 // grantees returns the enabled clients whose grants cover host.

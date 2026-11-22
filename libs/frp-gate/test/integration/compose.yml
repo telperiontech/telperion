@@ -5,7 +5,7 @@ name: frp-gate-it
 x-frp-build: &frp-build
   context: ../../../docker-frp
   args:
-    FRP_VERSION: ${FRP_VERSION:-0.65.0}
+    FRP_VERSION: ${FRP_VERSION:-0.72.0}
 
 services:
   frp-gate:
@@ -16,8 +16,13 @@ services:
       FRP_GATE_ADMIN_PASSWORD: ${FRP_GATE_ADMIN_PASSWORD:?}
       FRP_GATE_INSTANCE_KEY: ${FRP_GATE_INSTANCE_KEY:?}
       FRP_GATE_INSTANCE_SERVER_ADDR: frps:7000
+      FRP_GATE_CONFIG: /config/gate.yaml
+      FRP_GATE_TOKEN_DAVE: ${DAVE_TOKEN:?}
       FRP_GATE_LOG_LEVEL: debug
       FRP_GATE_SESSION_TIMEOUT: 15s
+    volumes:
+      - ./gate.yaml:/config/gate.yaml:ro
+      - gate-data:/data # run.sh deletes this volume to simulate a lost database
     ports:
       - "127.0.0.1:17600:7600"
       - "127.0.0.1:17601:7601"
@@ -26,7 +31,7 @@ services:
     build:
       <<: *frp-build
       target: server
-    image: frp-gate-it/frps:${FRP_VERSION:-0.65.0}
+    image: frp-gate-it/frps:${FRP_VERSION:-0.72.0}
     environment:
       FRP_GATE_INSTANCE_KEY: ${FRP_GATE_INSTANCE_KEY:?}
     volumes:
@@ -43,7 +48,7 @@ services:
     build:
       <<: *frp-build
       target: client
-    image: frp-gate-it/frpc:${FRP_VERSION:-0.65.0}
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.72.0}
     environment:
       FRP_TOKEN: ${ALICE_TOKEN:-unset}
     volumes:
@@ -51,7 +56,7 @@ services:
     depends_on: [frps, backend]
 
   frpc-bob:
-    image: frp-gate-it/frpc:${FRP_VERSION:-0.65.0}
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.72.0}
     environment:
       FRP_TOKEN: ${BOB_TOKEN:-unset}
     volumes:
@@ -59,9 +64,20 @@ services:
     depends_on: [frpc-alice]
 
   frpc-carol:
-    image: frp-gate-it/frpc:${FRP_VERSION:-0.65.0}
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.72.0}
     environment:
       FRP_TOKEN: ${CAROL_TOKEN:-unset}
     volumes:
       - ./frpc/carol:/app/configs:ro
     depends_on: [frpc-alice]
+
+  frpc-dave:
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.72.0}
+    environment:
+      FRP_TOKEN: ${DAVE_TOKEN:?}
+    volumes:
+      - ./frpc/dave:/app/configs:ro
+    depends_on: [frpc-alice]
+
+volumes:
+  gate-data:

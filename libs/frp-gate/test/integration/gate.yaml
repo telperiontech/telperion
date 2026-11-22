@@ -1,0 +1,12 @@
+# Declarative config for the integration test (FRP_GATE_CONFIG). The
+# "default" instance gets its key from FRP_GATE_INSTANCE_KEY. alice, bob and
+# carol are made through the API by run.sh; dave exists only here.
+zones: [dev.test.example]
+instances:
+  default: { server_addr: "frps:7000", zones: [dev.test.example] }
+clients:
+  dave:
+    note: declared in gate.yaml
+    token_env: FRP_GATE_TOKEN_DAVE
+grants:
+  - { client: dave, kind: host, zone: dev.test.example, pattern: "*.{client}" }

@@ -1,0 +1,16 @@
+# dave: a client declared only in gate.yaml (token from an env var on both
+# sides). It must survive frp-gate losing its database.
+serverAddr = "frps"
+serverPort = 7000
+user = "dave"
+metadatas.token = "{{ .Envs.FRP_TOKEN }}"
+loginFailExit = false
+transport.heartbeatInterval = 5
+transport.heartbeatTimeout = 20
+
+[[proxies]]
+name = "web"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["web.dave.dev.test.example"]

@@ -1,13 +1,17 @@
 # Multi-stage Dockerfile for FRP Server and Client
 
+# frp release to package. Build info for labels and the startup banner.
+ARG FRP_VERSION=0.72.0
+ARG VERSION=dev
+ARG BUILD_DATE=unknown
+
 # Base stage with FRP binaries
-FROM alpine:3.19 as frp-base
+FROM alpine:3.24 AS frp-base
 RUN apk add --no-cache curl tar
 
 # Download and extract FRP with automatic architecture detection
-ARG FRP_VERSION=0.65.0
+ARG FRP_VERSION
 ARG TARGETPLATFORM
-ARG BUILDPLATFORM
 WORKDIR /app
 
 # Convert Docker platform to FRP architecture naming
@@ -20,62 +24,49 @@ RUN case "${TARGETPLATFORM}" in \
         *) echo "Unsupported platform: ${TARGETPLATFORM}" && exit 1 ;; \
     esac && \
     echo "Building for platform: ${TARGETPLATFORM}, using FRP arch: ${FRP_ARCH}" && \
-    curl -L https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_${FRP_ARCH}.tar.gz -o frp.tar.gz && \
+    curl -fL "https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_${FRP_ARCH}.tar.gz" -o frp.tar.gz && \
     tar -xzf frp.tar.gz --strip-components=1 && \
     rm frp.tar.gz && \
     chmod +x frps frpc
 
-# Server image
-FROM alpine:3.19 as server
+# Shared runtime: shell tools, entrypoint, masking, health check, build info
+FROM alpine:3.24 AS runtime-base
+ARG FRP_VERSION
+ARG VERSION
+ARG BUILD_DATE
 RUN apk add --no-cache bash gettext dos2unix
-COPY --from=frp-base /app/frps /usr/local/bin/frps
-# Copy only server template and entrypoint
-COPY frps.toml.template /app/frps.toml.template
-COPY entrypoint.sh /app/entrypoint.sh
-RUN dos2unix /app/entrypoint.sh && chmod +x /app/entrypoint.sh
-RUN mkdir -p /app/configs
+COPY entrypoint.sh mask-config.sh healthcheck.sh /app/
+RUN dos2unix /app/*.sh && chmod +x /app/*.sh && \
+    mkdir -p /app/configs && \
+    printf 'docker-frp %s, frp %s, built %s\n' "${VERSION}" "${FRP_VERSION}" "${BUILD_DATE}" > /app/BUILD_INFO
+LABEL org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      io.github.fatedier.frp.version="${FRP_VERSION}"
 VOLUME ["/app/configs"]
 WORKDIR /app
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["/app/healthcheck.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Server image
+FROM runtime-base AS server
+COPY --from=frp-base /app/frps /usr/local/bin/frps
+COPY frps.toml.template /app/frps.toml.template
 EXPOSE 7000 7500 8080 8443
 ENV MODE=server
-ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Client image
-FROM alpine:3.19 as client
-RUN apk add --no-cache bash gettext dos2unix
+FROM runtime-base AS client
 COPY --from=frp-base /app/frpc /usr/local/bin/frpc
-# Copy only client template and entrypoint
 COPY frpc.toml.template /app/frpc.toml.template
-COPY entrypoint.sh /app/entrypoint.sh
-RUN dos2unix /app/entrypoint.sh && chmod +x /app/entrypoint.sh
-RUN mkdir -p /app/configs
-VOLUME ["/app/configs"]
-WORKDIR /app
 EXPOSE 7400
 ENV MODE=client
-ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Combined image (default)
-FROM alpine:3.19 AS both
-RUN apk add --no-cache bash gettext dos2unix
-
-# Copy FRP binaries
+FROM runtime-base AS both
 COPY --from=frp-base /app/frps /usr/local/bin/frps
 COPY --from=frp-base /app/frpc /usr/local/bin/frpc
-
-# Copy configuration templates and entrypoint
 COPY frps.toml.template /app/frps.toml.template
 COPY frpc.toml.template /app/frpc.toml.template
-COPY entrypoint.sh /app/entrypoint.sh
-
-# Set permissions and fix line endings
-RUN dos2unix /app/entrypoint.sh && chmod +x /app/entrypoint.sh
-
-# Create configs directory for persistent configuration storage
-RUN mkdir -p /app/configs
-VOLUME ["/app/configs"]
-
-WORKDIR /app
 EXPOSE 7000 7500 7400 8080 8443
 
 # Default environment variables
@@ -86,6 +77,5 @@ ENV DASHBOARD_USER=admin
 ENV ADMIN_PORT=7400
 ENV VHOST_HTTP_PORT=8080
 ENV VHOST_HTTPS_PORT=8443
-# Note: DASHBOARD_PASSWORD should be set at runtime for security
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+# DASHBOARD_PASSWORD / ADMIN_PASSWORD must be set at runtime when the config
+# is generated from the template; "admin" or empty is refused.

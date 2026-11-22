@@ -20,7 +20,7 @@
   {{range .}}
   <tr>
     <td><a href="/clients/{{.Name}}">{{.Name}}</a></td>
-    <td>{{if .Disabled}}<span class="tag off">disabled</span>{{else}}<span class="tag on">active</span>{{end}}</td>
+    <td>{{if .Disabled}}<span class="tag off">disabled</span>{{else}}<span class="tag on">active</span>{{end}}{{if .Managed}} <span class="tag managed" title="declared in the config file">managed</span>{{end}}</td>
     <td title="{{stamp .LastLoginAt}}">{{ago .LastLoginAt}}{{if .LastLoginAddr}} from {{.LastLoginAddr}}{{end}}</td>
     <td>{{.Note}}</td>
   </tr>
