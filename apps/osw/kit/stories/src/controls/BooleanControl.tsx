@@ -11,7 +11,7 @@ export function BooleanControl({ id, value, onChange }: BooleanControlProps) {
 			type="checkbox"
 			checked={value}
 			onChange={(event) => onChange(event.target.checked)}
-			className="size-4 accent-secondary-600"
+			className="size-4 accent-secondary-550"
 		/>
 	);
 }

@@ -14,23 +14,23 @@ export function SupportTable() {
 	const report = useMemo(detectSupport, []);
 
 	return (
-		<ul className="divide-y divide-neutral-100 rounded-xl border border-neutral-100">
+		<ul className="divide-y divide-neutral-40 rounded-xl border border-neutral-40">
 			{FEATURES.map(({ key, label, detail, required }) => {
 				const ok = report[key];
 
 				return (
 					<li key={key} className="flex items-start gap-3 px-4 py-3">
-						<span className={`mt-0.5 shrink-0 ${ok ? 'text-success-600' : required ? 'text-danger-600' : 'text-neutral-550'}`}>
+						<span className={`mt-0.5 shrink-0 ${ok ? 'text-success-540' : required ? 'text-danger-540' : 'text-neutral-270'}`}>
 							<Icon name={ok ? 'check_circle' : required ? 'cancel' : 'do_not_disturb_on'} size={20} filled />
 						</span>
 						<div className="min-w-0">
 							<p className="text-sm font-medium">
 								{label}
-								{!required && <span className="ml-2 text-xs font-normal text-neutral-850">optional</span>}
+								{!required && <span className="ml-2 text-xs font-normal text-neutral-550">optional</span>}
 							</p>
-							<p className="text-xs text-neutral-850">{detail}</p>
+							<p className="text-xs text-neutral-550">{detail}</p>
 						</div>
-						<span className="ml-auto shrink-0 text-xs font-medium text-neutral-920">{ok ? 'Supported' : 'Missing'}</span>
+						<span className="ml-auto shrink-0 text-xs font-medium text-neutral-660">{ok ? 'Supported' : 'Missing'}</span>
 					</li>
 				);
 			})}

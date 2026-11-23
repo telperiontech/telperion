@@ -16,8 +16,8 @@ export function Panel({ id, icon, title, actions, children }: PanelProps) {
 	const titleId = `${id}-title`;
 
 	return (
-		<section aria-labelledby={titleId} className="rounded-xl border border-neutral-100">
-			<header className="flex items-center justify-between gap-2 border-b border-neutral-100 px-4 py-2.5">
+		<section aria-labelledby={titleId} className="rounded-xl border border-neutral-40">
+			<header className="flex items-center justify-between gap-2 border-b border-neutral-40 px-4 py-2.5">
 				<h2 id={titleId} className="flex items-center gap-2 text-sm font-semibold">
 					<Icon name={icon} size={18} />
 					{title}

@@ -24,8 +24,8 @@ export function DeclarationDetails({ declaration, summaryShown = false }: Declar
 
 			{declaration.returns && (
 				<div className="mt-6">
-					<h3 className="text-xs font-semibold tracking-wide text-neutral-850 uppercase">Returns</h3>
-					<p className="mt-2 text-sm text-neutral-920"><Inline text={declaration.returns} /></p>
+					<h3 className="text-xs font-semibold tracking-wide text-neutral-550 uppercase">Returns</h3>
+					<p className="mt-2 text-sm text-neutral-660"><Inline text={declaration.returns} /></p>
 				</div>
 			)}
 

@@ -13,10 +13,10 @@ export function RawView({ kind, storage }: { kind: DemoKind; storage: ReactiveSt
 	}, [kind, storage]);
 
 	return (
-		<div className="border-t border-neutral-100 bg-neutral-30 px-4 py-3">
-			<p className="text-xs font-semibold text-neutral-990">In the browser</p>
-			<p className="mt-1 font-mono text-xs text-neutral-850">{rawLocation(kind)}</p>
-			<p className="mt-2 font-mono text-xs break-all text-neutral-990">{raw ?? <span className="text-neutral-850">(not set)</span>}</p>
+		<div className="border-t border-neutral-40 bg-neutral-10 px-4 py-3">
+			<p className="text-xs font-semibold text-neutral-900">In the browser</p>
+			<p className="mt-1 font-mono text-xs text-neutral-550">{rawLocation(kind)}</p>
+			<p className="mt-2 font-mono text-xs break-all text-neutral-900">{raw ?? <span className="text-neutral-550">(not set)</span>}</p>
 		</div>
 	);
 }

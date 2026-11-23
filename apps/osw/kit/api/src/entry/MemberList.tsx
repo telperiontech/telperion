@@ -13,10 +13,10 @@ function Member({ member }: { member: DocsMember }) {
 		<div id={memberAnchor(member)} className="scroll-mt-20 py-6 first:pt-2">
 			<div className="flex flex-wrap items-center gap-2">
 				<h4 className="font-mono text-base font-semibold">
-					<a href={`#${memberAnchor(member)}`} className="hover:text-secondary-800">{memberLabel(member)}</a>
+					<a href={`#${memberAnchor(member)}`} className="hover:text-secondary-660">{memberLabel(member)}</a>
 				</h4>
 				{member.static && <KindBadge kind="static" />}
-				{member.inheritedFrom && <span className="text-xs text-neutral-850">from <code className="font-mono">{member.inheritedFrom}</code></span>}
+				{member.inheritedFrom && <span className="text-xs text-neutral-550">from <code className="font-mono">{member.inheritedFrom}</code></span>}
 			</div>
 
 			<div className="mt-3 space-y-2">
@@ -36,8 +36,8 @@ function Member({ member }: { member: DocsMember }) {
 
 			{member.returns && (
 				<div className="mt-6">
-					<h5 className="text-xs font-semibold tracking-wide text-neutral-850 uppercase">Returns</h5>
-					<p className="mt-2 text-sm text-neutral-920"><Inline text={member.returns} /></p>
+					<h5 className="text-xs font-semibold tracking-wide text-neutral-550 uppercase">Returns</h5>
+					<p className="mt-2 text-sm text-neutral-660"><Inline text={member.returns} /></p>
 				</div>
 			)}
 		</div>
@@ -50,8 +50,8 @@ export function MemberList({ members }: { members?: DocsMember[] }) {
 
 	return (
 		<div className="mt-10">
-			<h3 className="text-xs font-semibold tracking-wide text-neutral-850 uppercase">Members</h3>
-			<div className="mt-2 divide-y divide-neutral-100">
+			<h3 className="text-xs font-semibold tracking-wide text-neutral-550 uppercase">Members</h3>
+			<div className="mt-2 divide-y divide-neutral-40">
 				{members.map((member) => <Member key={memberAnchor(member)} member={member} />)}
 			</div>
 		</div>

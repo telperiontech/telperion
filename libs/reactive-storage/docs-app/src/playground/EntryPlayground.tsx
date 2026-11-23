@@ -40,7 +40,7 @@ export function EntryPlayground({ entry }: { entry: DocsEntry }) {
 	return (
 		<section aria-labelledby="try-it" className="mt-10">
 			<h2 id="try-it" className="text-lg font-semibold tracking-tight">Try it</h2>
-			<p className="mt-1 text-sm text-neutral-920">{demo.description}</p>
+			<p className="mt-1 text-sm text-neutral-660">{demo.description}</p>
 			<StoragePlayground key={entry.id} kind={demo.kind} />
 		</section>
 	);

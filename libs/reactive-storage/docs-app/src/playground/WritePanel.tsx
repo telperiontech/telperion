@@ -67,12 +67,12 @@ export function WritePanel({ storage, onCall }: WritePanelProps) {
 	return (
 		<div className="grid gap-3 p-4">
 			<div className="grid gap-1.5">
-				<label htmlFor={`${id}-key`} className="text-xs font-semibold text-neutral-990">Key path</label>
+				<label htmlFor={`${id}-key`} className="text-xs font-semibold text-neutral-900">Key path</label>
 				<input id={`${id}-key`} value={key} spellCheck={false} onChange={(event) => setKey(event.target.value)} className={fieldClass} />
-				<p className="text-xs text-neutral-850">Dot-separated, inside the <code className="font-mono">{DEMO_STORE}</code> store. Empty means the whole store.</p>
+				<p className="text-xs text-neutral-550">Dot-separated, inside the <code className="font-mono">{DEMO_STORE}</code> store. Empty means the whole store.</p>
 			</div>
 			<div className="grid gap-1.5">
-				<label htmlFor={`${id}-value`} className="text-xs font-semibold text-neutral-990">Value (JSON)</label>
+				<label htmlFor={`${id}-value`} className="text-xs font-semibold text-neutral-900">Value (JSON)</label>
 				<textarea id={`${id}-value`} value={valueText} rows={3} spellCheck={false} onChange={(event) => setValueText(event.target.value)} className={fieldClass} />
 			</div>
 			<div className="flex flex-wrap gap-2">

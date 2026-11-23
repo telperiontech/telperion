@@ -13,9 +13,9 @@ export function LaneAxis({ y, solid }: { y: number; solid?: { from: number; to?:
 
 	return (
 		<g>
-			{solid && <line x1={scale.axisStart} x2={scale.axisEnd} y1={y} y2={y} strokeWidth={1.5} strokeDasharray="3 5" className="stroke-neutral-200" />}
-			<line x1={from} x2={to} y1={y} y2={y} strokeWidth={1.5} className="stroke-neutral-550" />
-			<path d={`M ${scale.axisEnd + 8} ${y} l -9 -5 v 10 z`} className={solid?.to !== undefined ? 'fill-neutral-200' : 'fill-neutral-550'} />
+			{solid && <line x1={scale.axisStart} x2={scale.axisEnd} y1={y} y2={y} strokeWidth={1.5} strokeDasharray="3 5" className="stroke-neutral-80" />}
+			<line x1={from} x2={to} y1={y} y2={y} strokeWidth={1.5} className="stroke-neutral-450" />
+			<path d={`M ${scale.axisEnd + 8} ${y} l -9 -5 v 10 z`} className={solid?.to !== undefined ? 'fill-neutral-80' : 'fill-neutral-450'} />
 		</g>
 	);
 }
@@ -31,7 +31,7 @@ export function LaneCaption({ label, y, onAdd }: { label: string; y: number; onA
 
 	return (
 		<g>
-			<text x={0} y={y} dominantBaseline="central" className="fill-neutral-920 text-[12px] font-medium">{label}</text>
+			<text x={0} y={y} dominantBaseline="central" className="fill-neutral-660 text-[12px] font-medium">{label}</text>
 			{onAdd && (
 				<g role="button" tabIndex={0} aria-label={`Add a value to ${label}`} className="group cursor-pointer outline-none" onClick={onAdd} onKeyDown={onKeyDown}>
 					<title>{`Add a value to ${label}`}</title>
@@ -40,9 +40,9 @@ export function LaneCaption({ label, y, onAdd }: { label: string; y: number; onA
 						cy={y}
 						r={ADD_RADIUS}
 						strokeWidth={1.25}
-						className="fill-white stroke-neutral-250 group-hover:fill-secondary-50 group-hover:stroke-secondary-500 group-focus-visible:stroke-secondary-600 group-focus-visible:stroke-2"
+						className="fill-white stroke-neutral-110 group-hover:fill-secondary-30 group-hover:stroke-secondary-500 group-focus-visible:stroke-secondary-550 group-focus-visible:stroke-2"
 					/>
-					<path d={`M ${GUTTER - 20} ${y} h 8 M ${GUTTER - 16} ${y - 4} v 8`} strokeWidth={1.5} strokeLinecap="round" className="pointer-events-none stroke-neutral-920" />
+					<path d={`M ${GUTTER - 20} ${y} h 8 M ${GUTTER - 16} ${y - 4} v 8`} strokeWidth={1.5} strokeLinecap="round" className="pointer-events-none stroke-neutral-660" />
 				</g>
 			)}
 		</g>

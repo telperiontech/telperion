@@ -11,7 +11,7 @@ export function SupportNotice({ className = '' }: { className?: string }) {
 	const missing = !report.paintApi ? 'the CSS Paint API' : 'CSS custom functions (@function)';
 
 	return (
-		<div role="status" className={`flex gap-3 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900 ${className}`}>
+		<div role="status" className={`flex gap-3 rounded-xl border border-warning-150 bg-warning-40 p-4 text-sm text-warning-750 ${className}`}>
 			<Icon name="warning" size={20} className="shrink-0" />
 			<p>
 				This browser does not support {missing}, so the previews below stay blank.

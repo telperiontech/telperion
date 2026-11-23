@@ -11,13 +11,13 @@ export function CategoryPage({ category }: { category: DocsCategory }) {
 
 	return (
 		<section className="max-w-4xl">
-			<nav aria-label="Breadcrumb" className="text-xs text-neutral-850">
-				<a href={overviewPath()} className="hover:text-neutral-990">{name}</a>
+			<nav aria-label="Breadcrumb" className="text-xs text-neutral-550">
+				<a href={overviewPath()} className="hover:text-neutral-900">{name}</a>
 			</nav>
 			<h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{category.title}</h1>
-			{category.description && <p className="mt-3 text-base text-neutral-920">{category.description}</p>}
+			{category.description && <p className="mt-3 text-base text-neutral-660">{category.description}</p>}
 			{hasBarrel && (
-				<p className="mt-2 text-sm text-neutral-850">
+				<p className="mt-2 text-sm text-neutral-550">
 					Import all at once from <Code code={`${model.packageName}/${category.id}`} />, or each from its own path for the smallest bundle.
 				</p>
 			)}

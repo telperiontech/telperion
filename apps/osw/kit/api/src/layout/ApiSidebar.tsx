@@ -12,8 +12,8 @@ interface ApiSidebarProps {
 }
 
 const linkBase = 'block truncate rounded-md px-2 py-1 font-mono text-[13px] transition-colors';
-const linkIdle = 'text-neutral-920 hover:bg-neutral-50 hover:text-neutral-990';
-const linkActive = 'bg-secondary-100 font-medium text-secondary-850';
+const linkIdle = 'text-neutral-660 hover:bg-neutral-20 hover:text-neutral-900';
+const linkActive = 'bg-secondary-70 font-medium text-secondary-710';
 
 /** Searchable module list grouped by category */
 export function ApiSidebar({ activeId, onNavigate }: ApiSidebarProps) {
@@ -33,7 +33,7 @@ export function ApiSidebar({ activeId, onNavigate }: ApiSidebarProps) {
 		<nav aria-label="Modules" className="text-sm">
 			<label className="relative block">
 				<span className="sr-only">Search modules</span>
-				<span className="pointer-events-none absolute inset-y-0 left-2.5 grid place-items-center text-neutral-550">
+				<span className="pointer-events-none absolute inset-y-0 left-2.5 grid place-items-center text-neutral-270">
 					<Icon name="search" size={16} />
 				</span>
 				<input
@@ -41,7 +41,7 @@ export function ApiSidebar({ activeId, onNavigate }: ApiSidebarProps) {
 					value={query}
 					onChange={(event) => setQuery(event.target.value)}
 					placeholder="Search modules"
-					className="w-full rounded-lg border border-neutral-100 bg-white py-2 pr-3 pl-8 text-sm text-neutral-990 placeholder:text-neutral-550 focus:border-secondary-300 focus:outline-none"
+					className="w-full rounded-lg border border-neutral-40 bg-white py-2 pr-3 pl-8 text-sm text-neutral-900 placeholder:text-neutral-270 focus:border-secondary-240 focus:outline-none"
 				/>
 			</label>
 
@@ -50,7 +50,7 @@ export function ApiSidebar({ activeId, onNavigate }: ApiSidebarProps) {
 					<a
 						href={docsPath(category.id)}
 						onClick={onNavigate}
-						className={`block px-2 text-xs font-semibold tracking-wide uppercase ${activeId === category.id ? 'text-secondary-800' : 'text-neutral-850 hover:text-neutral-990'}`}
+						className={`block px-2 text-xs font-semibold tracking-wide uppercase ${activeId === category.id ? 'text-secondary-660' : 'text-neutral-550 hover:text-neutral-900'}`}
 					>
 						{category.title}
 					</a>
@@ -71,7 +71,7 @@ export function ApiSidebar({ activeId, onNavigate }: ApiSidebarProps) {
 				</section>
 			))}
 
-			{!groups.length && <p className="mt-5 px-2 text-neutral-850">No modules match “{query}”.</p>}
+			{!groups.length && <p className="mt-5 px-2 text-neutral-550">No modules match “{query}”.</p>}
 		</nav>
 	);
 }

@@ -10,8 +10,8 @@ interface CatalogFiltersProps {
 }
 
 const chipBase = 'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors';
-const chipAllOn = 'border-transparent bg-linear-to-r from-primary-600 to-secondary-600 text-white shadow-sm shadow-secondary-500/25';
-const chipOff = 'border-neutral-100 bg-white text-neutral-920 hover:border-secondary-300 hover:text-neutral-990';
+const chipAllOn = 'border-transparent bg-linear-to-r from-primary-550 to-secondary-550 text-white shadow-sm shadow-secondary-500/25';
+const chipOff = 'border-neutral-40 bg-white text-neutral-660 hover:border-secondary-240 hover:text-neutral-900';
 
 const countFor = (filter: EcosystemFilter) =>
 	filter === 'all' ? libraries.length : libraries.filter((lib) => lib.ecosystem === filter).length;
@@ -37,7 +37,7 @@ export function CatalogFilters({ query, onQueryChange, filter, onFilterChange }:
 						>
 							{chip.dot && <span aria-hidden="true" className={`size-2 rounded-full ${chip.dot}`} />}
 							{chip.label}
-							<span className={`font-mono text-xs ${active ? 'opacity-70' : 'text-neutral-850'}`}>{countFor(chip.id)}</span>
+							<span className={`font-mono text-xs ${active ? 'opacity-70' : 'text-neutral-550'}`}>{countFor(chip.id)}</span>
 						</button>
 					);
 				})}
@@ -45,7 +45,7 @@ export function CatalogFilters({ query, onQueryChange, filter, onFilterChange }:
 
 			<label className="relative flex items-center md:w-72">
 				<span className="sr-only">Search libraries</span>
-				<span className="pointer-events-none absolute left-3 flex text-neutral-850">
+				<span className="pointer-events-none absolute left-3 flex text-neutral-550">
 					<Icon name="search" size={18} />
 				</span>
 				<input
@@ -53,7 +53,7 @@ export function CatalogFilters({ query, onQueryChange, filter, onFilterChange }:
 					value={query}
 					onChange={(event) => onQueryChange(event.target.value)}
 					placeholder="Search libraries…"
-					className="w-full rounded-lg border border-neutral-100 bg-white py-2 pr-3 pl-9 text-sm text-neutral-990 placeholder:text-neutral-850 outline-none focus:border-secondary-400 focus:ring-2 focus:ring-secondary-500/20 transition"
+					className="w-full rounded-lg border border-neutral-40 bg-white py-2 pr-3 pl-9 text-sm text-neutral-900 placeholder:text-neutral-550 outline-none focus:border-secondary-350 focus:ring-2 focus:ring-secondary-500/20 transition"
 				/>
 			</label>
 		</div>

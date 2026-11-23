@@ -18,10 +18,10 @@ export function GalleryTile({ entry }: { entry: EntryDoc }) {
 			args={{}}
 			events={[]}
 			height={224}
-			className="pointer-events-none bg-neutral-20"
+			className="pointer-events-none bg-neutral-10"
 		/>
 	) : (
-		<div className="grid h-56 place-items-center bg-neutral-20 font-mono text-sm text-neutral-850">{`<${entry.elements[0]?.tagName}>`}</div>
+		<div className="grid h-56 place-items-center bg-neutral-10 font-mono text-sm text-neutral-550">{`<${entry.elements[0]?.tagName}>`}</div>
 	);
 
 	return (

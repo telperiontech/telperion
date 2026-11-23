@@ -11,7 +11,7 @@ export function GlobalsSection({ entry }: { entry: DocsEntry }) {
 	return (
 		<section aria-labelledby="globals">
 			<h2 id="globals" className={sectionTitle}>Global declarations</h2>
-			<p className="mt-1 text-sm text-neutral-920">
+			<p className="mt-1 text-sm text-neutral-660">
 				Import the module once, for its side effect, to declare{' '}
 				{entry.globals.map((global, index) => (
 					<span key={global.name}>

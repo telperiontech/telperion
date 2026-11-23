@@ -20,14 +20,14 @@ export function Hero() {
 	const firstStory = firstEntry && storiesOf(firstEntry)[0];
 
 	return (
-		<section className="relative overflow-hidden border-b border-neutral-100 bg-linear-to-b from-secondary-20 to-white">
+		<section className="relative overflow-hidden border-b border-neutral-40 bg-linear-to-b from-secondary-10 to-white">
 			<div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_30rem] lg:py-24">
 				<div>
-					<p className="font-mono text-sm font-semibold text-secondary-700">{model.packageName}</p>
+					<p className="font-mono text-sm font-semibold text-secondary-600">{model.packageName}</p>
 					<h1 className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
 						Web components that behave like native elements
 					</h1>
-					<p className="mt-5 max-w-xl text-lg leading-relaxed text-neutral-920">
+					<p className="mt-5 max-w-xl text-lg leading-relaxed text-neutral-660">
 						Buttons and selects that join your forms, popovers placed by CSS, accordions, icons, drag and drop and a declarative router.
 						Plain HTML tags, so they work with any framework or none.
 					</p>

@@ -13,7 +13,7 @@ export function GalleryTile({ paintlet }: { paintlet: ComponentDoc }) {
 		<GalleryCard
 			href={paintletPath(paintlet.id)}
 			title={paintlet.title}
-			preview={<StoryCanvas story={story} args={story.args} className="pointer-events-none h-56 bg-neutral-20 p-4" />}
+			preview={<StoryCanvas story={story} args={story.args} className="pointer-events-none h-56 bg-neutral-10 p-4" />}
 			meta={`${paintlet.stories.length} stories`}
 			summary={paintlet.summary}
 			cta="Play with it"

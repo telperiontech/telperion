@@ -5,7 +5,7 @@ import { MarblePlayground } from './playground/MarblePlayground';
 
 const tabClass = (active: boolean) =>
 	`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-		active ? 'bg-secondary-600 text-white' : 'border border-neutral-100 text-neutral-920 hover:border-neutral-250 hover:text-neutral-990'
+		active ? 'bg-secondary-550 text-white' : 'border border-neutral-40 text-neutral-660 hover:border-neutral-110 hover:text-neutral-900'
 	}`;
 
 /** A playground per scenario, with a switcher when there are several */
@@ -28,7 +28,7 @@ export function ScenarioShowcase({ scenarios }: { scenarios: readonly AnyMarbleS
 			)}
 			{scenarios.length === 1 && <h3 className="mt-4 text-sm font-semibold">{scenario.title}</h3>}
 			{scenario.description && (
-				<p className="mt-3 text-sm leading-relaxed text-neutral-920">
+				<p className="mt-3 text-sm leading-relaxed text-neutral-660">
 					<Inline text={scenario.description} />
 				</p>
 			)}

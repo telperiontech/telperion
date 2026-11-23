@@ -44,7 +44,7 @@ export function PlaygroundPage({ paintlet, story }: PlaygroundPageProps) {
 				onRender={onRender}
 				fit={{ maxHeight: STAGE_MAX_HEIGHT }}
 				showZoom
-				className="mt-6 min-h-72 rounded-xl border border-neutral-100 bg-neutral-20 bg-[radial-gradient(var(--color-neutral-100)_1px,transparent_1px)] bg-size-[16px_16px] p-6"
+				className="mt-6 min-h-72 rounded-xl border border-neutral-40 bg-neutral-10 bg-[radial-gradient(var(--color-neutral-40)_1px,transparent_1px)] bg-size-[16px_16px] p-6"
 			/>
 
 			<div className="mt-6 grid grid-cols-1 items-start gap-6 xl:grid-cols-2">

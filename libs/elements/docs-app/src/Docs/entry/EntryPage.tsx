@@ -7,7 +7,7 @@ import { storiesOf } from '../stories';
 import { ElementReference } from './ElementReference';
 
 const chipClass =
-	'inline-flex items-center gap-1 rounded-full border border-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-920 transition-colors hover:border-secondary-300 hover:text-secondary-800';
+	'inline-flex items-center gap-1 rounded-full border border-neutral-40 px-2.5 py-1 text-xs font-medium text-neutral-660 transition-colors hover:border-secondary-240 hover:text-secondary-660';
 
 /** Docs of one entry point: live preview, guide (README) and API reference */
 export function EntryPage({ entry }: { entry: EntryDoc }) {
@@ -17,17 +17,17 @@ export function EntryPage({ entry }: { entry: EntryDoc }) {
 	return (
 		<>
 			<header>
-				<p className="font-mono text-sm font-semibold text-secondary-700">{entry.importPath}</p>
+				<p className="font-mono text-sm font-semibold text-secondary-600">{entry.importPath}</p>
 				<h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{entry.title}</h1>
-				<p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-920">
+				<p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-660">
 					<Inline text={entry.summary} />
 				</p>
 				<div className="mt-4 max-w-xl">
 					<CodeLine code={sideEffectImport(entry.importPath)} language="ts" />
 				</div>
-				<p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-850">
+				<p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-550">
 					<span>Defines {entry.elements.map((element) => `<${element.tagName}>`).join(', ')}</span>
-					<ExternalLink href={treeUrl(entry.sourcePath)} className="font-medium hover:text-secondary-800">Source</ExternalLink>
+					<ExternalLink href={treeUrl(entry.sourcePath)} className="font-medium hover:text-secondary-660">Source</ExternalLink>
 				</p>
 			</header>
 
@@ -35,7 +35,7 @@ export function EntryPage({ entry }: { entry: EntryDoc }) {
 				<section aria-labelledby="preview-title" className="mt-8">
 					<div className="flex flex-wrap items-center justify-between gap-2">
 						<h2 id="preview-title" className="text-lg font-semibold tracking-tight">Try it</h2>
-						<a href={storyPath(entry.id, first.story.id)} className="inline-flex items-center gap-1 text-sm font-medium text-secondary-800 hover:underline">
+						<a href={storyPath(entry.id, first.story.id)} className="inline-flex items-center gap-1 text-sm font-medium text-secondary-660 hover:underline">
 							Open the playground
 							<Icon name="arrow_forward" size={16} />
 						</a>
@@ -47,7 +47,7 @@ export function EntryPage({ entry }: { entry: EntryDoc }) {
 						args={{}}
 						events={[]}
 						maxHeight={420}
-						className="mt-3 overflow-hidden rounded-xl border border-neutral-100 bg-neutral-20"
+						className="mt-3 overflow-hidden rounded-xl border border-neutral-40 bg-neutral-10"
 					/>
 					<ul className="mt-3 flex flex-wrap gap-2" aria-label="Stories">
 						{stories.map(({ story }) => (
@@ -68,7 +68,7 @@ export function EntryPage({ entry }: { entry: EntryDoc }) {
 
 			<section aria-labelledby="api-title" className="mt-12">
 				<h2 id="api-title" className="text-lg font-semibold tracking-tight">API reference</h2>
-				<p className="mt-1 text-sm text-neutral-850">
+				<p className="mt-1 text-sm text-neutral-550">
 					Generated from the Custom Elements Manifest. The playground logs these events: {eventsOf(entry).map((name) => `\`${name}\``).join(', ')}.
 				</p>
 				<div className="mt-4 space-y-6">

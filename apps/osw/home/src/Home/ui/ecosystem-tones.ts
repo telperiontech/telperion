@@ -15,43 +15,43 @@ export interface EcosystemTone {
 
 /**
  * Per-ecosystem color classes, written out in full so Tailwind can scan them.
- * Text shades sit at 800/850 because the xyz-mixed scales stay light longer;
- * lighter shades of tertiary/success/quaternary fail contrast on white.
+ * Text shades (660-710) are the lightest that keep WCAG AA (4.5:1) on the 70 tile
+ * backgrounds; tertiary/success/quaternary need the darker end of that range.
  */
 export const ecosystemTones: Record<EcosystemId, EcosystemTone> = {
 	core: {
 		dot: 'bg-primary-500',
-		tile: 'border-primary-200 bg-primary-100 text-primary-800',
-		hoverBorder: 'hover:border-primary-300 focus-within:border-primary-300',
+		tile: 'border-primary-150 bg-primary-70 text-primary-670',
+		hoverBorder: 'hover:border-primary-240 focus-within:border-primary-240',
 		bar: 'from-primary-500 to-secondary-500',
-		chip: 'border-primary-300 bg-primary-100 text-primary-850',
+		chip: 'border-primary-240 bg-primary-70 text-primary-710',
 	},
 	browser: {
 		dot: 'bg-tertiary-500',
-		tile: 'border-tertiary-200 bg-tertiary-100 text-tertiary-850',
-		hoverBorder: 'hover:border-tertiary-300 focus-within:border-tertiary-300',
+		tile: 'border-tertiary-160 bg-tertiary-70 text-tertiary-700',
+		hoverBorder: 'hover:border-tertiary-250 focus-within:border-tertiary-250',
 		bar: 'from-tertiary-500 to-primary-500',
-		chip: 'border-tertiary-300 bg-tertiary-100 text-tertiary-850',
+		chip: 'border-tertiary-250 bg-tertiary-70 text-tertiary-700',
 	},
 	frameworks: {
 		dot: 'bg-secondary-500',
-		tile: 'border-secondary-200 bg-secondary-100 text-secondary-800',
-		hoverBorder: 'hover:border-secondary-300 focus-within:border-secondary-300',
+		tile: 'border-secondary-150 bg-secondary-70 text-secondary-660',
+		hoverBorder: 'hover:border-secondary-240 focus-within:border-secondary-240',
 		bar: 'from-secondary-500 to-tertiary-500',
-		chip: 'border-secondary-300 bg-secondary-100 text-secondary-850',
+		chip: 'border-secondary-240 bg-secondary-70 text-secondary-710',
 	},
 	node: {
 		dot: 'bg-success-500',
-		tile: 'border-success-200 bg-success-100 text-success-850',
-		hoverBorder: 'hover:border-success-300 focus-within:border-success-300',
+		tile: 'border-success-150 bg-success-70 text-success-700',
+		hoverBorder: 'hover:border-success-250 focus-within:border-success-250',
 		bar: 'from-success-500 to-tertiary-500',
-		chip: 'border-success-300 bg-success-100 text-success-850',
+		chip: 'border-success-250 bg-success-70 text-success-700',
 	},
 	docker: {
 		dot: 'bg-quaternary-500',
-		tile: 'border-quaternary-200 bg-quaternary-100 text-quaternary-850',
-		hoverBorder: 'hover:border-quaternary-300 focus-within:border-quaternary-300',
+		tile: 'border-quaternary-150 bg-quaternary-70 text-quaternary-700',
+		hoverBorder: 'hover:border-quaternary-250 focus-within:border-quaternary-250',
 		bar: 'from-quaternary-500 to-secondary-500',
-		chip: 'border-quaternary-300 bg-quaternary-100 text-quaternary-850',
+		chip: 'border-quaternary-250 bg-quaternary-70 text-quaternary-700',
 	},
 };

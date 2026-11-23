@@ -16,11 +16,11 @@ interface CodeLineProps {
  * A single highlighted, truncated line of code with a copy button.
  * Tightened inline `<tp-code>` styles live in the shell's `code.css` (`.osw-code-line`).
  */
-export function CodeLine({ code, language, prompt, className = 'bg-neutral-30' }: CodeLineProps) {
+export function CodeLine({ code, language, prompt, className = 'bg-neutral-10' }: CodeLineProps) {
 	return (
-		<div className={`osw-code-line flex items-center gap-2 rounded-lg border border-neutral-100 py-1 pr-1 pl-3 ${className}`}>
+		<div className={`osw-code-line flex items-center gap-2 rounded-lg border border-neutral-40 py-1 pr-1 pl-3 ${className}`}>
 			{prompt && (
-				<span aria-hidden="true" className="font-mono text-xs font-semibold text-tertiary-800 select-none">
+				<span aria-hidden="true" className="font-mono text-xs font-semibold text-tertiary-660 select-none">
 					{prompt}
 				</span>
 			)}

@@ -41,7 +41,7 @@ export function PlaygroundPage({ entry, component, story }: PlaygroundPageProps)
 				onEvent={log}
 				minHeight={240}
 				maxHeight={maxHeightOf(story)}
-				className="mt-6 overflow-hidden rounded-xl border border-neutral-100 bg-neutral-20 bg-[radial-gradient(var(--color-neutral-100)_1px,transparent_1px)] bg-size-[16px_16px]"
+				className="mt-6 overflow-hidden rounded-xl border border-neutral-40 bg-neutral-10 bg-[radial-gradient(var(--color-neutral-40)_1px,transparent_1px)] bg-size-[16px_16px]"
 			/>
 
 			<div className="mt-6 grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
@@ -55,12 +55,12 @@ export function PlaygroundPage({ entry, component, story }: PlaygroundPageProps)
 			<section aria-labelledby="about-title" className="mt-12 max-w-3xl">
 				<div className="flex flex-wrap items-baseline justify-between gap-2">
 					<h2 id="about-title" className="text-lg font-semibold tracking-tight">About {component.title}</h2>
-					<a href={entryPath(entry.id)} className="inline-flex items-center gap-1 text-sm font-medium text-secondary-800 hover:underline">
+					<a href={entryPath(entry.id)} className="inline-flex items-center gap-1 text-sm font-medium text-secondary-660 hover:underline">
 						Guide and API reference
 						<Icon name="arrow_forward" size={16} />
 					</a>
 				</div>
-				{component.description ? <Markdown source={component.description} /> : <p className="mt-3 text-sm text-neutral-920">{entry.summary}</p>}
+				{component.description ? <Markdown source={component.description} /> : <p className="mt-3 text-sm text-neutral-660">{entry.summary}</p>}
 			</section>
 		</>
 	);

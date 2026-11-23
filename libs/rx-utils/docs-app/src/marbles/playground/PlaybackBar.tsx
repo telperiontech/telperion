@@ -15,12 +15,12 @@ export function PlaybackBar({ playback, end, dirty, onReset }: PlaybackBarProps)
 	const { time, playing, play, pause, seek } = playback;
 
 	return (
-		<div className="flex items-center gap-3 border-b border-neutral-100 px-3 py-2">
+		<div className="flex items-center gap-3 border-b border-neutral-40 px-3 py-2">
 			<button
 				type="button"
 				onClick={playing ? pause : play}
 				aria-label={playing ? 'Pause' : 'Play'}
-				className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary-600 text-white transition-colors hover:bg-secondary-700"
+				className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary-550 text-white transition-colors hover:bg-secondary-600"
 			>
 				<Icon name={playing ? 'pause' : 'play_arrow'} size={20} />
 			</button>
@@ -33,9 +33,9 @@ export function PlaybackBar({ playback, end, dirty, onReset }: PlaybackBarProps)
 				onChange={(event) => seek(event.target.valueAsNumber)}
 				aria-label="Playhead frame"
 				aria-valuetext={`Frame ${Math.floor(time)} of ${end}`}
-				className="min-w-0 flex-1 accent-secondary-600"
+				className="min-w-0 flex-1 accent-secondary-550"
 			/>
-			<span className="w-14 shrink-0 text-right font-mono text-xs tabular-nums text-neutral-850" aria-hidden="true">
+			<span className="w-14 shrink-0 text-right font-mono text-xs tabular-nums text-neutral-550" aria-hidden="true">
 				{Math.floor(time)}/{end}
 			</span>
 			<PanelAction icon="restart_alt" onClick={onReset} disabled={!dirty}>

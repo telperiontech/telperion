@@ -10,13 +10,13 @@ function renderToken(token: string, key: number): ReactNode {
 	}
 
 	if (token.startsWith('**') || token.startsWith('__')) {
-		return <strong key={key} className="font-semibold text-neutral-990">{token.slice(2, -2)}</strong>;
+		return <strong key={key} className="font-semibold text-neutral-900">{token.slice(2, -2)}</strong>;
 	}
 
 	const [, label, href] = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/) ?? [];
 
 	return (
-		<ExternalLink key={key} href={href} className="font-medium text-secondary-800 hover:underline">
+		<ExternalLink key={key} href={href} className="font-medium text-secondary-660 hover:underline">
 			{label}
 		</ExternalLink>
 	);

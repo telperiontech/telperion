@@ -11,7 +11,7 @@ export function EntryMarbles({ entry }: { entry: DocsEntry }) {
 	return (
 		<section aria-labelledby="see-it-run" className="mt-10">
 			<h2 id="see-it-run" className="text-lg font-semibold tracking-tight">See it run</h2>
-			<p className="mt-1 text-sm text-neutral-920">
+			<p className="mt-1 text-sm text-neutral-660">
 				Live marble diagrams: the real code runs on virtual time and redraws as you change the inputs or the arguments.
 			</p>
 			<ScenarioShowcase scenarios={list} />

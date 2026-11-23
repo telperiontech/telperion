@@ -21,7 +21,7 @@ export function RangeControl({ id, value, min, max, step, onChange }: RangeContr
 				step={step}
 				value={value}
 				onChange={(event) => onChange(event.target.valueAsNumber)}
-				className="min-w-0 flex-1 accent-secondary-600"
+				className="min-w-0 flex-1 accent-secondary-550"
 			/>
 			<NumberControl
 				aria-label="Exact value"

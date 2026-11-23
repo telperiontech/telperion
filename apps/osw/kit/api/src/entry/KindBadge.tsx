@@ -1,15 +1,15 @@
 import type { DocsEntry } from '../model';
 
 const STYLES: Record<string, string> = {
-	function: 'border-primary-200 bg-primary-100 text-primary-850',
-	class: 'border-secondary-200 bg-secondary-100 text-secondary-850',
-	variable: 'border-tertiary-200 bg-tertiary-100 text-tertiary-850',
-	type: 'border-neutral-100 bg-neutral-30 text-neutral-920',
-	interface: 'border-neutral-100 bg-neutral-30 text-neutral-920',
-	enum: 'border-neutral-100 bg-neutral-30 text-neutral-920',
-	prototype: 'border-quaternary-200 bg-quaternary-100 text-quaternary-850',
-	static: 'border-success-200 bg-success-100 text-success-850',
-	global: 'border-warning-200 bg-warning-100 text-warning-850',
+	function: 'border-primary-150 bg-primary-70 text-primary-710',
+	class: 'border-secondary-150 bg-secondary-70 text-secondary-710',
+	variable: 'border-tertiary-160 bg-tertiary-70 text-tertiary-700',
+	type: 'border-neutral-40 bg-neutral-10 text-neutral-660',
+	interface: 'border-neutral-40 bg-neutral-10 text-neutral-660',
+	enum: 'border-neutral-40 bg-neutral-10 text-neutral-660',
+	prototype: 'border-quaternary-150 bg-quaternary-70 text-quaternary-700',
+	static: 'border-success-150 bg-success-70 text-success-700',
+	global: 'border-warning-150 bg-warning-70 text-warning-700',
 };
 const LABELS: Record<string, string> = { variable: 'const', prototype: 'proto' };
 

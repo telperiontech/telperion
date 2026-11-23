@@ -4,16 +4,16 @@ import type { ApiAttribute, ApiEvent, ApiMethod, ApiNamed, ApiProperty } from '.
 
 /** Names render plain; pass `language="ts"` for types and default values */
 const ApiCode = ({ children, language }: { children?: string; language?: string }) =>
-	children ? <Code code={children} language={language} /> : <span className="text-neutral-300">—</span>;
+	children ? <Code code={children} language={language} /> : <span className="text-neutral-130">—</span>;
 
-const Text = ({ text }: { text?: string }) => (text ? <Inline text={text.replace(/\s*\n\s*/g, ' ')} /> : <span className="text-neutral-300">—</span>);
+const Text = ({ text }: { text?: string }) => (text ? <Inline text={text.replace(/\s*\n\s*/g, ' ')} /> : <span className="text-neutral-130">—</span>);
 
 function ApiSection({ title, count, children }: { title: string; count: number; children: ReactNode }) {
 	if (!count) return null;
 
 	return (
 		<section className="mt-6">
-			<h4 className="text-xs font-semibold tracking-wide text-neutral-850 uppercase">{title}</h4>
+			<h4 className="text-xs font-semibold tracking-wide text-neutral-550 uppercase">{title}</h4>
 			{children}
 		</section>
 	);
@@ -46,7 +46,7 @@ export function PropertiesTable({ properties }: { properties: ApiProperty[] }) {
 				rows={jsOnly.map((property) => [
 					<span className="inline-flex flex-wrap items-center gap-1.5">
 						<ApiCode>{property.name}</ApiCode>
-						{property.readonly && <span className="rounded bg-neutral-50 px-1 text-[10px] text-neutral-850">readonly</span>}
+						{property.readonly && <span className="rounded bg-neutral-20 px-1 text-[10px] text-neutral-550">readonly</span>}
 					</span>,
 					<ApiCode language="ts">{property.type}</ApiCode>,
 					<Text text={property.description} />,
@@ -64,7 +64,7 @@ export function MethodsList({ methods }: { methods: ApiMethod[] }) {
 					<li key={method.signature}>
 						<CodeBlock code={method.signature} copyable={false} />
 						{method.description && (
-							<p className="mt-1.5 text-sm text-neutral-920">
+							<p className="mt-1.5 text-sm text-neutral-660">
 								<Text text={method.description} />
 							</p>
 						)}

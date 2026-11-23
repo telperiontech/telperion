@@ -5,16 +5,17 @@ export interface MarbleColor {
 
 /** Full class names, so Tailwind generates them */
 const PALETTE: MarbleColor[] = [
-	{ fill: 'fill-primary-200', stroke: 'stroke-primary-700' },
-	{ fill: 'fill-tertiary-200', stroke: 'stroke-tertiary-700' },
-	{ fill: 'fill-quaternary-200', stroke: 'stroke-quaternary-700' },
-	{ fill: 'fill-secondary-200', stroke: 'stroke-secondary-700' },
-	{ fill: 'fill-success-200', stroke: 'stroke-success-700' },
-	{ fill: 'fill-danger-200', stroke: 'stroke-danger-700' },
-	{ fill: 'fill-warning-200', stroke: 'stroke-warning-700' },
+	{ fill: 'fill-primary-150', stroke: 'stroke-primary-600' },
+	{ fill: 'fill-tertiary-160', stroke: 'stroke-tertiary-600' },
+	{ fill: 'fill-quaternary-150', stroke: 'stroke-quaternary-600' },
+	{ fill: 'fill-secondary-150', stroke: 'stroke-secondary-600' },
+	{ fill: 'fill-success-150', stroke: 'stroke-success-600' },
+	{ fill: 'fill-danger-150', stroke: 'stroke-danger-600' },
+	{ fill: 'fill-warning-150', stroke: 'stroke-warning-600' },
 ];
 
-export const NEUTRAL: MarbleColor = { fill: 'fill-white', stroke: 'stroke-neutral-400' };
+/** Outline clears the WCAG 3:1 non-text minimum on the white page (neutral-450: 3.6:1) */
+export const NEUTRAL: MarbleColor = { fill: 'fill-white', stroke: 'stroke-neutral-450' };
 
 const keyOf = (value: unknown) => (value !== null && typeof value === 'object' ? JSON.stringify(value) : `${typeof value}:${String(value)}`);
 const contains = (container: unknown, value: unknown): boolean =>

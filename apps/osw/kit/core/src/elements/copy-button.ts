@@ -1,8 +1,8 @@
 import { trackEvent } from '../analytics';
 
 const HOST_CLASSES = [
-	'grid', 'place-items-center', 'size-7', 'rounded-md', 'text-neutral-850',
-	'hover:text-neutral-990', 'hover:bg-neutral-50', 'transition-colors',
+	'grid', 'place-items-center', 'size-7', 'rounded-md', 'text-neutral-550',
+	'hover:text-neutral-900', 'hover:bg-neutral-20', 'transition-colors',
 ];
 
 const RESET_DELAY = 1500;
@@ -54,7 +54,7 @@ export class OswCopyButton extends HTMLElement {
 		button.addEventListener('click', () => this.#copy());
 
 		this.#copyIcon = this.#icon('content_copy');
-		this.#doneIcon = this.#icon('check', 'text-success-600');
+		this.#doneIcon = this.#icon('check', 'text-success-540');
 		button.append(this.#copyIcon, this.#doneIcon);
 
 		this.#button = button;

@@ -10,33 +10,33 @@
 	--tp-color-success: var(--color-success);
 	--tp-color-warning: var(--color-warning);
 	--tp-color-danger: var(--color-danger);
-	--tp-color-contrast: var(--color-neutral-990);
+	--tp-color-contrast: var(--color-neutral-900);
 
 	--tp-code-font-family: var(--font-mono);
-	--tp-code-background: var(--color-neutral-50);
+	--tp-code-background: var(--color-neutral-20);
 
-	/* Token colors, matching the shades the docs used before tp-code */
-	--tp-code-token-keyword: var(--color-secondary-700);
-	--tp-code-token-function: var(--color-primary-700);
-	--tp-code-token-constant: var(--color-tertiary-800);
-	--tp-code-token-string: var(--color-success-750);
-	--tp-code-token-string-expression: var(--color-success-800);
-	--tp-code-token-parameter: var(--color-quaternary-800);
+	/* Token colors: every token clears WCAG AA (4.5:1) on both code backgrounds (neutral-10 / neutral-20) */
+	--tp-code-token-keyword: var(--color-secondary-600);
+	--tp-code-token-function: var(--color-primary-600);
+	--tp-code-token-constant: var(--color-tertiary-670);
+	--tp-code-token-string: var(--color-success-670);
+	--tp-code-token-string-expression: var(--color-success-680);
+	--tp-code-token-parameter: var(--color-quaternary-690);
 	--tp-code-token-comment: var(--color-neutral-550);
-	--tp-code-token-punctuation: var(--color-neutral-750);
-	--tp-code-token-link: var(--color-secondary-800);
-	--tp-code-token-inserted: var(--color-success-750);
-	--tp-code-token-deleted: var(--color-danger-700);
-	--tp-code-token-changed: var(--color-quaternary-800);
+	--tp-code-token-punctuation: var(--color-neutral-650);
+	--tp-code-token-link: var(--color-secondary-660);
+	--tp-code-token-inserted: var(--color-success-670);
+	--tp-code-token-deleted: var(--color-danger-600);
+	--tp-code-token-changed: var(--color-quaternary-690);
 
-	--tp-code-copy-background: var(--color-neutral-20);
-	--tp-code-copy-color: var(--color-neutral-850);
-	--tp-code-copy-success-color: var(--color-success-600);
+	--tp-code-copy-background: var(--color-neutral-10);
+	--tp-code-copy-color: var(--color-neutral-550);
+	--tp-code-copy-success-color: var(--color-success-590);
 }
 
 /* Blocks: the frame (border, radius, margins) comes from utilities on the host */
 tp-code[variant='block'] {
-	--tp-code-background: var(--color-neutral-20);
+	--tp-code-background: var(--color-neutral-10);
 	--tp-code-font-size: 13px;
 	--tp-code-line-height: 1.625;
 	--tp-code-padding-block: 1rem;

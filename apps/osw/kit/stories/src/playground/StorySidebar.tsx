@@ -13,8 +13,8 @@ interface StorySidebarProps {
 }
 
 const linkBase = 'block truncate rounded-md px-2 py-1 text-[13px] transition-colors';
-const linkIdle = 'text-neutral-920 hover:bg-neutral-50 hover:text-neutral-990';
-const linkActive = 'bg-secondary-100 font-medium text-secondary-850';
+const linkIdle = 'text-neutral-660 hover:bg-neutral-20 hover:text-neutral-900';
+const linkActive = 'bg-secondary-70 font-medium text-secondary-710';
 
 /** Components and their stories, grouped like Storybook's sidebar */
 export function StorySidebar({ components, label, componentHref, storyHref, activeComponentId, activeStoryId, onNavigate }: StorySidebarProps) {
@@ -25,7 +25,7 @@ export function StorySidebar({ components, label, componentHref, storyHref, acti
 					<a
 						href={componentHref(component.id)}
 						onClick={onNavigate}
-						className={`block px-2 text-xs font-semibold tracking-wide uppercase ${component.id === activeComponentId ? 'text-secondary-800' : 'text-neutral-850 hover:text-neutral-990'}`}
+						className={`block px-2 text-xs font-semibold tracking-wide uppercase ${component.id === activeComponentId ? 'text-secondary-660' : 'text-neutral-550 hover:text-neutral-900'}`}
 					>
 						{component.title}
 					</a>

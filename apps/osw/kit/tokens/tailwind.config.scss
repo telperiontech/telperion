@@ -26,7 +26,7 @@
     @for $i from 1 through 499 {
       $percent: math.div($i, 500) * 100%;
       $lightness: 100% - math.div($i, 500) * 100%;
-      --color-#{$color}-#{$i}: color-mix(in xyz, var(--color-#{$color}) #{$percent}, var(--color-white, #ffffff) #{$lightness});
+      --color-#{$color}-#{$i}: color-mix(in oklab, var(--color-#{$color}) #{$percent}, var(--color-white, #ffffff) #{$lightness});
     }
 
     --color-#{$color}-500: var(--color-#{$color});
@@ -34,12 +34,12 @@
     @for $i from 501 through 999 {
       $percent: math.div($i - 500, 500) * 100%;
       $darkness: 100% - math.div($i - 500, 500) * 100%;
-      --color-#{$color}-#{$i}: color-mix(in xyz, var(--color-#{$color}) #{$darkness}, var(--color-black, #000000) #{$percent});
+      --color-#{$color}-#{$i}: color-mix(in oklab, var(--color-#{$color}) #{$darkness}, var(--color-black, #000000) #{$percent});
     }
   }
 
   @for $i from 1 through 999 {
-    --color-neutral-#{$i}: color-mix(in xyz, var(--color-white, #ffffff) #{math.div(1000 - $i, 1000) * 100%}, var(--color-black, #000000) #{math.div($i, 1000) * 100%});
+    --color-neutral-#{$i}: color-mix(in oklab, var(--color-white, #ffffff) #{math.div(1000 - $i, 1000) * 100%}, var(--color-black, #000000) #{math.div($i, 1000) * 100%});
   }
 
   --color-neutral: var(--color-neutral-500);

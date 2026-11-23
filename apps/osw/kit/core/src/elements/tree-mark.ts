@@ -10,7 +10,7 @@ const TREE_SVG = `
 
 /**
  * `<osw-tree-mark>`: minimal silver-tree logo mark. Strokes follow `currentColor`;
- * size it with utilities on the host (e.g. `class="size-7 text-secondary-600"`).
+ * size it with utilities on the host (e.g. `class="size-7 text-secondary-550"`).
  */
 export class OswTreeMark extends HTMLElement {
 	static readonly tagName = 'osw-tree-mark';

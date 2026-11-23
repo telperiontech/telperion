@@ -18,7 +18,7 @@ export function CodeBlock({ code, language = 'ts', copyable = true, className = 
 			code={code}
 			language={language}
 			copyable={copyable}
-			className={`rounded-lg border border-neutral-100 ${className}`}
+			className={`rounded-lg border border-neutral-40 ${className}`}
 		/>
 	);
 }

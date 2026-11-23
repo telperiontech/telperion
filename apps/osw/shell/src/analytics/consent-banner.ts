@@ -58,7 +58,7 @@ export class OswConsentBanner extends HTMLElement {
 		const panel = document.createElement('section');
 		panel.setAttribute('aria-label', 'Analytics consent');
 		panel.className =
-			'pointer-events-auto mx-auto flex max-w-3xl flex-col gap-4 rounded-xl border border-neutral-100 bg-white p-4 text-sm text-neutral-920 shadow-lg sm:flex-row sm:items-center sm:p-5';
+			'pointer-events-auto mx-auto flex max-w-3xl flex-col gap-4 rounded-xl border border-neutral-40 bg-white p-4 text-sm text-neutral-660 shadow-lg sm:flex-row sm:items-center sm:p-5';
 
 		const text = document.createElement('p');
 		text.className = 'flex-1 leading-relaxed';
@@ -68,8 +68,8 @@ export class OswConsentBanner extends HTMLElement {
 		const actions = document.createElement('div');
 		actions.className = 'flex shrink-0 gap-2';
 		actions.append(
-			this.#button('denied', 'Decline', `${BUTTON_CLASSES} text-neutral-990 hover:bg-neutral-50 border border-neutral-100`),
-			this.#button('granted', 'Accept', `${BUTTON_CLASSES} bg-primary-600 text-white hover:bg-primary-700`),
+			this.#button('denied', 'Decline', `${BUTTON_CLASSES} text-neutral-900 hover:bg-neutral-20 border border-neutral-40`),
+			this.#button('granted', 'Accept', `${BUTTON_CLASSES} bg-primary-550 text-white hover:bg-primary-600`),
 		);
 
 		panel.append(text, actions);

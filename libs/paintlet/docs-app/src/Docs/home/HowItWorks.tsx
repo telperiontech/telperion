@@ -30,16 +30,16 @@ const STEPS: { title: string; text: string; code: string; language: string }[] =
 
 export function HowItWorks() {
 	return (
-		<section aria-labelledby="how-title" className="border-y border-neutral-100 bg-neutral-20">
+		<section aria-labelledby="how-title" className="border-y border-neutral-40 bg-neutral-10">
 			<div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
 				<h2 id="how-title" className="text-2xl font-semibold tracking-tight">How to use it</h2>
 				<ol className="mt-8 space-y-4">
 					{STEPS.map((step, index) => (
-						<li key={step.title} className="grid grid-cols-1 gap-3 rounded-xl border border-neutral-100 bg-white p-4 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-6">
+						<li key={step.title} className="grid grid-cols-1 gap-3 rounded-xl border border-neutral-40 bg-white p-4 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-6">
 							<div>
-								<p className="font-mono text-xs font-semibold text-secondary-700">0{index + 1}</p>
+								<p className="font-mono text-xs font-semibold text-secondary-600">0{index + 1}</p>
 								<h3 className="mt-1 text-sm font-semibold">{step.title}</h3>
-								<p className="mt-1 text-sm text-neutral-920">{step.text}</p>
+								<p className="mt-1 text-sm text-neutral-660">{step.text}</p>
 							</div>
 							<CodeBlock code={step.code} language={step.language} />
 						</li>

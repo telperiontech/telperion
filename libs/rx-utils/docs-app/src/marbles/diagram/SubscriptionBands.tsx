@@ -27,7 +27,7 @@ export function SubscriptionBands({ windows, y }: { windows: readonly Subscripti
 						width={Math.max(to - from, 2)}
 						height={BAND_HEIGHT}
 						rx={BAND_HEIGHT / 2}
-						className="fill-secondary-300"
+						className="fill-secondary-240"
 					>
 						<title>{describe(window)}</title>
 					</rect>

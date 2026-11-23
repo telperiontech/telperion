@@ -6,13 +6,13 @@ import { AttributesTable, EventsTable, MethodsList, NamedTable, PropertiesTable 
 /** API reference of one custom element, anchored at its tag name */
 export function ElementReference({ element }: { element: ElementDoc }) {
 	return (
-		<article id={element.tagName} className="scroll-mt-20 rounded-xl border border-neutral-100 p-5 sm:p-6">
+		<article id={element.tagName} className="scroll-mt-20 rounded-xl border border-neutral-40 p-5 sm:p-6">
 			<header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 				<h3 className="font-mono text-lg font-semibold">
-					<a href={`#${element.tagName}`} className="hover:text-secondary-800">{`<${element.tagName}>`}</a>
+					<a href={`#${element.tagName}`} className="hover:text-secondary-660">{`<${element.tagName}>`}</a>
 				</h3>
-				<span className="font-mono text-xs text-neutral-850">{element.className}</span>
-				<ExternalLink href={sourceUrl(element.sourcePath)} className="ml-auto text-xs font-medium text-neutral-850 hover:text-secondary-800">
+				<span className="font-mono text-xs text-neutral-550">{element.className}</span>
+				<ExternalLink href={sourceUrl(element.sourcePath)} className="ml-auto text-xs font-medium text-neutral-550 hover:text-secondary-660">
 					Source
 				</ExternalLink>
 			</header>
@@ -20,7 +20,7 @@ export function ElementReference({ element }: { element: ElementDoc }) {
 			{element.description ? (
 				<Markdown source={element.description} headingTag="h4" />
 			) : (
-				<p className="mt-3 text-sm text-neutral-850">No description yet.</p>
+				<p className="mt-3 text-sm text-neutral-550">No description yet.</p>
 			)}
 
 			<AttributesTable attributes={element.attributes} />

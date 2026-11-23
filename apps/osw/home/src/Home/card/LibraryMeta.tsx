@@ -2,9 +2,9 @@ import type { Library } from '../data';
 import { formatCount, useNpmStats } from '../npm';
 
 const pill = 'inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-xs';
-const neutralPill = `${pill} bg-neutral-50 text-neutral-920`;
-const versionPill = `${pill} bg-tertiary-100 text-tertiary-850`;
-const downloadsPill = `${pill} bg-secondary-100 text-secondary-850`;
+const neutralPill = `${pill} bg-neutral-20 text-neutral-660`;
+const versionPill = `${pill} bg-tertiary-70 text-tertiary-700`;
+const downloadsPill = `${pill} bg-secondary-70 text-secondary-710`;
 
 /** Version and weekly downloads for npm packages; registry label for docker images. */
 export function LibraryMeta({ library }: { library: Library }) {

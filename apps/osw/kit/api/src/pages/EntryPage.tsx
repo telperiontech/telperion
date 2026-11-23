@@ -15,10 +15,10 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 
 	return (
 		<article className="max-w-3xl">
-			<nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-850">
-				<a href={overviewPath()} className="hover:text-neutral-990">{name}</a>
+			<nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-neutral-550">
+				<a href={overviewPath()} className="hover:text-neutral-900">{name}</a>
 				<span aria-hidden="true">/</span>
-				{category && <a href={docsPath(category.id)} className="hover:text-neutral-990">{category.title}</a>}
+				{category && <a href={docsPath(category.id)} className="hover:text-neutral-900">{category.title}</a>}
 			</nav>
 
 			<header className="mt-3">
@@ -27,14 +27,14 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 					<KindBadge kind={primary.kind} />
 					{entryKinds(entry).map((kind) => <KindBadge key={kind} kind={kind} />)}
 				</div>
-				{primary.summary && <p className="mt-3 text-base leading-relaxed text-neutral-920">{primary.summary}</p>}
+				{primary.summary && <p className="mt-3 text-base leading-relaxed text-neutral-660">{primary.summary}</p>}
 				<div className="mt-5 flex flex-wrap items-center gap-3">
 					<div className="min-w-0 flex-1">
 						<CodeLine code={(TYPE_ONLY.includes(primary.kind) ? typeImport : namedImport)([primary.name], entry.importPath)} language="ts" />
 					</div>
 					<ExternalLink
 						href={sourceUrl(entry.sourcePath)}
-						className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-920 hover:text-secondary-800"
+						className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-660 hover:text-secondary-660"
 					>
 						<Icon brand="github" size={14} />
 						Source
@@ -51,7 +51,7 @@ export function EntryPage({ entry }: { entry: DocsEntry }) {
 			{entry.extensions.length > 0 && (
 				<section aria-labelledby="extensions">
 					<h2 id="extensions" className={sectionTitle}>Prototype &amp; static versions</h2>
-					<p className="mt-1 text-sm text-neutral-920">
+					<p className="mt-1 text-sm text-neutral-660">
 						Opt-in modules that install <Code code={primary.name} language="ts" /> on an existing class. Import them once, for their side effect.
 					</p>
 					<div className="mt-4 space-y-4">

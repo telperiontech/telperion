@@ -17,15 +17,15 @@ export function StoryHeader({ component, story, args }: StoryHeaderProps) {
 	return (
 		<header className="flex flex-wrap items-end justify-between gap-4">
 			<div className="min-w-0">
-				<p className="font-mono text-sm font-semibold text-secondary-700">{component.title}</p>
+				<p className="font-mono text-sm font-semibold text-secondary-600">{component.title}</p>
 				<h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{story.name}</h1>
 				{description && (
-					<p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-920">
+					<p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-660">
 						<Inline text={description} />
 					</p>
 				)}
 			</div>
-			<div className="flex items-center gap-2 text-xs font-medium text-neutral-920">
+			<div className="flex items-center gap-2 text-xs font-medium text-neutral-660">
 				<span>Share this setup</span>
 				<CopyButton text={shareUrl} />
 			</div>

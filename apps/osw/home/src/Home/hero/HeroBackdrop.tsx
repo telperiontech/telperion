@@ -8,8 +8,8 @@ import type { CSSProperties } from 'react';
  */
 const plexusStyle = {
 	backgroundImage: '--tp-plexus()',
-	'--tp-plexus-dot-color': 'var(--color-secondary-300)',
-	'--tp-plexus-line-color': 'var(--color-primary-200)',
+	'--tp-plexus-dot-color': 'var(--color-secondary-240)',
+	'--tp-plexus-line-color': 'var(--color-primary-150)',
 	'--tp-plexus-density': 9000,
 	'--tp-plexus-dot-size': 3,
 	'--tp-plexus-proximity': 120,

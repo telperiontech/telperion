@@ -12,7 +12,7 @@ export function Playhead({ height }: { height: number }) {
 	return (
 		<g className="pointer-events-none" aria-hidden="true">
 			<line x1={x} x2={x} y1={TOP_PAD - 6} y2={height - BOTTOM_PAD} strokeWidth={1.5} className="stroke-secondary-500" />
-			<text x={x} y={TOP_PAD - 12} textAnchor="middle" className="fill-secondary-700 font-mono text-[10px] font-semibold">
+			<text x={x} y={TOP_PAD - 12} textAnchor="middle" className="fill-secondary-600 font-mono text-[10px] font-semibold">
 				{Math.floor(time)}
 			</text>
 		</g>

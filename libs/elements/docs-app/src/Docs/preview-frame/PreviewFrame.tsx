@@ -30,7 +30,7 @@ export function PreviewFrame({ title, minHeight = 160, maxHeight = 720, height, 
 				style={{ height: frameHeight }}
 			/>
 			{preview.error && (
-				<p role="alert" className="absolute inset-x-3 bottom-3 flex items-start gap-2 rounded-lg border border-danger-200 bg-danger-50 p-3 text-xs text-danger-900">
+				<p role="alert" className="absolute inset-x-3 bottom-3 flex items-start gap-2 rounded-lg border border-danger-150 bg-danger-30 p-3 text-xs text-danger-760">
 					<Icon name="error" size={16} className="shrink-0" />
 					{preview.error}
 				</p>

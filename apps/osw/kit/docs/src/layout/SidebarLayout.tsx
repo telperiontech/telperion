@@ -20,13 +20,13 @@ export function SidebarLayout({ sidebar, menuLabel, children }: SidebarLayoutPro
 					type="button"
 					onClick={() => setMenuOpen((open) => !open)}
 					aria-expanded={menuOpen}
-					className="flex w-full items-center justify-between rounded-lg border border-neutral-100 px-3 py-2 text-sm font-medium"
+					className="flex w-full items-center justify-between rounded-lg border border-neutral-40 px-3 py-2 text-sm font-medium"
 				>
 					{menuLabel}
 					<span className={menuOpen ? 'hidden' : 'contents'}><Icon name="expand_more" size={18} /></span>
 					<span className={menuOpen ? 'contents' : 'hidden'}><Icon name="expand_less" size={18} /></span>
 				</button>
-				{menuOpen && <div className="mt-3 rounded-lg border border-neutral-100 p-3">{sidebar(() => setMenuOpen(false))}</div>}
+				{menuOpen && <div className="mt-3 rounded-lg border border-neutral-40 p-3">{sidebar(() => setMenuOpen(false))}</div>}
 			</div>
 
 			<aside className="hidden lg:block">

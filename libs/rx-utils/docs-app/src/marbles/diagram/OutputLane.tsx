@@ -16,7 +16,7 @@ function SubscriptionHandle({ x, y, edge }: { x: number; y: number; edge: Window
 	const top = y - MARBLE_RADIUS - 10;
 
 	return (
-		<g className="fill-secondary-600 stroke-secondary-600">
+		<g className="fill-secondary-550 stroke-secondary-550">
 			<line x1={x} x2={x} y1={top} y2={y + MARBLE_RADIUS + 2} strokeWidth={2} />
 			{edge === 'subscribe' ? <circle cx={x} cy={top} r={KNOB} /> : <rect x={x - KNOB} y={top - KNOB} width={KNOB * 2} height={KNOB * 2} rx={1.5} />}
 		</g>

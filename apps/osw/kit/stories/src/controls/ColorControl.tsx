@@ -12,7 +12,7 @@ export function ColorControl({ id, value, onChange }: ColorControlProps) {
 	return (
 		<div className="flex items-center gap-2">
 			<label
-				className="relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-md border border-neutral-100 shadow-inner"
+				className="relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-md border border-neutral-40 shadow-inner"
 				style={{ background: value }}
 			>
 				<span className="sr-only">Pick a color</span>

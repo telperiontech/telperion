@@ -6,7 +6,7 @@ import type { PlacedEvent } from '../model/placement';
 
 type ValueGlyphProps = Pick<PlacedEvent<never>, 'shape' | 'label' | 'fullLabel' | 'x' | 'width'> & { value: unknown; y: number };
 
-const textClass = 'pointer-events-none fill-neutral-990 font-mono';
+const textClass = 'pointer-events-none fill-neutral-900 font-mono';
 
 /** A marble: a circle for short labels, a pill for long ones, a pill of small marbles for arrays */
 export function ValueGlyph({ value, shape, label, fullLabel, x, y, width }: ValueGlyphProps) {

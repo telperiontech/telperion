@@ -24,15 +24,15 @@ interface ArgControlsProps {
 /** The operator's arguments, re-running the diagram on every change */
 export function ArgControls({ specs, values, onChange, idPrefix }: ArgControlsProps) {
 	return (
-		<div className="grid gap-4 border-t border-neutral-100 px-4 py-3 sm:grid-cols-2">
+		<div className="grid gap-4 border-t border-neutral-40 px-4 py-3 sm:grid-cols-2">
 			{Object.entries(specs).map(([name, spec]) => {
 				const id = `${idPrefix}-${name}`;
 
 				return (
 					<div key={name} className="grid content-start gap-1.5">
-						<label htmlFor={id} className="font-mono text-xs font-semibold text-neutral-990">{name}</label>
+						<label htmlFor={id} className="font-mono text-xs font-semibold text-neutral-900">{name}</label>
 						<ControlInput id={id} control={toControl(spec.control)} value={values[name]} onChange={(value) => onChange(name, value)} />
-						{spec.description && <p className="text-xs text-neutral-850">{spec.description}</p>}
+						{spec.description && <p className="text-xs text-neutral-550">{spec.description}</p>}
 					</div>
 				);
 			})}

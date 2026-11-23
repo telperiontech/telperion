@@ -21,12 +21,12 @@ interface MarkdownProps {
 function renderBlock(block: Block, key: number, previous: Block | undefined, Heading: HeadingTag) {
 	switch (block.type) {
 		case 'heading':
-			return <Heading key={key} className="mt-6 text-sm font-semibold text-neutral-990"><Inline text={block.text} /></Heading>;
+			return <Heading key={key} className="mt-6 text-sm font-semibold text-neutral-900"><Inline text={block.text} /></Heading>;
 		case 'label':
-			return <p key={key} className="mt-5 mb-2 text-xs font-semibold tracking-wide text-neutral-850 uppercase">{block.text.replace(/:$/, '')}</p>;
+			return <p key={key} className="mt-5 mb-2 text-xs font-semibold tracking-wide text-neutral-550 uppercase">{block.text.replace(/:$/, '')}</p>;
 		case 'list':
 			return (
-				<ul key={key} className="mt-3 list-disc space-y-1 pl-5 text-neutral-920 marker:text-neutral-300">
+				<ul key={key} className="mt-3 list-disc space-y-1 pl-5 text-neutral-660 marker:text-neutral-130">
 					{block.items.map((item, index) => <li key={index}><Inline text={item} /></li>)}
 				</ul>
 			);
@@ -41,7 +41,7 @@ function renderBlock(block: Block, key: number, previous: Block | undefined, Hea
 		case 'code':
 			return <CodeBlock key={key} code={block.code} language={block.lang} className={previous?.type === 'label' ? 'mt-2' : 'mt-3'} />;
 		default:
-			return <p key={key} className="mt-3 leading-relaxed text-neutral-920"><Inline text={block.text} /></p>;
+			return <p key={key} className="mt-3 leading-relaxed text-neutral-660"><Inline text={block.text} /></p>;
 	}
 }
 

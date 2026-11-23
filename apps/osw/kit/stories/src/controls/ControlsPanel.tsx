@@ -27,27 +27,27 @@ export function ControlsPanel({ story, args, changed, onChange, onReset }: Contr
 			}
 		>
 			{controls.length ? (
-				<ul className="divide-y divide-neutral-100">
+				<ul className="divide-y divide-neutral-40">
 					{controls.map(({ name, control, description, defaultSummary }) => {
 						const id = `control-${name}`;
 
 						return (
 							<li key={name} className="grid gap-1.5 px-4 py-3">
 								<div className="flex items-baseline justify-between gap-2">
-									<label htmlFor={id} className="font-mono text-xs font-semibold text-neutral-990">
+									<label htmlFor={id} className="font-mono text-xs font-semibold text-neutral-900">
 										{name}
 										{changed.includes(name) && <span className="ml-1.5 inline-block size-1.5 rounded-full bg-secondary-500 align-middle" title="Changed" />}
 									</label>
-									{defaultSummary && <span className="font-mono text-[11px] text-neutral-550">default {defaultSummary}</span>}
+									{defaultSummary && <span className="font-mono text-[11px] text-neutral-270">default {defaultSummary}</span>}
 								</div>
 								<ControlInput id={id} control={control} value={args[name]} onChange={(value) => onChange(name, value)} />
-								{description && <p className="text-xs text-neutral-850">{description}</p>}
+								{description && <p className="text-xs text-neutral-550">{description}</p>}
 							</li>
 						);
 					})}
 				</ul>
 			) : (
-				<p className="px-4 py-6 text-sm text-neutral-850">This story has no configurable args.</p>
+				<p className="px-4 py-6 text-sm text-neutral-550">This story has no configurable args.</p>
 			)}
 		</Panel>
 	);

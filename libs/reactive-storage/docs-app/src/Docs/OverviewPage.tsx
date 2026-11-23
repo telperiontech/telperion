@@ -34,19 +34,19 @@ export function OverviewPage() {
 	return (
 		<div className="max-w-4xl">
 			<header>
-				<p className="font-mono text-sm font-semibold text-secondary-700">{model.packageName}</p>
+				<p className="font-mono text-sm font-semibold text-secondary-600">{model.packageName}</p>
 				<h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Reactive storage</h1>
-				<p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-920">
+				<p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-660">
 					localStorage, sessionStorage and cookies as RxJS Observables. Subscribe to a value, or to a path inside it, and
 					get the current value and every later change; write with promises that resolve once subscribers are up to date.
 					This reference is generated from the library's source on every release.
 				</p>
-				<CodeLine code={`pnpm add ${model.packageName}`} language="sh" prompt="$" className="mt-6 max-w-md bg-neutral-30" />
+				<CodeLine code={`pnpm add ${model.packageName}`} language="sh" prompt="$" className="mt-6 max-w-md bg-neutral-10" />
 			</header>
 
 			<section aria-labelledby="quick-start" className="mt-12">
 				<h2 id="quick-start" className="text-lg font-semibold tracking-tight">Quick start</h2>
-				<p className="mt-1 text-sm text-neutral-920">
+				<p className="mt-1 text-sm text-neutral-660">
 					Pick a storage, give it your app's name, and use it like a small reactive key-value store.
 				</p>
 				<CodeBlock code={quickStart(model.packageName)} copyable={false} className="mt-4" />
@@ -54,7 +54,7 @@ export function OverviewPage() {
 
 			<section aria-labelledby="stores-and-paths" className="mt-12">
 				<h2 id="stores-and-paths" className="text-lg font-semibold tracking-tight">Stores and key paths</h2>
-				<p className="mt-1 text-sm text-neutral-920">
+				<p className="mt-1 text-sm text-neutral-660">
 					Data lives in named stores, one JSON value each. A dot-separated key path reaches inside a store; an empty
 					path means the whole store.
 				</p>
@@ -63,7 +63,7 @@ export function OverviewPage() {
 
 			<section aria-labelledby="choosing" className="mt-12">
 				<h2 id="choosing" className="text-lg font-semibold tracking-tight">Choosing a storage</h2>
-				<p className="mt-1 text-sm text-neutral-920">All of them share the same API; they differ in where the data is kept.</p>
+				<p className="mt-1 text-sm text-neutral-660">All of them share the same API; they differ in where the data is kept.</p>
 				<ChoosingTable docsPath={docsPath} />
 			</section>
 
@@ -71,9 +71,9 @@ export function OverviewPage() {
 				<h2 id="good-to-know" className="text-lg font-semibold tracking-tight">Good to know</h2>
 				<dl className="mt-4 grid gap-4 sm:grid-cols-2">
 					{notes.map(([title, text]) => (
-						<div key={title} className="rounded-xl border border-neutral-100 p-4">
+						<div key={title} className="rounded-xl border border-neutral-40 p-4">
 							<dt className="text-sm font-semibold">{title}</dt>
-							<dd className="mt-1 text-sm text-neutral-920">{text}</dd>
+							<dd className="mt-1 text-sm text-neutral-660">{text}</dd>
 						</div>
 					))}
 				</dl>
@@ -82,9 +82,9 @@ export function OverviewPage() {
 			{model.categories.map((category) => (
 				<section key={category.id} aria-labelledby={`category-${category.id}`} className="mt-12">
 					<h2 id={`category-${category.id}`} className="text-lg font-semibold tracking-tight">
-						<a href={docsPath(category.id)} className="hover:text-secondary-800">{category.title}</a>
+						<a href={docsPath(category.id)} className="hover:text-secondary-660">{category.title}</a>
 					</h2>
-					{category.description && <p className="mt-1 text-sm text-neutral-920">{category.description}</p>}
+					{category.description && <p className="mt-1 text-sm text-neutral-660">{category.description}</p>}
 					<div className="mt-4">
 						<EntryList entries={entriesOf(category)} />
 					</div>

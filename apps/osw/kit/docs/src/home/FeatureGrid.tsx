@@ -19,11 +19,11 @@ export function FeatureGrid({ title, features }: FeatureGridProps) {
 			<div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 				{features.map((feature) => (
 					<div key={feature.title}>
-						<span className="grid size-10 place-items-center rounded-lg bg-secondary-100 text-secondary-800">
+						<span className="grid size-10 place-items-center rounded-lg bg-secondary-70 text-secondary-660">
 							<Icon name={feature.icon} size={22} />
 						</span>
 						<h3 className="mt-4 text-sm font-semibold">{feature.title}</h3>
-						<p className="mt-1.5 text-sm leading-relaxed text-neutral-920">{feature.text}</p>
+						<p className="mt-1.5 text-sm leading-relaxed text-neutral-660">{feature.text}</p>
 					</div>
 				))}
 			</div>

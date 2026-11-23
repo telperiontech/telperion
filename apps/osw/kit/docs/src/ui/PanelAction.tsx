@@ -15,7 +15,7 @@ export function PanelAction({ icon, children, disabled, onClick }: PanelActionPr
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-920 transition-colors hover:bg-neutral-50 hover:text-neutral-990 disabled:pointer-events-none disabled:opacity-40"
+			className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-660 transition-colors hover:bg-neutral-20 hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-40"
 		>
 			<Icon name={icon} size={16} />
 			{children}

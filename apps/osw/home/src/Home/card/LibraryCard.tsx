@@ -7,10 +7,10 @@ interface LibraryCardProps {
 	library: Library;
 }
 
-const secondaryLink = 'relative z-10 inline-flex items-center gap-1.5 text-neutral-920 hover:text-secondary-800 transition-colors';
+const secondaryLink = 'relative z-10 inline-flex items-center gap-1.5 text-neutral-660 hover:text-secondary-660 transition-colors';
 
 const titleLink =
-	'block truncate font-mono text-sm font-semibold text-neutral-990 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:outline-2 focus-visible:after:outline-secondary-600';
+	'block truncate font-mono text-sm font-semibold text-neutral-900 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:outline-2 focus-visible:after:outline-secondary-550';
 
 export function LibraryCard({ library }: LibraryCardProps) {
 	const isNpm = library.type === 'npm';
@@ -18,7 +18,7 @@ export function LibraryCard({ library }: LibraryCardProps) {
 
 	return (
 		<article
-			className={`group relative flex h-full flex-col gap-4 overflow-hidden rounded-xl border border-neutral-100 bg-white p-5 transition-[border-color,box-shadow] hover:shadow-lg hover:shadow-secondary-500/10 ${tone.hoverBorder}`}
+			className={`group relative flex h-full flex-col gap-4 overflow-hidden rounded-xl border border-neutral-40 bg-white p-5 transition-[border-color,box-shadow] hover:shadow-lg hover:shadow-secondary-500/10 ${tone.hoverBorder}`}
 		>
 			{/* Ecosystem-colored bar, revealed on hover */}
 			<div
@@ -41,11 +41,11 @@ export function LibraryCard({ library }: LibraryCardProps) {
 							{library.name}
 						</ExternalLink>
 					)}
-					<p className="mt-0.5 text-sm text-neutral-920">{library.tagline}</p>
+					<p className="mt-0.5 text-sm text-neutral-660">{library.tagline}</p>
 				</div>
 			</div>
 
-			<p className="flex-1 text-sm leading-relaxed text-neutral-920">{library.description}</p>
+			<p className="flex-1 text-sm leading-relaxed text-neutral-660">{library.description}</p>
 
 			<LibraryMeta library={library} />
 			<InstallLine library={library} />

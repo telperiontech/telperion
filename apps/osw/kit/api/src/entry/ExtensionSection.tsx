@@ -13,13 +13,13 @@ const usageName = (extension: DocsExtension, member: string) => {
 /** A `proto/` or `static/` module that installs the entry's function on a global */
 export function ExtensionSection({ extension }: { extension: DocsExtension }) {
 	return (
-		<article className="rounded-xl border border-neutral-100 p-5">
+		<article className="rounded-xl border border-neutral-40 p-5">
 			<header className="flex flex-wrap items-center gap-2">
 				<h3 className="font-mono text-sm font-semibold">
 					{extension.members.map((member) => usageName(extension, member)).join(', ')}
 				</h3>
 				<KindBadge kind={extension.kind} />
-				<ExternalLink href={sourceUrl(extension.sourcePath)} className="ml-auto text-xs font-medium text-neutral-850 hover:text-secondary-800">
+				<ExternalLink href={sourceUrl(extension.sourcePath)} className="ml-auto text-xs font-medium text-neutral-550 hover:text-secondary-660">
 					Source
 				</ExternalLink>
 			</header>

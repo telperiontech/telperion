@@ -17,9 +17,9 @@ const cell = 'px-4 py-2.5 align-top';
 /** The storages side by side: lifetime, size and whether the server sees the data */
 export function ChoosingTable({ docsPath }: { docsPath: (id: string) => string }) {
 	return (
-		<div className="mt-4 overflow-x-auto rounded-xl border border-neutral-100">
+		<div className="mt-4 overflow-x-auto rounded-xl border border-neutral-40">
 			<table className="w-full min-w-[36rem] text-left text-sm">
-				<thead className="bg-neutral-30 text-xs font-semibold text-neutral-850">
+				<thead className="bg-neutral-10 text-xs font-semibold text-neutral-550">
 					<tr>
 						<th scope="col" className={cell}>Storage</th>
 						<th scope="col" className={cell}>Kept</th>
@@ -27,11 +27,11 @@ export function ChoosingTable({ docsPath }: { docsPath: (id: string) => string }
 						<th scope="col" className={cell}>Sent to the server</th>
 					</tr>
 				</thead>
-				<tbody className="divide-y divide-neutral-100 text-neutral-920">
+				<tbody className="divide-y divide-neutral-40 text-neutral-660">
 					{ROWS.map((row) => (
 						<tr key={row.id}>
 							<th scope="row" className={`${cell} font-mono text-[13px] font-medium`}>
-								<a href={docsPath(row.id)} className="text-neutral-990 hover:text-secondary-800">{row.name}</a>
+								<a href={docsPath(row.id)} className="text-neutral-900 hover:text-secondary-660">{row.name}</a>
 							</th>
 							<td className={cell}>{row.kept}</td>
 							<td className={cell}>{row.size}</td>

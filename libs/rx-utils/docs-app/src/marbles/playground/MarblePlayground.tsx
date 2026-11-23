@@ -49,20 +49,20 @@ export function MarblePlayground({ scenario }: { scenario: AnyMarbleScenario }) 
 
 	return (
 		<div className="mt-4">
-			<div className="overflow-hidden rounded-xl border border-neutral-100">
+			<div className="overflow-hidden rounded-xl border border-neutral-40">
 				<PlaybackBar playback={playback} end={end} dirty={state !== initial} onReset={reset} />
 				<div className="overflow-x-auto px-3 py-2">
 					<MarbleDiagram scenario={scenario} state={state} result={result} scale={scale} colorer={colorer} time={playback.time} editor={editor} />
 				</div>
 				{result?.error && (
-					<p role="alert" className="border-t border-neutral-100 bg-danger-50 px-4 py-2 font-mono text-xs text-danger-800">
+					<p role="alert" className="border-t border-neutral-40 bg-danger-30 px-4 py-2 font-mono text-xs text-danger-660">
 						{result.error}
 					</p>
 				)}
 				{scenario.args && (
 					<ArgControls specs={scenario.args} values={state.args} idPrefix={idPrefix} onChange={(name, value) => setState((current) => ({ ...current, args: { ...current.args, [name]: value } }))} />
 				)}
-				<p className="border-t border-neutral-100 px-4 py-2 text-xs text-neutral-850">
+				<p className="border-t border-neutral-40 px-4 py-2 text-xs text-neutral-550">
 					Drag marbles along their lane, double-click a lane to add one, double-click a marble (or focus it and press Delete) to remove it.
 					Bars under an input show when it is subscribed.
 				</p>

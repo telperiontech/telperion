@@ -58,15 +58,15 @@ export function StoragePlayground({ kind }: { kind: DemoKind }) {
 			>
 				<WritePanel storage={demo.storage} onCall={setLastCall} />
 				{lastCall && (
-					<div className="border-t border-neutral-100 px-4 py-3">
+					<div className="border-t border-neutral-40 px-4 py-3">
 						<CodeBlock code={lastCall.code} copyable={false} />
-						{lastCall.error && <p role="alert" className="mt-2 font-mono text-xs text-danger-800">{lastCall.error}</p>}
+						{lastCall.error && <p role="alert" className="mt-2 font-mono text-xs text-danger-660">{lastCall.error}</p>}
 					</div>
 				)}
 			</Panel>
 
 			<Panel id={`${id}-read`} icon="visibility" title="Subscribers">
-				<ul className="divide-y divide-neutral-100">
+				<ul className="divide-y divide-neutral-40">
 					{subscribers.map((subscriber) => (
 						<SubscriberLog
 							key={subscriber.id}
@@ -77,7 +77,7 @@ export function StoragePlayground({ kind }: { kind: DemoKind }) {
 						/>
 					))}
 				</ul>
-				<form onSubmit={addSubscriber} className="flex gap-2 border-t border-neutral-100 px-4 py-3">
+				<form onSubmit={addSubscriber} className="flex gap-2 border-t border-neutral-40 px-4 py-3">
 					<label htmlFor={`${id}-path`} className="sr-only">Key path to subscribe to</label>
 					<input id={`${id}-path`} value={newPath} placeholder="key path" spellCheck={false} onChange={(event) => setNewPath(event.target.value)} className={fieldClass} />
 					<button type="submit" className={`${actionClass()} shrink-0`}>Subscribe</button>
