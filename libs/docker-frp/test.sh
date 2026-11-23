@@ -198,9 +198,7 @@ test_client_container() {
     fi
 
     # Clean up containers
-    docker rm frp-client-test 2>/dev/null || true
-    docker stop frp-test-server 2>/dev/null || true
-    docker rm frp-test-server 2>/dev/null || true
+    docker rm -f frp-client-test frp-test-server >/dev/null 2>&1 || true
 }
 
 # Test volume persistence functionality
