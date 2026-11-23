@@ -43,6 +43,23 @@ func (s *Store) AddProxy(ctx context.Context, instanceID int64, runID string, p 
 	return mapErr(err)
 }
 
+// ProxyHolder returns the session (without its proxies) that holds a proxy
+// name on an frps, or ErrNotFound.
+func (s *Store) ProxyHolder(ctx context.Context, instanceID int64, name string) (Session, error) {
+	var x Session
+	var first, last int64
+	err := s.q.QueryRowContext(ctx,
+		"SELECT s.instance_id, s.run_id, s.client_id, s.first_seen, s.last_seen FROM proxies p"+
+			" JOIN sessions s ON s.instance_id = p.instance_id AND s.run_id = p.run_id"+
+			" WHERE p.instance_id = ? AND p.name = ?",
+		instanceID, name).Scan(&x.InstanceID, &x.RunID, &x.ClientID, &first, &last)
+	if err != nil {
+		return Session{}, mapErr(err)
+	}
+	x.FirstSeen, x.LastSeen = time.Unix(first, 0), time.Unix(last, 0)
+	return x, nil
+}
+
 // RemoveProxy forgets a closed proxy.
 func (s *Store) RemoveProxy(ctx context.Context, instanceID int64, name string) error {
 	_, err := s.q.ExecContext(ctx, "DELETE FROM proxies WHERE instance_id = ? AND name = ?", instanceID, name)

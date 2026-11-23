@@ -38,9 +38,15 @@ type Policy struct {
 	Store          *store.Store
 	AskMode        string
 	ClaimRetention time.Duration
+	// SessionTimeout: a session counts as alive if seen this recently
+	// (FRP_GATE_SESSION_TIMEOUT). A proxy name held by a dead session is free.
+	SessionTimeout time.Duration
 	Log            *slog.Logger
 	Now            func() time.Time
 }
+
+// DefaultSessionTimeout is FRP_GATE_SESSION_TIMEOUT's default.
+const DefaultSessionTimeout = 90 * time.Second
 
 // New returns a Policy with defaults for unset fields.
 func New(s *store.Store, askMode string, retention time.Duration, log *slog.Logger) *Policy {
@@ -50,5 +56,5 @@ func New(s *store.Store, askMode string, retention time.Duration, log *slog.Logg
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Policy{Store: s, AskMode: askMode, ClaimRetention: retention, Log: log, Now: time.Now}
+	return &Policy{Store: s, AskMode: askMode, ClaimRetention: retention, SessionTimeout: DefaultSessionTimeout, Log: log, Now: time.Now}
 }

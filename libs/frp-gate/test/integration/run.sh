@@ -2,7 +2,8 @@
 # frp-gate integration test: real frps + frpc (docker-frp, FRP_VERSION) and
 # frp-gate in Docker. Checks that an allowed name works, a foreign name is
 # rejected, the TLS ask follows grants and claims, and revoked clients are
-# cut off; that a client declared only in the config file (gate.yaml) works
+# cut off; that a second frpc of a client cannot take a proxy name the first
+# one holds; that a client declared only in the config file (gate.yaml) works
 # and survives the loss of frp-gate's database.
 #
 #   FRP_VERSION=0.65.0 ./run.sh      (default: 0.72.0, the version docker-frp ships)
@@ -34,7 +35,7 @@ compose() { docker compose "$@"; }
 cleanup() {
     local code=$?
     if [ "$code" -ne 0 ] || [ "$FAILED" -ne 0 ] || [ "$VERBOSE" = "true" ]; then
-        compose logs --no-color frp-gate frps frpc-alice frpc-bob frpc-carol frpc-dave 2>&1 | tail -n 300 || true
+        compose logs --no-color frp-gate frps frpc-alice frpc-bob frpc-carol frpc-dave frpc-dave2 2>&1 | tail -n 300 || true
     fi
     compose down -v --remove-orphans >/dev/null 2>&1 || true
     [ "$FAILED" -eq 0 ] && [ "$code" -eq 0 ] || exit 1
@@ -210,6 +211,16 @@ sleep 2
 if wait_for 60 "web.dave reachable after frpc restart" is_200 "web.dave.$ZONE"; then
     pass "dave logs in again with the same token after the rebuild"
 fi
+
+echo ""
+echo "🧪 Two frpc of one client with the same proxy name"
+compose up -d frpc-dave2 >/dev/null 2>&1
+dave2_refused() { compose logs frpc-dave2 2>&1 | grep -q "already open in another frpc session"; }
+wait_for 45 "p2.dave reachable" is_200 "p2.dave.$ZONE" && pass "the second frpc's own proxy name works"
+wait_for 45 "dave2's clashing proxy refused" dave2_refused && pass "frpc sees why its clashing proxy was refused"
+expect_eq "the first frpc keeps the name" "$(host_status "web.dave.$ZONE")" 200
+expect_eq "the clashing name gets no route" "$(host_status "web2.dave.$ZONE")" 404
+compose stop frpc-dave2 >/dev/null 2>&1
 
 echo ""
 if [ "$FAILED" -eq 0 ]; then

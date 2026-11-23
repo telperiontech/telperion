@@ -65,6 +65,10 @@ func frpcSnippet(w *world, c store.Client, secret string, grants []store.Grant) 
 	b.WriteString("# frp-gate cuts off revoked clients through heartbeats. Keep these;\n")
 	b.WriteString("# without them frps drops the connection after the timeout.\n")
 	fmt.Fprintf(&b, "transport.heartbeatInterval = %d\ntransport.heartbeatTimeout = %d\n", HeartbeatInterval, HeartbeatTimeout)
+	if hostExample != "" || portGrant != nil {
+		b.WriteString("\n# Proxy names must differ across every frpc of this client (one per\n")
+		b.WriteString("# project or device): name them <project>-<service>-<device>.\n")
+	}
 	if hostExample != "" {
 		fmt.Fprintf(&b, "\n[[proxies]]\nname = \"web\"\ntype = \"http\"\nlocalPort = 3000\ncustomDomains = [%q]\n", hostExample)
 	}

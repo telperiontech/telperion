@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"errors"
 
 	"github.com/fatedier/frp/pkg/msg"
 	plugin "github.com/fatedier/frp/pkg/plugin/server"
@@ -26,6 +27,9 @@ func (p *Policy) NewProxy(ctx context.Context, inst store.Instance, in *plugin.N
 	if !d.Allow {
 		return d
 	}
+	if d := p.proxyNameFree(ctx, inst, c, in.User.RunID, px.Name); !d.Allow {
+		return d
+	}
 	if in.User.RunID != "" {
 		if err := p.Store.TouchSession(ctx, inst.ID, in.User.RunID, c.ID); err != nil {
 			p.Log.Warn("touch session failed", "err", err)
@@ -37,6 +41,38 @@ func (p *Policy) NewProxy(ctx context.Context, inst store.Instance, in *plugin.N
 		p.Log.Warn("record claims failed", "err", err)
 	}
 	return allow()
+}
+
+// proxyNameFree refuses a proxy name that another live session already holds.
+//
+// frpc prefixes proxy names with its user ("alice.web"), so names of
+// different clients never meet. But one client may run several frpc at once
+// (one per project or per device); if two of them use the same proxy name,
+// frps refuses the second with a bare "proxy already exists", after this
+// plugin allowed it, and frp-gate would record the proxy for the wrong
+// session. Refusing here gives frpc a reason that says what to change.
+//
+// A holder not seen within SessionTimeout is dead (its CloseProxy was
+// missed), so the name is free. Lookup errors fail open: frps still checks.
+func (p *Policy) proxyNameFree(ctx context.Context, inst store.Instance, c store.Client, runID, name string) Decision {
+	if runID == "" {
+		return allow()
+	}
+	h, err := p.Store.ProxyHolder(ctx, inst.ID, name)
+	if errors.Is(err, store.ErrNotFound) {
+		return allow()
+	}
+	if err != nil {
+		p.Log.Warn("proxy holder lookup failed", "err", err)
+		return allow()
+	}
+	if h.RunID == runID || p.Now().Sub(h.LastSeen) > p.SessionTimeout {
+		return allow()
+	}
+	return deny("name_in_use",
+		"proxy %q is already open in another frpc session (run id %s) of client %q: "+
+			"every frpc of a client needs its own proxy names, e.g. start them with the project name",
+		name, h.RunID, c.Name)
 }
 
 // CloseProxy forgets a proxy. It is a notification; frps ignores the answer.

@@ -1,0 +1,24 @@
+# dave2: a second frpc of client dave (another project), reusing dave's proxy
+# name "web". frp-gate must refuse it with a reason that names the clash;
+# its own, differently named proxy must work.
+serverAddr = "frps"
+serverPort = 7000
+user = "dave"
+metadatas.token = "{{ .Envs.FRP_TOKEN }}"
+loginFailExit = false
+transport.heartbeatInterval = 5
+transport.heartbeatTimeout = 20
+
+[[proxies]]
+name = "web"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["web2.dave.dev.test.example"]
+
+[[proxies]]
+name = "project2-web"
+type = "http"
+localIP = "backend"
+localPort = 80
+customDomains = ["p2.dave.dev.test.example"]

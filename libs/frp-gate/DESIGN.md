@@ -55,7 +55,12 @@ frps' own check uses one shared `auth.token`, which is useless for per-client id
   identifies the frps instance and authenticates it. An unknown key gets 404, which frps treats as
   a rejection.
 - frpc's `user` also prefixes proxy names (`alice.web`), so proxy names cannot collide between
-  clients.
+  clients. They can collide within one client: a developer runs one frpc per project (and per
+  device) with the same client name, and frps keeps one name space per `user`. frps refuses the
+  second proxy with a bare "proxy [alice.web] already exists", but only after the plugin allowed
+  it, so NewProxy refuses a name that another live session (seen within
+  `FRP_GATE_SESSION_TIMEOUT`) already holds, with a reason that says to prefix names per project.
+  A holder not seen for longer is taken as dead (a missed CloseProxy) and does not block.
 
 ## Revocation
 

@@ -180,6 +180,10 @@ requestHeaders.set.x-forwarded-proto = "https"
 - **Heartbeats are required.** frpc turns them off by default when tcpMux is on. frps (with
   `transport.heartbeatTimeout = 60`) drops a session that sends none, so leaving these lines out
   means the client is cut off every minute.
+- **Proxy names are per client, not per frpc.** frpc prefixes them with `user` (`alice.web`), so
+  two frpc logged in as the same client (one per project or per device) must not reuse a name.
+  frp-gate refuses the second one ("already open in another frpc session"); frps would refuse it
+  anyway. Name proxies `<project>-<service>-<device>`, e.g. `webapp-web-pc`.
 - **Use `customDomains` with full names.** `subdomain` is refused (see
   [DESIGN.md](DESIGN.md#subdomain-or-customdomains)). frp wildcards such as `*.pc.alice.dev.example.com`
   work if the whole wildcard is granted.
@@ -363,7 +367,7 @@ the like. The newest 10,000 entries are kept.
 | Metric | Labels | Meaning |
 | --- | --- | --- |
 | `frp_gate_sessions_connected` | `client` | Sessions with a heartbeat within `FRP_GATE_SESSION_TIMEOUT`. Every client is listed, `0` when not connected, so `frp_gate_sessions_connected{client="home-pi"} == 0` makes a good alert. |
-| `frp_gate_plugin_ops_total` | `op`, `result`, `reason` | frps plugin calls (`Login`, `NewProxy`, `Ping`, …), `allow` or `reject`, with a short reason code: `bad_token`, `disabled`, `no_grants`, `host_not_granted`, `port_not_granted`, `subdomain`, `unknown_instance`, … |
+| `frp_gate_plugin_ops_total` | `op`, `result`, `reason` | frps plugin calls (`Login`, `NewProxy`, `Ping`, …), `allow` or `reject`, with a short reason code: `bad_token`, `disabled`, `no_grants`, `host_not_granted`, `port_not_granted`, `name_in_use`, `subdomain`, `unknown_instance`, … |
 | `frp_gate_tls_ask_total` | `result`, `reason` | Caddy's TLS asks: `not_granted`, `not_claimed`, `bad_name`, … |
 | `frp_gate_build_info` | `version` | Always 1. |
 

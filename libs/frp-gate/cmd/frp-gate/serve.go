@@ -48,6 +48,7 @@ func serve() error {
 	}
 
 	pol := policy.New(st, cfg.AskMode, cfg.ClaimRetention, log)
+	pol.SessionTimeout = cfg.SessionTimeout
 	met := metrics.New(version)
 
 	internal := http.NewServeMux()

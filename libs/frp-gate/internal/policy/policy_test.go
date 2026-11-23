@@ -182,6 +182,39 @@ func TestRevocation(t *testing.T) {
 	expect(t, "ping with old token", f.ping("alice"), false, "invalid token")
 }
 
+// One client, two frpc (e.g. two projects) using the same proxy name.
+func TestNewProxyNameInUse(t *testing.T) {
+	f := newFixture(t)
+	np := msg.NewProxy{ProxyName: "alice.web-pc", ProxyType: "http", CustomDomains: []string{"pc.alice.dev.example.com"}}
+	second := f.user("alice")
+	second.RunID = "run-alice-2"
+	newProxy2 := func(np msg.NewProxy) Decision {
+		return f.p.NewProxy(f.ctx, f.inst, &plugin.NewProxyContent{User: second, NewProxy: np})
+	}
+
+	expect(t, "first frpc", f.newProxy("alice", np), true, "")
+	expect(t, "first frpc again (reconnect, same run id)", f.newProxy("alice", np), true, "")
+	expect(t, "second frpc, same name", newProxy2(np), false, `already open in another frpc session (run id run-alice)`)
+	if ps := must(f.st.SessionProxies(f.ctx, f.inst.ID, "run-alice")); len(ps) != 1 {
+		t.Errorf("the name should stay recorded for the first session, got %+v", ps)
+	}
+	other := np
+	other.ProxyName = "alice.project2-web-pc"
+	other.CustomDomains = []string{"pc.alice.dev.example.com"}
+	expect(t, "second frpc, own name", newProxy2(other), true, "")
+
+	// the first session stops sending heartbeats (its CloseProxy was missed)
+	f.now = f.now.Add(f.p.SessionTimeout + time.Second)
+	expect(t, "name held by a dead session", newProxy2(np), true, "")
+	if ps := must(f.st.SessionProxies(f.ctx, f.inst.ID, "run-alice-2")); len(ps) != 2 {
+		t.Errorf("the name should now belong to the second session, got %+v", ps)
+	}
+
+	// after CloseProxy the name is free right away
+	f.p.CloseProxy(f.ctx, f.inst, &plugin.CloseProxyContent{User: second, CloseProxy: msg.CloseProxy{ProxyName: np.ProxyName}})
+	expect(t, "name after close", f.newProxy("alice", np), true, "")
+}
+
 func TestPingAfterGrantRemoved(t *testing.T) {
 	f := newFixture(t)
 	expect(t, "proxy", f.newProxy("bob", httpProxy("app.bob.dev.example.com")), true, "")

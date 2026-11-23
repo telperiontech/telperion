@@ -79,5 +79,13 @@ services:
       - ./frpc/dave:/app/configs:ro
     depends_on: [frpc-alice]
 
+  frpc-dave2: # started by run.sh only after frpc-dave holds its proxy
+    image: frp-gate-it/frpc:${FRP_VERSION:-0.72.0}
+    environment:
+      FRP_TOKEN: ${DAVE_TOKEN:?}
+    volumes:
+      - ./frpc/dave2:/app/configs:ro
+    depends_on: [frpc-alice]
+
 volumes:
   gate-data:
