@@ -8,7 +8,7 @@
   "metadata": { "description": "Docs remote; serve and build targets are inferred for type:docs-app projects by apps/osw/kit/build/src/nx-plugin" },
   "targets": {
     "serve/app": {
-      "options": { "port": 4203 }
+      "options": { "port": 10523 }
     }
   }
 }

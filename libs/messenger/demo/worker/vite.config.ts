@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   root: resolve(__dirname),
   server: {
-    port: 5173,
+    port: 10503,
     open: true,
     fs: {
       // Allow serving files from the workspace root

@@ -7,7 +7,7 @@
 pnpm nx serve messenger-worker-demo
 ```
 
-The browser will automatically open at `http://localhost:5173`.
+The browser will automatically open at `http://localhost:10503`.
 
 ## 📁 Project Structure
 

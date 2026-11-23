@@ -39,7 +39,7 @@
       "executor": "@nx/vite:preview-server",
       "options": {
         "buildTarget": "messenger/demo/worker:build",
-        "port": 4300
+        "port": 10502
       },
       "defaultConfiguration": "development"
     }

@@ -23,7 +23,7 @@
         "buildTarget": "osw/shell:build/app",
         "host": "0.0.0.0",
         "publicHost": "https://open-source.telperion.local",
-        "port": 4200
+        "port": 10500
       },
       "configurations": {
         "development": {

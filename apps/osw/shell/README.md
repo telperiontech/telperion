@@ -22,7 +22,7 @@ const ga = import.meta.env.GOOGLE_ANALYTICS_ID;
 - If your editor/TypeScript doesn't pick up `import.meta.env` types, restart the TypeScript server (VS Code: "TypeScript: Restart TS Server"). The available keys are declared in `apps/osw/shell/src/global.d.ts`.
 
 Running the app
-- Start the shell and every remote (dev servers on ports 4200+) with Nx (use pnpm):
+- Start the shell and every remote (dev servers on ports 10500+) with Nx (use pnpm):
 
 ```bash
 pnpm nx run osw:serve

@@ -65,7 +65,7 @@
       "executor": "@nx/storybook:storybook",
       "options": {
         "configDir": "libs/paintlet/.storybook",
-        "port": 6006,
+        "port": 10561,
         "ci": true,
         "quiet": false,
         "uiFramework": "@storybook/web-components",

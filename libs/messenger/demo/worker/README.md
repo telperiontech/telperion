@@ -65,7 +65,7 @@ pnpm vite build
 pnpm vite preview
 ```
 
-The demo will automatically open in your browser at `http://localhost:5173`.
+The demo will automatically open in your browser at `http://localhost:10503`.
 
 ## Code Structure
 

@@ -120,7 +120,7 @@
       "dependsOn": ["analyze"],
       "options": {
         "configDir": "libs/elements/.storybook",
-        "port": 6006,
+        "port": 10560,
         "ci": true,
         "quiet": false,
         "uiFramework": "@storybook/web-components",

@@ -105,7 +105,7 @@
       "executor": "@storybook/angular:start-storybook",
       "options": {
         "configDir": "libs/ng-pack/.storybook",
-        "port": 6007,
+        "port": 10562,
         "compodoc": false,
         "tsConfig": "libs/ng-pack/tsconfig.storybook.json",
         "styles": [],

@@ -56,7 +56,7 @@ must run Tailwind v4 and tell it to scan this package:
 ## Development
 
 ```bash
-pnpm nx run ng-ui:storybook        # http://localhost:6008
+pnpm nx run ng-ui:storybook        # http://localhost:10563
 pnpm nx run ng-ui:build
 pnpm nx run ng-ui:build-storybook
 pnpm nx run ng-ui:lint

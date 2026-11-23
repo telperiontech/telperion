@@ -34,7 +34,7 @@
     },
     "serve/app": {
       "options": {
-        "port": 4204
+        "port": 10524
       }
     },
     "build": {
