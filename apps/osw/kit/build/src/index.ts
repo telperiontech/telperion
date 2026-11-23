@@ -1,4 +1,5 @@
 export { configureExtensions, configureWarnings, overrideMiniCssPluginOptions, overrideTsCompilerOptions } from './webpack-utils';
+export { configureDevServer, DevEnvError, devHost, readDevIdentity, type DevIdentity } from './dev';
 export { docsRemoteConfig } from './docs-remote';
 export { skipWorkspaceLicense } from './licenses';
 export { argValue, writeJson } from './model-cli';

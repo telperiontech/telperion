@@ -9,9 +9,6 @@ export interface DocsRemote {
 	modelScript?: string;
 }
 
-/** Shared by the shell, the remotes and the local gateway (see `nx run osw:mediator`) */
-const LOCAL_DOMAIN = 'open-source.telperion.local';
-
 const webpackConfigurations = {
 	development: {
 		extractLicenses: false,
@@ -35,12 +32,11 @@ const webpackConfigurations = {
  * (at least `serve/app.options.port`); its targets are merged over these.
  */
 export function docsRemoteTargets({ name, root, modelScript }: DocsRemote): Record<string, TargetConfiguration> {
-	const shortName = name.replace(/^osw\//, '');
 	const model = modelScript ? ['generate-model'] : [];
 	const targets: Record<string, TargetConfiguration> = {
 		serve: {
 			executor: '@thalesrc/nx-utils:run-parallel',
-			// The local gateway (`nx run osw:mediator`) is started separately, so serving works without Docker
+			// The frp-gate tunnel (`nx run osw:mediator`) is started separately, so serving works without Docker
 			dependsOn: [...model],
 			options: {
 				commands: [
@@ -54,8 +50,8 @@ export function docsRemoteTargets({ name, root, modelScript }: DocsRemote): Reco
 			defaultConfiguration: 'development',
 			options: {
 				buildTarget: `${name}:build/app`,
+				// Public host and HMR socket come from .workspace/dev.env (configureDevServer in @osw/build)
 				host: '0.0.0.0',
-				publicHost: `https://${shortName}.${LOCAL_DOMAIN}`,
 			},
 			configurations: {
 				development: { buildTarget: `${name}:build/app:development` },

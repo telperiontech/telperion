@@ -1,5 +1,5 @@
 auth = { method = "token", token = "inline-secret" }
-metadatas = { token = "inline-meta-secret", owner = "sahin" }
+metadatas = { token = "inline-meta-secret", owner = "alice" }
 webServer = { port = 7400, password = "{{ .Envs.ADMIN_PASSWORD }}" }
 tokens = [
   "array-secret-1",

@@ -3,6 +3,7 @@
   "name": "osw",
   "sourceRoot": "apps/osw",
   "projectType": "application",
+  "metadata": { "description": "Local development of the osw apps through frp-gate tunnels; see docs/OSW-DEVELOPMENT.md" },
   "targets": {
     "serve": {
       "executor": "nx:run-commands",
@@ -13,7 +14,25 @@
     "mediator": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["node apps/osw/scripts/mediator.cjs"]
+        "command": "node -r @swc-node/register apps/osw/scripts/mediator.ts"
+      }
+    },
+    "mediator/stop": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose --project-name=osw -f apps/osw/docker-compose.mediator.yml down --remove-orphans"
+      }
+    },
+    "mediator/logs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose --project-name=osw -f apps/osw/docker-compose.mediator.yml logs -f frpc"
+      }
+    },
+    "status": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r @swc-node/register apps/osw/scripts/status.ts"
       }
     }
   }

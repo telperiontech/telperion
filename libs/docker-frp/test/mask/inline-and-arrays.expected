@@ -1,5 +1,5 @@
 auth = { method = "token", token = "***" }
-metadatas = { token = "***", owner = "sahin" }
+metadatas = { token = "***", owner = "alice" }
 webServer = { port = 7400, password = "{{ .Envs.ADMIN_PASSWORD }}" }
 tokens = "***"
 after = "visible"

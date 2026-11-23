@@ -22,7 +22,6 @@
       "options": {
         "buildTarget": "osw/shell:build/app",
         "host": "0.0.0.0",
-        "publicHost": "https://open-source.telperion.local",
         "port": 10500
       },
       "configurations": {
@@ -109,10 +108,10 @@
     },
     "generate-remotes": {
       "executor": "nx:run-commands",
-      "inputs": ["{projectRoot}/config/remotes.json", "{projectRoot}/scripts/generate-remotes.mjs", { "env": "OSW_DOMAIN" }],
+      "inputs": ["{projectRoot}/config/remotes.json", "{projectRoot}/scripts/generate-remotes.ts", "{workspaceRoot}/apps/osw/kit/build/src/dev/identity.ts", { "env": "OSW_DOMAIN" }],
       "outputs": ["{projectRoot}/src/assets/module-federation.manifest.json", "{projectRoot}/src/generated"],
       "options": {
-        "command": "node apps/osw/shell/scripts/generate-remotes.mjs"
+        "command": "node -r @swc-node/register apps/osw/shell/scripts/generate-remotes.ts"
       }
     }
   }

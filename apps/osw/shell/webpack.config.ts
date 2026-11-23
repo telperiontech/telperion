@@ -1,7 +1,7 @@
 import { composePlugins, withNx, withWeb } from '@nx/webpack';
 import { withModuleFederation } from '@nx/module-federation/webpack';
 import * as Dotenv from 'dotenv-webpack';
-import { configureWarnings, overrideTsCompilerOptions } from '@osw/build';
+import { configureDevServer, configureWarnings, overrideTsCompilerOptions } from '@osw/build';
 
 const config = composePlugins(
   withNx({}),
@@ -20,6 +20,9 @@ const config = composePlugins(
 
     // Override TypeScript compiler options for modern JavaScript output
     overrideTsCompilerOptions(config);
+
+    // Served as https://<base> through the frp-gate tunnel (HMR socket, host checks)
+    configureDevServer(config);
 
     config.plugins.push(
       new Dotenv({

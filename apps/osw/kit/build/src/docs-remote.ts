@@ -2,6 +2,7 @@ import type { Configuration } from 'webpack';
 import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
 import { withModuleFederation } from '@nx/module-federation/webpack';
+import { configureDevServer } from './dev';
 import { oswShared } from './shared-libraries';
 import { configureExtensions, configureWarnings, overrideMiniCssPluginOptions, overrideTsCompilerOptions } from './webpack-utils';
 
@@ -35,6 +36,9 @@ export function docsRemoteConfig(name: string, ...customize: Customize[]) {
 
 			// Override TypeScript compiler options for modern JavaScript output
 			overrideTsCompilerOptions(config);
+
+			// Served as https://<remote>.<base> through the frp-gate tunnel (HMR socket, host checks)
+			configureDevServer(config, name.replace(/^osw\//, ''));
 
 			customize.forEach((step) => step(config));
 

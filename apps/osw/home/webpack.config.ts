@@ -1,7 +1,7 @@
 import { composePlugins, withNx } from '@nx/webpack';
 import { withReact } from '@nx/react';
 import { withModuleFederation } from '@nx/module-federation/webpack';
-import { configureExtensions, configureWarnings, overrideMiniCssPluginOptions, overrideTsCompilerOptions } from '@osw/build';
+import { configureDevServer, configureExtensions, configureWarnings, overrideMiniCssPluginOptions, overrideTsCompilerOptions } from '@osw/build';
 
 export default composePlugins(
   withNx({extractCss: false}),
@@ -28,6 +28,9 @@ export default composePlugins(
 
     // Override TypeScript compiler options for modern JavaScript output
     overrideTsCompilerOptions(config);
+
+    // Served as https://home.<base> through the frp-gate tunnel (HMR socket, host checks)
+    configureDevServer(config, 'home');
 
     return config;
   }

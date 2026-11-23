@@ -1,1 +1,2 @@
-.certs/
+# Generated frpc config (nx run osw:mediator)
+.mediator/
