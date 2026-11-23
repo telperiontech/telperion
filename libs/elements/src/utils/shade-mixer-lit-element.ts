@@ -57,7 +57,7 @@ export class ShadeMixerLitElement extends LitElement {
           --tp-color-success: hsl(140 70% 40%);
           --tp-color-danger: hsl(0 70% 50%);
           --tp-color-warning: hsl(45 100% 50%);
-          --tp-color-neutral: color-mix(in xyz, var(--tp-color-white) 50%, var(--tp-color-black) 50%);
+          --tp-color-neutral: color-mix(in oklab, var(--tp-color-white) 50%, var(--tp-color-black) 50%);
         }
       }
     `;
@@ -79,7 +79,7 @@ export class ShadeMixerLitElement extends LitElement {
       style(--tp-shade-mixer-type: black): calc(100% - ((var(--tp-shade-attr) - 500) / 500 * 100%));
       else: calc(100% - ((500 - var(--tp-shade-attr)) / 500 * 100%))
     );
-    --tp-calc-element-color: color-mix(in xyz, var(--tp-element-color) var(--tp-shade-mixer-percent), var(--tp-shade-mixer-color) calc(100% - var(--tp-shade-mixer-percent)));
+    --tp-calc-element-color: color-mix(in oklab, var(--tp-element-color) var(--tp-shade-mixer-percent), var(--tp-shade-mixer-color) calc(100% - var(--tp-shade-mixer-percent)));
     --tp-calc-contrast-color: contrast-color(var(--tp-calc-element-color));
     --tp-contrast-color: if(
       style(--tp-calc-contrast-color: white): var(--tp-color-white);

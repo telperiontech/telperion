@@ -56,7 +56,7 @@ declare global {
  * @cssprop --tp-button-contrast-color - Resolved contrast color used for `solid` text.
  * @cssprop --tp-button-active-mixer-color - Color blended into `--tp-button-color` to compute the hover/active color. Defaults to `transparent` for `outline` / `ghost` (subtle tint) and `var(--tp-color-black)` for `solid` / `text` (slight darken).
  * @cssprop --tp-button-active-mixer-percentage - Amount of `--tp-button-color` retained when blending against the mixer color. Defaults to `10%` for `outline` / `ghost` and `80%` for `solid` / `text`. Lower values produce a stronger hover effect.
- * @cssprop --tp-button-active-color - Final hover/active color, computed as `color-mix(in xyz, var(--tp-button-color) var(--tp-button-active-mixer-percentage), var(--tp-button-active-mixer-color) calc(100% - var(--tp-button-active-mixer-percentage)))`. Override directly to fully customize the hover color.
+ * @cssprop --tp-button-active-color - Final hover/active color, computed as `color-mix(in oklab, var(--tp-button-color) var(--tp-button-active-mixer-percentage), var(--tp-button-active-mixer-color) calc(100% - var(--tp-button-active-mixer-percentage)))`. Override directly to fully customize the hover color.
  *
  * @example
  * ```html
@@ -83,7 +83,7 @@ export class ButtonElement extends ShadeMixerLitElement {
           --tp-button-contrast-color: var(--tp-calc-contrast-color);
           --tp-button-active-mixer-color: transparent;
           --tp-button-active-mixer-percentage: 10%;
-          --tp-button-active-color: color-mix(in xyz, var(--tp-button-color) var(--tp-button-active-mixer-percentage), var(--tp-button-active-mixer-color) calc(100% - var(--tp-button-active-mixer-percentage)));
+          --tp-button-active-color: color-mix(in oklab, var(--tp-button-color) var(--tp-button-active-mixer-percentage), var(--tp-button-active-mixer-color) calc(100% - var(--tp-button-active-mixer-percentage)));
           display: inline-block;
           border: 1px solid transparent;
           cursor: pointer;
@@ -103,7 +103,7 @@ export class ButtonElement extends ShadeMixerLitElement {
           }
 
           &[disabled] {
-            --tp-button-color: color-mix(in xyz, var(--tp-calc-element-color) 50%, var(--tp-color-white) 50%);
+            --tp-button-color: color-mix(in oklab, var(--tp-calc-element-color) 50%, var(--tp-color-white) 50%);
             --tp-button-contrast-color: rgb(from var(--tp-calc-contrast-color) r g b / 50%);
             pointer-events: none;
             user-select: none;

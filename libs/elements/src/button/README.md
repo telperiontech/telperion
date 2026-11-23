@@ -34,7 +34,7 @@ Framework-agnostic, form-associated button web component built with [Lit](https:
 | `--tp-button-contrast-color`          | `var(--tp-calc-contrast-color)`                                                                           | Text color used by `solid`.                                                                                                            |
 | `--tp-button-active-mixer-color`      | `transparent` (`outline` / `ghost`)<br>`var(--tp-color-black)` (`solid` / `text`)                         | Color blended into `--tp-button-color` to compute the hover/active color.                                                              |
 | `--tp-button-active-mixer-percentage` | `10%` (`outline` / `ghost`)<br>`80%` (`solid` / `text`)                                                   | Amount of `--tp-button-color` retained in the mix. Lower values produce a stronger hover effect.                                       |
-| `--tp-button-active-color`            | `color-mix(in xyz, var(--tp-button-color) var(--tp-button-active-mixer-percentage), var(--tp-button-active-mixer-color) calc(100% - var(--tp-button-active-mixer-percentage)))` | Final hover/active color. Override directly to bypass the mixer math entirely. |
+| `--tp-button-active-color`            | `color-mix(in oklab, var(--tp-button-color) var(--tp-button-active-mixer-percentage), var(--tp-button-active-mixer-color) calc(100% - var(--tp-button-active-mixer-percentage)))` | Final hover/active color. Override directly to bypass the mixer math entirely. |
 
 The element also inherits the full set of palette tokens from `ShadeMixerLitElement` (`--tp-color-primary`, `--tp-color-success`, &hellip;), which can be overridden globally to re-theme every shade-mixer element at once.
 
@@ -58,7 +58,7 @@ The shade-mixer mixin auto-injects the following defaults onto `:root`. Re-decla
   --tp-color-success: hsl(140 70% 40%);
   --tp-color-danger: hsl(0 70% 50%);
   --tp-color-warning: hsl(45 100% 50%);
-  --tp-color-neutral: color-mix(in xyz, var(--tp-color-white) 50%, var(--tp-color-black) 50%);
+  --tp-color-neutral: color-mix(in oklab, var(--tp-color-white) 50%, var(--tp-color-black) 50%);
 }
 ```
 

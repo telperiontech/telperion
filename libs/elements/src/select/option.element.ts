@@ -45,7 +45,7 @@ export class OptionElement extends SignalWatcherLitElement {
         background: var(--tp-select-option-color, white);
 
         &:hover {
-          background: color-mix(in xyz, var(--tp-select-option-color, white) calc(100% - var(--tp-select-highlight-percent, 20%)), black var(--tp-select-highlight-percent, 20%));
+          background: color-mix(in oklab, var(--tp-select-option-color, white) calc(100% - var(--tp-select-highlight-percent, 20%)), black var(--tp-select-highlight-percent, 20%));
         }
 
         &[selected] {
@@ -53,7 +53,7 @@ export class OptionElement extends SignalWatcherLitElement {
           color: var(--tp-select-selection-contrast-color, white);
 
           &:hover {
-            background: color-mix(in xyz, var(--tp-select-selection-color, #0078d4) calc(100% - var(--tp-select-highlight-percent, 20%)), black var(--tp-select-highlight-percent, 20%));
+            background: color-mix(in oklab, var(--tp-select-selection-color, #0078d4) calc(100% - var(--tp-select-highlight-percent, 20%)), black var(--tp-select-highlight-percent, 20%));
           }
         }
       }
