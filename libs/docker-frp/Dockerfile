@@ -34,7 +34,10 @@ FROM alpine:3.24 AS runtime-base
 ARG FRP_VERSION
 ARG VERSION
 ARG BUILD_DATE
-RUN apk add --no-cache bash gettext dos2unix
+# tini reaps orphaned processes. frps/frpc as PID 1 never do, and every passing
+# health check orphans BusyBox `timeout`'s watchdog: the zombies filled the
+# container's pids limit within a day and then every health check failed.
+RUN apk add --no-cache bash gettext dos2unix tini
 COPY entrypoint.sh mask-config.sh healthcheck.sh /app/
 RUN dos2unix /app/*.sh && chmod +x /app/*.sh && \
     mkdir -p /app/configs && \
@@ -45,7 +48,8 @@ LABEL org.opencontainers.image.version="${VERSION}" \
 VOLUME ["/app/configs"]
 WORKDIR /app
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD ["/app/healthcheck.sh"]
-ENTRYPOINT ["/app/entrypoint.sh"]
+# -s: also reap when tini is not PID 1 (e.g. under `docker run --init`).
+ENTRYPOINT ["/sbin/tini", "-s", "--", "/app/entrypoint.sh"]
 
 # Server image
 FROM runtime-base AS server

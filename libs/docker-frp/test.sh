@@ -507,7 +507,29 @@ test_healthcheck() {
         log_success "Health check fails when the bind port does not answer"
     fi
 
-    docker rm -f frp-health-server-test frp-health-client-test frp-health-plain-test frp-health-bad-test >/dev/null 2>&1 || true
+    # Passing probes must not leave zombies behind: the init reaps what the
+    # health check orphans (BusyBox timeout's watchdog). Count them after a
+    # dozen probes, from inside the container (`docker top` lists the cgroup,
+    # which zombies have already left); with and without docker's own --init.
+    local name zombies
+    for name in frp-health-zombie-test frp-health-zombie-init-test; do
+        local extra=()
+        [ "$name" = frp-health-zombie-init-test ] && extra=(--init)
+        docker run -d --name "$name" --health-interval=1s --health-start-period=1s "${extra[@]}" \
+            -e DASHBOARD_PASSWORD=healthpass "${TEST_TAG}:server" >/dev/null
+        wait_health "$name" healthy 30 >/dev/null || true
+        sleep 12
+        zombies=$(docker exec "$name" sh -c 'grep -l "^State:[[:space:]]*Z" /proc/[0-9]*/status 2>/dev/null | wc -l')
+        if [ "$zombies" -eq 0 ]; then
+            log_success "No zombies after a dozen health checks (${extra[*]:-image init})"
+        else
+            log_error "$zombies zombie processes after a dozen health checks (${extra[*]:-image init})"
+            failed=1
+        fi
+    done
+
+    docker rm -f frp-health-server-test frp-health-client-test frp-health-plain-test frp-health-bad-test \
+        frp-health-zombie-test frp-health-zombie-init-test >/dev/null 2>&1 || true
     return $failed
 }
 

@@ -577,6 +577,12 @@ config in `/app/configs` and reports healthy when:
 | server | `frps` is running and `bindPort` (default 7000) accepts a TCP connection on `bindAddr` (127.0.0.1 when unset or `0.0.0.0`) |
 | client | `frpc` is running and, if the admin UI is enabled, `webServer.port` accepts a connection. Without `webServer` only the process is checked |
 
+The images run [tini](https://github.com/krallin/tini) as the init (`tini -s`), so processes the
+health check leaves behind are reaped. Images up to 1.3.0 ran frps/frpc as PID 1: each passing
+port probe left a zombie (BusyBox `timeout`'s watchdog), and after about a day the container hit
+its pids limit and every health check failed with `procReady not received`. With those images,
+run the container with `init: true` (Compose) or `--init`.
+
 A port written as `{{ .Envs.X }}` is not probed. The client check does not tell whether frpc
 is logged in to its server; use the admin UI or the server dashboard for that.
 
