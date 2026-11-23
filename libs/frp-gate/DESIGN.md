@@ -289,7 +289,9 @@ expected.
 
 - `Dockerfile`: `src` → `test` (`go vet`, `go test`) → `build` (cross-compiled, `CGO_ENABLED=0`) →
   `runtime` (distroless static, nonroot, ~25 MB). The arm64 image needs no QEMU.
-- `frp-gate.publish.yml` runs on `release: published`, filtered to tags `frp-gate-vX.Y.Z`. It
+- `frp-gate.publish.yml` runs on `push: tags` matching `frp-gate-vX.Y.Z`, like every other
+  publish workflow. (`release: published` cannot be filtered by tag, so it started a skipped run
+  for every other package's release.) It
   runs hadolint, unit tests and the integration test against frp 0.72.0 (docker-frp's default
   since 1.3.0) and 0.65.0, then pushes amd64 + arm64. The integration test builds frps and frpc
   from `libs/docker-frp` at the same commit, not from a published image.
@@ -297,8 +299,7 @@ expected.
   release creates the tag. Release `docker-frp-v1.2.0` was published at 12:30:29Z and its
   `docker-frp.publish.yml` run started at 12:30:31Z with `event: push` (public Actions API). It
   does not fire if the tag already existed before the release, or if the release is created by a
-  workflow using `GITHUB_TOKEN`. `release: published` also covers releases made from an existing
-  tag.
+  workflow using `GITHUB_TOKEN`. To publish from a tag that already exists, delete and re-push it.
 
 ## Known limits and follow-ups
 

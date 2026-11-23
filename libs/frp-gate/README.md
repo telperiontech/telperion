@@ -458,7 +458,7 @@ Layout: `cmd/frp-gate` (main and CLI commands), `internal/pattern` (host pattern
 
 ### Release
 
-Publish a GitHub release whose tag is `frp-gate-vX.Y.Z`:
+Push a tag `frp-gate-vX.Y.Z`, or publish a GitHub release that creates it:
 
 ```bash
 gh release create frp-gate-v1.1.0 --title "frp-gate v1.1.0" --notes "..."

@@ -1,10 +1,11 @@
 name: FRP Gate / Publish
 
-# Runs when a GitHub release with a tag like frp-gate-v1.2.3 is published,
-# e.g. `gh release create frp-gate-v1.2.3 --title ... --notes ...`.
+# Runs when a tag like frp-gate-v1.2.3 is pushed, including one created by
+# `gh release create frp-gate-v1.2.3 --title ... --notes ...`.
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'frp-gate-v[0-9]+.[0-9]+.[0-9]+'
 
 env:
   REGISTRY: ghcr.io
@@ -12,7 +13,6 @@ env:
 
 jobs:
   build-and-publish:
-    if: startsWith(github.event.release.tag_name, 'frp-gate-v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,20 +20,10 @@ jobs:
 
     steps:
       - name: Set package version env variable
-        env:
-          TAG: ${{ github.event.release.tag_name }}
-        run: |
-          VERSION="${TAG#frp-gate-v}"
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release tag '$TAG' is not frp-gate-vX.Y.Z"
-            exit 1
-          fi
-          echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
+        run: echo "PACKAGE_VERSION=${GITHUB_REF_NAME#frp-gate-v}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
