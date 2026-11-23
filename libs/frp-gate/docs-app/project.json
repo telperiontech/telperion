@@ -1,0 +1,26 @@
+{
+  "name": "osw/frp-gate",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/frp-gate/docs-app/src",
+  "projectType": "application",
+  "tags": ["scope:osw", "type:docs-app", "framework:react"],
+  "implicitDependencies": ["frp-gate", "osw/kit/tokens"],
+  "metadata": { "description": "Docs remote for the frp-gate Go image: guides from its README, references from its Go sources. serve, build and generate-model targets are inferred for type:docs-app projects by apps/osw/kit/build/src/nx-plugin" },
+  "targets": {
+    "serve/app": {
+      "options": { "port": 10529 }
+    },
+    "generate-model": {
+      "inputs": [
+        "{projectRoot}/../README.md",
+        "{projectRoot}/../examples/**/*",
+        "{projectRoot}/../cmd/**/*.go",
+        "{projectRoot}/../internal/**/*.go",
+        "{projectRoot}/scripts/**/*.ts",
+        "{projectRoot}/src/model/**/*.ts",
+        "{workspaceRoot}/apps/osw/kit/docs/src/markdown/heading-id.ts",
+        { "env": "PACKAGE_VERSION" }
+      ]
+    }
+  }
+}

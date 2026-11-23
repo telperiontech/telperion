@@ -171,4 +171,15 @@ export const libraries: Library[] = [
 		type: 'docker',
 		image: 'thalesrc/docker-frp',
 	},
+	{
+		name: '@telperion/frp-gate',
+		packageName: 'frp-gate',
+		tagline: 'Multi-tenant gateway for frp',
+		description: 'Per-client tokens and grants for one shared frps, Caddy on-demand TLS, an admin UI and a declarative config.',
+		ecosystem: 'docker',
+		icon: 'shield_lock',
+		type: 'docker',
+		image: 'telperiontech/frp-gate',
+		docsPath: '/frp-gate',
+	},
 ];

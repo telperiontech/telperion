@@ -6,5 +6,6 @@
   { "name": "rx-utils" },
   { "name": "reactive-storage" },
   { "name": "paintlet" },
-  { "name": "elements" }
+  { "name": "elements" },
+  { "name": "frp-gate" }
 ]

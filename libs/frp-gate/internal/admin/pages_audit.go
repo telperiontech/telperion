@@ -30,6 +30,8 @@ func (s *Server) auditPage(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]any{"Entries": entries, "Next": next}})
 }
 
+// apiAudit lists audit log entries, newest first, 100 per page. Pass the
+// answer's next_before as ?before= for the next page.
 func (s *Server) apiAudit(w http.ResponseWriter, r *http.Request) {
 	entries, next, err := s.auditEntries(r)
 	s.apiResult(w, http.StatusOK, map[string]any{"entries": entries, "next_before": next}, err)

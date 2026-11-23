@@ -66,10 +66,15 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      package-version: ${{ steps.version.outputs.package-version }}
 
     steps:
       - name: Set package version env variable
-        run: echo "PACKAGE_VERSION=${GITHUB_REF_NAME#frp-gate-v}" >> "$GITHUB_ENV"
+        id: version
+        run: |
+          echo "PACKAGE_VERSION=${GITHUB_REF_NAME#frp-gate-v}" >> "$GITHUB_ENV"
+          echo "package-version=${GITHUB_REF_NAME#frp-gate-v}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -138,5 +143,15 @@ jobs:
             echo "- \`${REGISTRY}/${IMAGE_NAME}:${PACKAGE_VERSION}\`"
             echo "- \`${REGISTRY}/${IMAGE_NAME}:latest\`"
             echo ""
-            echo "Documentation: [libs/frp-gate/README.md](${{ github.server_url }}/${{ github.repository }}/tree/main/libs/frp-gate)"
+            echo "Documentation: https://open-source.telperion.tr/frp-gate (deployed by the deploy-docs job)"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-docs:
+    needs: build-and-publish
+    uses: ./.github/workflows/osw-frp-gate.publish.yml
+    permissions:
+      contents: read
+      deployments: write
+    with:
+      package-version: ${{ needs.build-and-publish.outputs.package-version }}
+    secrets: inherit

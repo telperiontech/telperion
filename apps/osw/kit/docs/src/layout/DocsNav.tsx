@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { OSW_SLOTS } from '@osw/core';
 import { ExternalLink, Icon, ShellSlot } from '@osw/react';
-import { npmUrl } from '../meta';
+import { ghcrUrl, npmUrl } from '../meta';
 
 export interface DocsNavProps {
 	/** Short library name shown next to the logo, e.g. `paintlet` */
@@ -12,6 +12,8 @@ export interface DocsNavProps {
 	/** Source folder on GitHub */
 	sourceUrl: string;
 	packageName: string;
+	/** GHCR image (`owner/name`) of a docker library: links to its registry page instead of npm */
+	image?: string;
 	/** Extra links placed before the GitHub / npm icons (style them with `navLinkClass`) */
 	links?: ReactNode;
 }
@@ -26,7 +28,7 @@ export const navLinkClass =
  * Fills the shell header: the library name and version next to the logo, and the
  * remote's links with its GitHub / npm icons on the right.
  */
-export function DocsNav({ name, version, homeHref, sourceUrl, packageName, links }: DocsNavProps) {
+export function DocsNav({ name, version, homeHref, sourceUrl, packageName, image, links }: DocsNavProps) {
 	return (
 		<>
 			<ShellSlot name={OSW_SLOTS.headerContext}>
@@ -44,9 +46,15 @@ export function DocsNav({ name, version, homeHref, sourceUrl, packageName, links
 				<ExternalLink href={sourceUrl} className={iconLink} aria-label="Source on GitHub" title="GitHub">
 					<Icon brand="github" size={18} />
 				</ExternalLink>
-				<ExternalLink href={npmUrl(packageName)} className={iconLink} aria-label="Package on npm" title="npm">
-					<Icon brand="npm" size={18} />
-				</ExternalLink>
+				{image ? (
+					<ExternalLink href={ghcrUrl(image)} className={iconLink} aria-label="Image on GitHub Container Registry" title="ghcr.io">
+						<Icon brand="docker" size={18} />
+					</ExternalLink>
+				) : (
+					<ExternalLink href={npmUrl(packageName)} className={iconLink} aria-label="Package on npm" title="npm">
+						<Icon brand="npm" size={18} />
+					</ExternalLink>
+				)}
 			</ShellSlot>
 		</>
 	);

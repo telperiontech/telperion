@@ -14,9 +14,15 @@ function renderToken(token: string, key: number): ReactNode {
 	}
 
 	const [, label, href] = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/) ?? [];
+	const linkClass = 'font-medium text-secondary-660 hover:underline';
+
+	// Paths on this site (`/frp-gate/metrics`, `#anchor`) stay in the tab and go through the shell's router
+	if (href.startsWith('/') || href.startsWith('#')) {
+		return <a key={key} href={href} className={linkClass}>{label}</a>;
+	}
 
 	return (
-		<ExternalLink key={key} href={href} className="font-medium text-secondary-660 hover:underline">
+		<ExternalLink key={key} href={href} className={linkClass}>
 			{label}
 		</ExternalLink>
 	);
