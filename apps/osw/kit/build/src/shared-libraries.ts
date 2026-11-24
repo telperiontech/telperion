@@ -1,5 +1,10 @@
-/** Kit libraries that are stateless and differ per remote, so each remote bundles its own copy */
-const BUNDLED_KIT_LIBRARIES = ['@osw/api', '@osw/docs', '@osw/stories', '@osw/stories/core'];
+/**
+ * Kit libraries that are stateless and differ per remote, so each remote bundles its own copy.
+ * Remotes are deployed independently and all declare version `0.0.0`, so a shared copy may come
+ * from a remote built before an export existed (e.g. `@osw/react`'s `Diagram`) and render as
+ * `undefined`. Navigation state lives in `@osw/core`, which stays shared.
+ */
+const BUNDLED_KIT_LIBRARIES = ['@osw/api', '@osw/docs', '@osw/react', '@osw/stories', '@osw/stories/core'];
 
 /**
  * Packages whose entry points must come from one unsplit copy. `rxjs/testing`'s `TestScheduler`
