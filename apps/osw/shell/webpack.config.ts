@@ -12,7 +12,12 @@ const config = composePlugins(
     remotes: []
   }, {
     dts: false,
-    library: { type: 'module' }
+    library: { type: 'module' },
+    // The default `version-first` initializes every registered remote (manifest + remoteEntry from
+    // each host) before the first shared module resolves, so one page fetched all remotes and any
+    // failure blanked it (seen in Googlebot's renderer). Remotes all declare 0.0.0, so comparing
+    // versions gains nothing: reuse what is loaded and fetch only the remote the page needs.
+    shareStrategy: 'loaded-first'
   }),
   (config, ctx) => {
     // Ignore source map warnings from 3rd party libraries

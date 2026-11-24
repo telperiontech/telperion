@@ -15,6 +15,15 @@ function pageTitle(route: ApiRoute, name: string): string {
 	return `${name} · Telperion Open Source`;
 }
 
+/** Meta description: the entry's summary or the category's description; the shell's default otherwise */
+function pageDescription(route: ApiRoute): string | undefined {
+	if (route.type === 'entry') return route.entry.primary.summary || undefined;
+
+	if (route.type === 'category') return route.category.description || undefined;
+
+	return undefined;
+}
+
 function activeId(route: ApiRoute): string | undefined {
 	if (route.type === 'entry') return route.entry.id;
 
@@ -48,7 +57,7 @@ export function ApiDocsRoot({ docs }: { docs: ApiDocs }) {
 		if (route.type === 'redirect') navigate(route.to, { replace: true });
 	}, [route]);
 
-	usePageMeta(pageTitle(route, docs.name), route);
+	usePageMeta(pageTitle(route, docs.name), route, pageDescription(route));
 
 	if (route.type === 'redirect') return null;
 
