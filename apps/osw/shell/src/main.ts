@@ -22,6 +22,8 @@ fetch('/assets/module-federation.manifest.json')
     import('@telperion/elements/portal'),
     // Registers <tp-code> for every remote's code samples; Shiki grammars load lazily per language
     import('@telperion/elements/code'),
+    // Registers <tp-mermaid> for diagrams in docs; Mermaid itself loads on the first diagram
+    import('@telperion/elements/mermaid'),
     // Registers <tp-date> for the footer's copyright year
     import('@telperion/elements/date'),
   ]))

@@ -31,4 +31,7 @@ export * from './date';
 // every Shiki grammar via `import()`, which the self-contained root IIFE would
 // inline (~8 MB). Import it from `@telperion/elements/code` (bundlers) or load
 // `iife/code/cdn.js` (script tag, grammars from the CDN).
+//
+// `<tp-mermaid>` is left out for the same reason: Mermaid is large. Import it
+// from `@telperion/elements/mermaid` or load `iife/mermaid/cdn.js`.
 

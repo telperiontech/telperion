@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CodeBlock } from '../code';
+import { CodeBlock, Diagram } from '../code';
 import { DataTable } from './DataTable';
 import { headingId } from './heading-id';
 import { Inline } from './Inline';
@@ -76,13 +76,17 @@ function renderBlock(block: Block, key: number, previous: Block | undefined, { H
 				/>
 			);
 		case 'code':
+			if (block.lang === 'mermaid') {
+				return <Diagram key={key} code={block.code} className="mt-4 block rounded-lg border border-neutral-40 bg-neutral-10 p-4" />;
+			}
+
 			return <CodeBlock key={key} code={block.code} language={block.lang} className={previous?.type === 'label' ? 'mt-2' : 'mt-3'} />;
 		default:
 			return <p key={key} className="mt-3 leading-relaxed text-neutral-660"><Inline text={block.text} /></p>;
 	}
 }
 
-/** Renders the small markdown subset used across the docs (see `parseBlocks`) */
+/** Renders the small markdown subset used across the docs (see `parseBlocks`); `mermaid` fences become diagrams */
 export function Markdown({ source, skipIntro = false, skipLeading, labels = false, headingTag = 'h3', anchors = false, size = 'sm' }: MarkdownProps) {
 	const blocks = useMemo(() => {
 		let parsed = parseBlocks(source, { labels });

@@ -10,5 +10,6 @@ export { ExternalLink } from './ExternalLink';
 export { CopyButton } from './CopyButton';
 export { Code } from './Code';
 export { CodeLine } from './CodeLine';
+export { Diagram } from './Diagram';
 export { TreeMark } from './TreeMark';
 export { ShellSlot } from './ShellSlot';

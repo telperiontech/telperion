@@ -1,5 +1,6 @@
 @import './tailwind.config.css';
 @import './code.css';
+@import './mermaid.css';
 
 @source "..";
 @source "../../../home/src";

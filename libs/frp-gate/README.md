@@ -23,14 +23,25 @@ an audit log and a Prometheus `/metrics` endpoint.
 frp-gate never starts, stops or rewrites frps or Caddy. Their config is written once. It does not
 need the Docker socket.
 
-```
-                    ┌──────────── gateway ─────────────────────────────┐
- browser ──HTTPS──▶ │ Caddy ──(on-demand cert? ask)──▶ frp-gate :7600  │
-                    │   │                                 ▲            │
-                    │   └─HTTP──▶ frps :8080 ──plugin────┘            │
-                    │              ▲ :7000                             │
-                    └──────────────┼───────────────────────────────────┘
-       frpc (user=alice, token) ───┘      admin ──HTTPS──▶ Caddy ──▶ frp-gate :7601
+```mermaid
+flowchart LR
+  browser([browser])
+  admin([admin])
+  frpc(["frpc<br/>user=alice, token"])
+
+  subgraph gateway
+    caddy[Caddy]
+    frps[frps]
+    gate[frp-gate]
+  end
+
+  browser -- HTTPS --> caddy
+  admin -- HTTPS --> caddy
+  caddy -- "HTTP :8080" --> frps
+  caddy -- "on-demand cert? ask :7600" --> gate
+  caddy -- "admin :7601" --> gate
+  frps -- "plugin :7600" --> gate
+  frpc -- ":7000" --> frps
 ```
 
 ## Contents

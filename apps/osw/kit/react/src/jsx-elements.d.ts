@@ -32,6 +32,11 @@ interface TpCodeAttributes extends BaseAttributes {
 	title?: string;
 }
 
+/** `<tp-mermaid>` from `@telperion/elements/mermaid` (registered by the shell). Pass the source as text children. */
+interface TpMermaidAttributes extends BaseAttributes {
+	label?: string;
+}
+
 /** `<osw-copy-button>` from `@osw/core` */
 interface OswCopyButtonAttributes extends BaseAttributes {
 	text: string;
@@ -44,6 +49,7 @@ declare module 'react' {
 			'tp-icon': TpIconAttributes;
 			'tp-portal': TpPortalAttributes;
 			'tp-code': TpCodeAttributes;
+			'tp-mermaid': TpMermaidAttributes;
 			'osw-copy-button': OswCopyButtonAttributes;
 			'osw-tree-mark': BaseAttributes;
 		}

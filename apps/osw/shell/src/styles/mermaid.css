@@ -1,0 +1,10 @@
+/*
+ * <tp-mermaid> theme for every remote (the shell registers the element; remotes render into its light DOM).
+ * The shared --tp-color-* palette comes from code.css; Mermaid bakes these colors into the SVG.
+ */
+
+tp-mermaid {
+	/* The frame <Diagram> sits in (see kit/docs Markdown), used for edge labels and the derived fills */
+	--tp-mermaid-background: var(--color-neutral-10);
+	--tp-mermaid-font-size: 14px;
+}

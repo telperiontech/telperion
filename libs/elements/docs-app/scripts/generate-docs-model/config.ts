@@ -22,6 +22,7 @@ export const ENTRY_META: Record<string, EntryMeta> = {
 	'details-set': { title: 'Details Set', summary: 'Groups `<details>` elements into accordions with a cap on how many stay open.' },
 	icon: { title: 'Icon', summary: 'Material Symbols, Simple Icons and theSVG icons from one element.' },
 	'drag-drop': { title: 'Drag & Drop', summary: 'Draggable elements, handles and drop zones with typed events.' },
+	mermaid: { title: 'Mermaid', summary: 'Mermaid diagrams rendered to SVG, loaded lazily and themed by CSS variables.' },
 	router: { title: 'Router', summary: 'A declarative client-side router: routes, outlets, links and params as elements.' },
 };
 

@@ -78,6 +78,9 @@ Use the **explicit `/iife/...` path** so the CDN serves the standalone bundle (s
 
 <!-- The code module (TelperionElements.Code) — not included in elements.js; grammars load from jsDelivr -->
 <script src="https://unpkg.com/@telperion/elements/iife/code/cdn.js"></script>
+
+<!-- The mermaid module (TelperionElements.Mermaid) — not included in elements.js; Mermaid loads from jsDelivr -->
+<script src="https://unpkg.com/@telperion/elements/iife/mermaid/cdn.js"></script>
 ```
 
 Each per-module bundle is fully self-contained: side-effect imports register the custom elements as soon as the script is evaluated. jsDelivr (`https://cdn.jsdelivr.net/npm/@telperion/elements/iife/...`) and other npm CDNs work the same way.
@@ -431,6 +434,37 @@ import "@telperion/elements/code";
 ```
 
 [Code Documentation →](./src/code/README.md)
+
+---
+
+### Mermaid
+
+[Mermaid](https://mermaid.js.org) diagrams (flowchart, sequence, class, state, ER, Gantt, …) rendered to SVG. Mermaid loads lazily on the first diagram of the page.
+
+**Features:**
+- Mermaid's `base` theme, colored from `--tp-mermaid-*` CSS variables with defaults derived from the shared `--tp-color-*` palette
+- Source from text content, a `<template>` child (`-->` and `<br/>` as written), or the `code` property; light-DOM changes re-render
+- `securityLevel: "strict"`; a source that does not parse shows the error and the source
+- `label` exposes the diagram as one image with an accessible name
+
+> `<tp-mermaid>` is not part of the root `@telperion/elements` import (Mermaid would bloat the all-in-one bundle). Import `@telperion/elements/mermaid` explicitly.
+
+#### JS/TS
+```ts
+import "@telperion/elements/mermaid";
+```
+
+#### HTML
+```html
+<tp-mermaid label="Request flow">
+  <template>
+    flowchart LR
+      browser -- HTTPS --> caddy[Caddy] --> app
+  </template>
+</tp-mermaid>
+```
+
+[Mermaid Documentation →](./src/mermaid/README.md)
 
 ---
 
