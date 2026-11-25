@@ -17,7 +17,7 @@ generateApiModel({
 	rootCategory: 'core',
 	categories: {
 		operators: { title: 'Operators', description: 'Pipeable operators for buffering, multicasting and picking values.' },
-		core: { title: 'Creation & interop', description: 'Observables from callbacks, and Observables as async iterables.' },
+		core: { title: 'Creation & interop', description: 'Observables from callbacks, Observables as async iterables, and a queue that runs tasks one at a time.' },
 	},
 	extensionBases: { 'static/async-iterator': 'to-async-iteratable' },
 });

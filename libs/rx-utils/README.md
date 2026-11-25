@@ -22,6 +22,7 @@ This library provides useful utilities for working with RxJS Observables:
 - **shareLast**: RxJS operator that shares the last emitted value without reference counting
 - **fromCallback**: Convert callback-based functions into Observables
 - **debounceTimeBuffer**: RxJS operator that buffers values and emits them as an array after a silence period
+- **SerialQueue**: Run Observable- or promise-returning tasks one at a time, in subscription order
 - **Static extension**: Optionally extend Observable prototype with async iterator support
 
 ## API
@@ -174,6 +175,31 @@ subject.next(3);
 
 **Returns:**
 - `OperatorFunction<T, T[]>` - An operator function that emits arrays of buffered values from the source Observable.
+
+### SerialQueue
+
+Runs tasks one at a time, in the order they were subscribed: a task starts once every earlier one has completed, errored or been unsubscribed.
+
+```typescript
+import { SerialQueue } from '@telperion/rx-utils/serial-queue';
+
+const queue = new SerialQueue();
+
+// The second request starts only once the first has settled
+queue.run(() => fetch('/api/a')).subscribe(response => console.log('a', response.status));
+queue.run(() => fetch('/api/b')).subscribe(response => console.log('b', response.status));
+```
+
+- `run(task)` returns a cold Observable. Nothing is queued until it is subscribed, and every subscription queues the task again.
+- `task` is a factory (`() => ObservableInput<T>`), so it may return an Observable, a promise or any other `ObservableInput`. It is called only when the task's turn comes.
+- The subscriber receives the task's values, error and completion. An error goes to that subscriber only; the queue moves on to the next task.
+- Unsubscribing while the task runs cancels it and starts the next one. Unsubscribing before its turn drops it: its factory is never called.
+- `complete()` closes the queue: tasks already queued still run, and later `run()` subscriptions error at once. `closed` tells whether it has been called.
+
+**Members:**
+- `run<T>(task: () => ObservableInput<T>): Observable<T>` - Queues `task` on every subscription
+- `complete(): void` - Stops accepting new tasks
+- `closed: boolean` - Whether `complete()` has been called
 
 ### Static Extension (Optional)
 

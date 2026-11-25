@@ -16,6 +16,7 @@
     "operators/",
     "operators/debounce-time-buffer",
     "operators/pluck",
-    "operators/share-last"
+    "operators/share-last",
+    "serial-queue"
   ]
 }
