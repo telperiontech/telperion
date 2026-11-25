@@ -19,6 +19,7 @@ This library provides useful utilities for working with RxJS Observables:
 - **toAsyncIteratable**: Convert RxJS Observables to AsyncIterables for use with `for await...of` loops
 - **makeAsyncIterator**: Create an AsyncIterator from an Observable
 - **pluck**: RxJS operator that emits the value of a specified key from the source object
+- **mapTo**: RxJS operator that maps every value to the same constant, shorthand for `map(() => value)`
 - **shareLast**: RxJS operator that shares the last emitted value without reference counting
 - **fromCallback**: Convert callback-based functions into Observables
 - **debounceTimeBuffer**: RxJS operator that buffers values and emits them as an array after a silence period
@@ -97,6 +98,23 @@ of({ name: 'Alice', age: 30 }).pipe(
 
 **Returns:**
 - `OperatorFunction<T, T[K]>` - An operator function that maps each source object to the value of the specified key
+
+### mapTo (Operator)
+
+An RxJS operator that maps every source value to the same constant: shorthand for `map(() => value)`. A typed, non-deprecated replacement for the RxJS `mapTo` operator. Every emission is the same reference, so use `map(() => ({ ... }))` when each one needs a fresh object.
+
+```typescript
+import { fromEvent } from 'rxjs';
+import { mapTo } from '@telperion/rx-utils/operators';
+
+const clicked$ = fromEvent(button, 'click').pipe(mapTo(true));
+```
+
+**Parameters:**
+- `value: R` - The value to emit for every source value
+
+**Returns:**
+- `OperatorFunction<unknown, R>` - An operator function that emits `value` each time the source emits
 
 ### shareLast (Operator)
 

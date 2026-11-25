@@ -15,6 +15,7 @@
     "static/async-iterator",
     "operators/",
     "operators/debounce-time-buffer",
+    "operators/map-to",
     "operators/pluck",
     "operators/share-last",
     "serial-queue"
