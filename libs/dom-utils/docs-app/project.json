@@ -1,0 +1,14 @@
+{
+  "name": "osw/dom-utils",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/dom-utils/docs-app/src",
+  "projectType": "application",
+  "tags": ["scope:osw", "type:docs-app", "framework:react"],
+  "implicitDependencies": ["dom-utils", "osw/kit/tokens", "osw/kit/api"],
+  "metadata": { "description": "Docs remote; serve, build and generate-model targets are inferred for type:docs-app projects by apps/osw/kit/build/src/nx-plugin" },
+  "targets": {
+    "serve/app": {
+      "options": { "port": 10530 }
+    }
+  }
+}

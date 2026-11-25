@@ -86,6 +86,7 @@ export const libraries: Library[] = [
 		ecosystem: 'browser',
 		icon: 'account_tree',
 		type: 'npm',
+		docsPath: '/dom-utils',
 	},
 	{
 		name: '@telperion/messenger',
