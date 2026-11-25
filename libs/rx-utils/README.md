@@ -18,7 +18,7 @@ This library provides useful utilities for working with RxJS Observables:
 
 - **toAsyncIteratable**: Convert RxJS Observables to AsyncIterables for use with `for await...of` loops
 - **makeAsyncIterator**: Create an AsyncIterator from an Observable
-- **pluck**: RxJS operator that emits the value of a specified key from the source object
+- **pluck**: RxJS operator that emits the value at a (nested) key path of the source object, with every key type-checked
 - **mapTo**: RxJS operator that maps every value to the same constant, shorthand for `map(() => value)`
 - **shareLast**: RxJS operator that shares the last emitted value without reference counting
 - **fromCallback**: Convert callback-based functions into Observables
@@ -81,7 +81,9 @@ const result4 = await asyncIterator.next(); // { value: undefined, done: true }
 
 ### pluck (Operator)
 
-An RxJS operator that emits the value of a specified key from the source object. A type-safe replacement for the deprecated RxJS `pluck` operator.
+An RxJS operator that emits the value found by following one or more keys into each source value: `pluck('a', 'b')` emits `value?.a?.b`. A type-safe replacement for the deprecated RxJS `pluck` operator.
+
+Every key is checked against the value at that point of the path, so a typo is a compile error. When a link on the way is `null` or `undefined`, the operator emits `undefined` and the emitted type includes it. Up to six keys are supported.
 
 ```typescript
 import { of } from 'rxjs';
@@ -91,13 +93,18 @@ of({ name: 'Alice', age: 30 }).pipe(
   pluck('name')
 ).subscribe(console.log);
 // Output: "Alice"
+
+of({ user: { name: { first: 'John' } } }).pipe(
+  pluck('user', 'name', 'first')
+).subscribe(console.log);
+// Output: "John" (typed as string)
 ```
 
 **Parameters:**
-- `key: K` - The key to pluck from the source object
+- `...keys` - The keys to follow, outermost first (one to six)
 
 **Returns:**
-- `OperatorFunction<T, T[K]>` - An operator function that maps each source object to the value of the specified key
+- `OperatorFunction<T, PathValue<T, Keys>>` - An operator function that maps each source value to the value at the path. `PathValue` comes from `@telperion/extra-ts-types`
 
 ### mapTo (Operator)
 

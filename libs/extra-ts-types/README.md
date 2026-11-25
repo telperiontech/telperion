@@ -125,6 +125,23 @@ type NewUser = PartialSome<User, 'id' | 'role'>;
 // same shape as { name: string; id?: number; role?: 'admin' | 'member' }
 ```
 
+### `PathValue<T, P>`
+
+The type of the value reached by following a list of keys into an object, the way `obj?.a?.b` reads at runtime: a `null` or `undefined` link on the way adds `undefined` to the result. This is the result type of `pluck` from `@telperion/rx-utils`.
+
+```typescript
+type State = { user: { name: { first: string } }; team?: { lead: string } };
+
+type First = PathValue<State, ['user', 'name', 'first']>;
+// string
+
+type Lead = PathValue<State, ['team', 'lead']>;
+// string | undefined
+
+type Item = PathValue<{ items: string[] }, ['items', number]>;
+// string
+```
+
 ### `Tail<X>`
 
 A tuple or parameter list without its first element. The result is always mutable.

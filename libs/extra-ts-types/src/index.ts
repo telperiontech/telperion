@@ -3,5 +3,6 @@ export * from './constructor.type';
 export * from './deepest.type';
 export * from './join.type';
 export * from './partial-some.type';
+export * from './path-value.type';
 export * from './tail.type';
 export * from './polyfills';
