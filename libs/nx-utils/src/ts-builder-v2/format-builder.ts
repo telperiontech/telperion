@@ -14,6 +14,7 @@ import replacePlugin from '@rollup/plugin-replace';
 import aliasPlugin from '@rollup/plugin-alias';
 import terser from '@rollup/plugin-terser';
 
+import { dtsGlobalModule } from '../utils/dts-global-module-plugin';
 import { programEmitTs } from '../utils/program-emit-ts-plugin';
 
 import type { AliasEntry } from '../utils/tsconfig-paths-aliases';
@@ -384,7 +385,7 @@ async function buildConfig(
         plugins.push(aliasPlugin({ entries: aliases }));
       }
       const dts = await loadDtsPlugin();
-      plugins.push(dts({ tsconfig: ctx.tsConfigPath, respectExternal: true }));
+      plugins.push(dts({ tsconfig: ctx.tsConfigPath, respectExternal: true }), dtsGlobalModule());
       return {
         inputOptions: {
           input: entriesAsInput(ctx),

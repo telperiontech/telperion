@@ -1,9 +1,9 @@
-import '@thalesrc/js-utils/array/proto/async-map';
+import '@telperion/js-utils/array/proto/async-map';
 
 import { copyFile as fsCopyFile, readFile, writeFile, watch as fsWatch, stat, cp } from 'fs/promises';
 
 import { ExecutorContext, logger } from '@nx/devkit';
-import { arrayize, never } from "@thalesrc/js-utils";
+import { arrayize, never } from "@telperion/js-utils";
 import { config, parse } from 'dotenv';
 import { glob } from 'glob';
 //@ts-expect-error this import shows error but works anyway

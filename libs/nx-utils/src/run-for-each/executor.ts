@@ -2,7 +2,7 @@ import { PromiseExecutor, logger } from '@nx/devkit';
 import { globSync } from 'glob';
 import { RunForEachExecutorSchema } from './schema';
 import { globCommandParser } from '../watch/glob-command-parser';
-import { chain } from '@thalesrc/js-utils';
+import { chain } from '@telperion/js-utils';
 import { platformScriptReplacer } from '../platform-runner/platform-script-replacer';
 import { promisifiedSpawn } from '../utils/promisified-spawn';
 

@@ -1,6 +1,6 @@
 import { PromiseExecutor } from '@nx/devkit';
 import { FillPackageJsonExecutorSchema } from './schema';
-import { tryCatch } from '@thalesrc/js-utils/promise/try-catch';
+import { tryCatch } from '@telperion/js-utils/promise/try-catch';
 import { ensureDirectory } from '@telperion/node-utils';
 import { writeFile } from 'fs/promises';
 import { orderConditions } from '../fill-package-json-v2/export-conditions';
@@ -20,7 +20,7 @@ const runExecutor: PromiseExecutor<FillPackageJsonExecutorSchema> = async (
   const [rootErr, rootPackageJson] = await tryCatch(import(`package.json`));
   const [packageErr, packagePackageJson] = await tryCatch(import(`${root}/package.json`));
 
-  if (packageErr || rootErr) {
+  if (packageErr !== null || rootErr !== null) {
     console.error('Error reading package.json');
 
     return {
@@ -99,7 +99,7 @@ const runExecutor: PromiseExecutor<FillPackageJsonExecutorSchema> = async (
   // Write package.json
   const [writeErr] = await tryCatch(writeFile(`${outputPath}/package.json`, JSON.stringify(packagePackageJson, null, 2)));
 
-  if (writeErr) {
+  if (writeErr !== null) {
     console.error('Error writing package.json', writeErr);
 
     return {

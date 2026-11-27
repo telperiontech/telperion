@@ -1,9 +1,9 @@
 import { logger, PromiseExecutor } from '@nx/devkit';
 import { WatchExecutorSchema } from './schema';
 import * as watch from 'glob-watcher';
-import { never } from '@thalesrc/js-utils/promise/never';
+import { never } from '@telperion/js-utils/promise/never';
 import { exec, ExecException } from 'child_process';
-import { arrayize } from '@thalesrc/js-utils/array/arrayize';
+import { arrayize } from '@telperion/js-utils/array/arrayize';
 import { platformScriptReplacer } from '../platform-runner/platform-script-replacer';
 import { globCommandParser } from './glob-command-parser';
 
