@@ -17,9 +17,9 @@ Utility functions for Node.js development
 
 | Import path | Contents | Extra requirements |
 | --- | --- | --- |
-| `@telperion/node-utils` | `ensureDirectory`, `AesGcmCipher` | |
+| `@telperion/node-utils` | `ensureDirectory`, `AesGcmCipher`, `sha256`, `randomToken`, `pkceChallenge`, `safeEqual` | |
 | `@telperion/node-utils/ensure-directory` | `ensureDirectory` | |
-| `@telperion/node-utils/crypto` | `AesGcmCipher` | |
+| `@telperion/node-utils/crypto` | `AesGcmCipher`, `sha256`, `randomToken`, `pkceChallenge`, `safeEqual` | |
 | `@telperion/node-utils/testing/typeorm` | `MemoryRepository` | `typeorm` 0.3 or 1.x (optional peer dependency) |
 
 The root entry point does not include `testing/typeorm`, so projects without TypeORM are not affected.
@@ -81,6 +81,58 @@ try {
   if (error instanceof AesGcmCipher.DecryptionError && error.reason === 'authentication') {
     // wrong key or tampered value
   }
+}
+```
+
+### SHA-256
+Hashes text (as UTF-8) or bytes with SHA-256. Returns the 32-byte `Buffer`, or a string when you pass an encoding: `'hex'`, `'base64'` or `'base64url'` (no padding).
+
+Typical use: store only the hash of an opaque token (refresh token, session id, authorization code) and look tokens up by hashing what the client sends. This is for high-entropy tokens, not passwords: hash passwords with a slow function such as scrypt or argon2.
+
+```typescript
+import { sha256 } from '@telperion/node-utils/crypto';
+
+sha256('abc'); // <Buffer ba 78 16 bf ...> (32 bytes)
+sha256('abc', 'hex'); // 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
+
+await tokens.save({ hash: sha256(refreshToken, 'hex'), userId });
+await tokens.findOneBy({ hash: sha256(presentedToken, 'hex') });
+```
+
+### Random Token
+Creates an unguessable token from cryptographically secure random bytes, as base64url without padding. Use it for refresh tokens, session cookies, authorization codes, OAuth/OIDC `state` and `nonce`, and PKCE code verifiers.
+
+The default of 32 bytes gives 256 bits of entropy (43 characters). The byte count must be a positive integer, otherwise it throws a `RangeError`.
+
+```typescript
+import { randomToken } from '@telperion/node-utils/crypto';
+
+randomToken(); // 32 bytes, 43 characters
+randomToken(48); // 48 bytes, 64 characters
+```
+
+### PKCE Challenge
+Derives the PKCE `S256` code challenge from a code verifier (RFC 7636): the base64url SHA-256 of the verifier. The verifier must be 43 to 128 characters from `A-Z a-z 0-9 - . _ ~`, which `randomToken(32)` to `randomToken(96)` produce; `pkceChallenge` does not validate it.
+
+```typescript
+import { pkceChallenge, randomToken, safeEqual } from '@telperion/node-utils/crypto';
+
+// Client
+const verifier = randomToken();
+const challenge = pkceChallenge(verifier); // send with code_challenge_method=S256
+
+// Authorization server, on the token request
+const valid = safeEqual(pkceChallenge(body.code_verifier), code.challenge);
+```
+
+### Safe Equal
+Compares two secrets (strings as UTF-8, or bytes) in constant time without revealing their lengths. Both values are hashed with SHA-256 first and the digests are compared with `timingSafeEqual`, so a length mismatch doesn't return early. Use it for client secrets, PKCE checks, API keys and signatures.
+
+```typescript
+import { safeEqual } from '@telperion/node-utils/crypto';
+
+if (!safeEqual(presentedSecret, client.clientSecret)) {
+  throw new UnauthorizedException();
 }
 ```
 

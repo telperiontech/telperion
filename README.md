@@ -169,7 +169,7 @@ Powerful Nx executors for monorepo projects. Includes executors for file copying
 Node.js-specific utility functions for server-side development, file system operations, and CLI tools. Formerly published as `@thalesrc/node-utils`.
 
 **Sub-modules:**
-- **crypto**: `AesGcmCipher`, AES-256-GCM string encryption with key rotation and associated data
+- **crypto**: `AesGcmCipher`, AES-256-GCM string encryption with key rotation and associated data; `sha256`, `randomToken`, `pkceChallenge` and `safeEqual` for opaque tokens, PKCE and constant-time secret checks
 - **testing/typeorm**: `MemoryRepository`, an in-memory TypeORM repository for unit tests (`typeorm` is an optional peer dependency)
 
 **Highlights**: File system utilities, CLI helpers, Encryption at rest, TypeORM test doubles

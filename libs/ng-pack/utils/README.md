@@ -229,7 +229,9 @@ The fetcher provides the same methods as `HttpClient` but with Promise-based sig
 - `options<T, E>(url, options?)` → `Promise<[E, null] | [null, T]>`
 - `request<T, E>(method, url, options?)` → `Promise<[E, null] | [null, T]>`
 
-The `Fetcher` and `FetcherError` types are exported from `@telperion/ng-pack/utils`. The tuple type is `TryCatchResult` from `@telperion/js-utils/promise` (`@telperion/js-utils` 4.0.0 or later).
+- `withRetry<E>(options)` → a `Fetcher` with the same methods, whose calls retry failed requests (see [Retrying requests](#retrying-requests))
+
+The `Fetcher`, `FetcherError`, `FetcherMethods` and `FetcherRetryOptions` types are exported from `@telperion/ng-pack/utils`. The tuple type is `TryCatchResult` from `@telperion/js-utils/promise` (`@telperion/js-utils` 4.0.0 or later).
 
 #### Return Value
 
@@ -259,6 +261,42 @@ if (error !== null) {
 }
 
 user.name; // user: User
+```
+
+#### Retrying requests
+
+`fetcher.withRetry(options)` returns a fetcher whose calls retry failed requests with js-utils [`retry`](https://open-source.telperion.tr/js-utils/promise/retry), sending the request again on each attempt. Calls still never reject: they resolve with the response of the first successful attempt, or with the last error once `when` returns `false` or the retries are used up.
+
+```typescript
+import { HttpErrorResponse } from '@angular/common/http';
+import { constructFetcher, type FetcherError } from '@telperion/ng-pack/utils';
+import { seconds } from '@telperion/js-utils/time';
+
+export class SessionService {
+  static readonly #offline = (error: FetcherError) => error instanceof HttpErrorResponse && error.status === 0;
+
+  readonly #fetcher = constructFetcher();
+
+  async refresh() {
+    // Retry only network failures (status 0), waiting 2 s, 4 s and 8 s; a 401 resolves at once
+    const [error, session] = await this.#fetcher
+      .withRetry({ count: 3, delay: attempt => seconds(2 ** attempt), when: SessionService.#offline })
+      .post<Session>('/auth/refresh', null, { withCredentials: true });
+  }
+}
+```
+
+Options (as in js-utils `RetryOptions`):
+- `count`: retries after the first attempt (default `3`)
+- `delay`: milliseconds before each retry, or a function of the retry number (`1`, `2`, …) and the error (default `0`)
+- `when`: retry only when it returns `true`; receives the error and the retry number (default: always)
+
+`delay` and `when` receive the error typed as `FetcherError`. A `when` that takes `unknown` works as well and does not change the error type of the results. To use another error type, pass it: `fetcher.withRetry<HttpErrorResponse>({ when: error => error.status === 0 })` (the type is not checked at runtime).
+
+`withRetry` leaves the fetcher it is called on unchanged, and calling it on a retrying fetcher replaces the options instead of adding to them. Keep the result in a field to reuse it:
+
+```typescript
+readonly #retrying = constructFetcher().withRetry({ count: 2, delay: 500 });
 ```
 
 #### Benefits

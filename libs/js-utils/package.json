@@ -37,7 +37,10 @@
     "url",
     "open redirect",
     "safe redirect",
-    "trailing slash"
+    "trailing slash",
+    "escape html",
+    "html escape",
+    "xss"
   ],
   "homepage": "https://open-source.telperion.tr/js-utils",
   "repository": {
@@ -143,7 +146,9 @@
     "set/proto/difference",
     "set/proto/intersection",
     "string/",
+    "string/proto/escape-html",
     "string/proto/limit",
+    "string/escape-html",
     "string/limit",
     "time/",
     "time/seconds",

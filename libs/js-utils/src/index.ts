@@ -23,7 +23,7 @@ export { clone, deepest, deepFreeze, jsonEqual, map } from '@telperion/js-utils/
 export * from '@telperion/js-utils/promise';
 export * from '@telperion/js-utils/time';
 export * from '@telperion/js-utils/url';
-// export {  } from '@telperion/js-utils/string';
+export { escapeHtml } from '@telperion/js-utils/string';
 
 export * from '@telperion/js-utils/compact';
 export * from '@telperion/js-utils/is-falsy';

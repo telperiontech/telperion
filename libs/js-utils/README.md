@@ -509,6 +509,19 @@ async function fooFunction() {
 
 ### String
 
+#### [Escape HTML](https://open-source.telperion.tr/js-utils/string/escape-html)
+Escapes `&`, `<`, `>`, `"` and `'`, so a value can be put into server-rendered HTML as text content or as a **quoted** attribute value. Every `&` is escaped, so `&amp;` becomes `&amp;amp;`: escape raw values once, where they enter the HTML.
+
+It is not enough for unquoted attribute values, URLs (a `javascript:` URL in `href` contains nothing to escape, so check the scheme, e.g. with `safeRelativePath`), or `<script>`/`<style>` content and `on*` attributes, which are parsed as JS or CSS.
+
+```typescript
+import { escapeHtml } from "@telperion/js-utils/string";
+
+escapeHtml('<b>"Tom" & \'Jerry\'</b>'); // '&lt;b&gt;&quot;Tom&quot; &amp; &#39;Jerry&#39;&lt;/b&gt;'
+
+const page = `<p title="${escapeHtml(title)}">${escapeHtml(message)}</p>`;
+```
+
 #### [Limit](https://open-source.telperion.tr/js-utils/modules/_string_limit_.html)
 Limits the string to `n` character
 

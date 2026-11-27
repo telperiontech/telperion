@@ -12,6 +12,12 @@
     "aes-256-gcm",
     "encryption",
     "cipher",
+    "sha256",
+    "hash",
+    "random token",
+    "pkce",
+    "timing safe",
+    "constant time",
     "typeorm",
     "testing",
     "in-memory",
@@ -47,6 +53,10 @@
     "ensure-directory",
     "crypto/",
     "crypto/aes-gcm-cipher",
+    "crypto/pkce-challenge",
+    "crypto/random-token",
+    "crypto/safe-equal",
+    "crypto/sha256",
     "testing/typeorm/",
     "testing/typeorm/memory-repository"
   ]

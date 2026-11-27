@@ -348,6 +348,14 @@ export class ExampleComponent {
 }
 ```
 
+Retry failed requests with js-utils `retry` options, still resolving with the tuple (the last error once retries are used up):
+
+```typescript
+const [error, session] = await this.fetcher
+  .withRetry({ count: 3, delay: attempt => seconds(2 ** attempt), when: error => error instanceof HttpErrorResponse && error.status === 0 })
+  .post<Session>('/auth/refresh', null, { withCredentials: true });
+```
+
 **Provide Service Directive**
 
 ```typescript

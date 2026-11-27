@@ -24,7 +24,7 @@ generateApiModel({
 		url: { title: 'URL', description: 'Trailing slashes and open-redirect-safe relative paths.' },
 		map: { title: 'Map', description: 'Helpers for Map instances.' },
 		math: { title: 'Math', description: 'Numeric helpers.' },
-		string: { title: 'String', description: 'String helpers.' },
+		string: { title: 'String', description: 'Limiting length and escaping HTML.' },
 		time: { title: 'Time', description: 'Readable durations in milliseconds, and parsing duration strings like 15m.' },
 		class: { title: 'Class', description: 'Class composition helpers.' },
 		boolean: { title: 'Boolean', description: 'Truthiness checks.' },
