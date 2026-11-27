@@ -25,6 +25,7 @@
       "@osw/stories/core": ["apps/osw/kit/stories/src/core/index.ts"],
       "@telperion/ng-pack": ["libs/ng-pack/src/index.ts"],
       "@telperion/ng-pack/common": ["libs/ng-pack/common/src/index.ts"],
+      "@telperion/ng-pack/forms": ["libs/ng-pack/forms/src/index.ts"],
       "@telperion/ng-pack/tsf": ["libs/ng-pack/tsf/src/index.ts"],
       "@telperion/ng-pack/utils": ["libs/ng-pack/utils/src/index.ts"],
       "@telperion/dom-utils": ["libs/dom-utils/src/index.ts"],

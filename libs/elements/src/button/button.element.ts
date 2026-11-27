@@ -1,6 +1,7 @@
 import { css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ShadeMixerLitElement } from "../utils/shade-mixer-lit-element";
+import { ImplicitSubmissionController } from "./implicit-submission";
 
 /**
  * Visual treatment applied by `<tp-button>`.
@@ -16,7 +17,8 @@ export type ButtonVariant = "solid" | "outline" | "text" | "ghost";
  * Mirrors the native HTML `<button>` `type` attribute.
  *
  * - `button`: no implicit form behaviour (default).
- * - `submit`: clicks/Enter call `form.requestSubmit()` on the associated form.
+ * - `submit`: clicks/Enter call `form.requestSubmit()` on the associated form. When it is the form's
+ *   first submit button, `Enter` in one of the form's text fields clicks it (implicit submission).
  * - `reset`: clicks/Enter call `form.reset()` on the associated form.
  */
 export type ButtonType = "button" | "submit" | "reset";
@@ -35,6 +37,9 @@ declare global {
  * - Participates in the tab order (`tabindex="0"` on connect; `-1` while disabled).
  * - Activates on `Space` / `Enter`.
  * - With `type="submit"` calls `form.requestSubmit()`; with `type="reset"` calls `form.reset()`.
+ * - With `type="submit"` it is a default button for implicit submission: while it is the form's first
+ *   submit button, `Enter` in a text field of the form clicks it, and submits nothing while it is
+ *   disabled (see {@link ImplicitSubmissionController}).
  * - When `disabled`, blocks click and keyboard activation and updates `aria-disabled`.
  * - Announces `role="button"` to assistive technology via `ElementInternals`.
  *
@@ -184,6 +189,9 @@ export class ButtonElement extends ShadeMixerLitElement {
 
   readonly #internals: ElementInternals;
 
+  /** Makes `Enter` in the form's text fields click this button while it is the form's default button. */
+  readonly #implicitSubmission = new ImplicitSubmissionController(this);
+
   constructor() {
     super();
     this.#internals = this.attachInternals();
@@ -193,6 +201,11 @@ export class ButtonElement extends ShadeMixerLitElement {
   /** The form this button is associated with, if any. Mirrors `HTMLButtonElement.form`. */
   get form(): HTMLFormElement | null {
     return this.#internals.form;
+  }
+
+  /** Called by the browser when the form owner changes; the update lets the implicit submission follow it. */
+  formAssociatedCallback(): void {
+    this.requestUpdate();
   }
 
   override connectedCallback(): void {

@@ -5,5 +5,5 @@
     "outDir": "../../dist/out-tsc",
     "types": ["vitest/globals", "node"]
   },
-  "include": ["vitest.config.ts", "test-setup.ts", "*/src/**/*.spec.ts", "*/src/**/*.d.ts"]
+  "include": ["vitest.config.ts", "vitest.testbed.config.mts", "test-setup.ts", "test-setup.testbed.ts", "*/src/**/*.spec.ts", "*/src/**/*.d.ts"]
 }

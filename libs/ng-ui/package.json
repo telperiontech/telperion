@@ -20,10 +20,8 @@
     "@angular/common": "*",
     "@angular/core": "*",
     "@angular/forms": "*",
-    "rxjs": "*"
-  },
-  "dependencies": {
-    "@telperion/ng-pack": "^3.0.1"
+    "rxjs": "*",
+    "@telperion/ng-pack": "^4.2.0"
   },
   "devDependencies": {
     "@angular/cli": "*"

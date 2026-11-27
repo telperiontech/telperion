@@ -63,6 +63,25 @@
         "cwd": "libs/elements"
       }
     },
+    "test/browser": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/elements-browser"],
+      "options": {
+        "configFile": "libs/elements/vitest.browser.config.ts",
+        "passWithNoTests": true,
+        "coverage": false
+      },
+      "dependsOn": ["test/prepare/browser"]
+    },
+    "test/prepare/browser": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec playwright install chromium",
+        "cwd": "{projectRoot}"
+      },
+      "cache": true,
+      "outputs": []
+    },
     "publish": {
       "executor": "nx:run-commands",
       "options": {
@@ -105,7 +124,7 @@
       "options": {
         "outputPath": "dist/libs/elements",
         "cdn": "iife/elements.js",
-        "sideEffects": ["**/*-element.js", "**/*-element.cjs", "**/code/cdn.js", "**/code/cdn.cjs", "**/mermaid/cdn.js", "**/mermaid/cdn.cjs", "**/*.css"],
+        "sideEffects": ["*/index.js", "*/index.cjs", "**/*-element.js", "**/*-element.cjs", "**/*.element.js", "**/*.element.cjs", "**/code/cdn.js", "**/code/cdn.cjs", "**/mermaid/cdn.js", "**/mermaid/cdn.cjs", "**/*.css"],
         "populateExports": {
           "exports": ["types", "import", "require", "node", "script", "default"]
         }

@@ -1,3 +1,4 @@
+import { JsonPipe } from '@angular/common';
 import type { Meta, StoryObj } from '@storybook/angular';
 import { moduleMetadata } from '@storybook/angular';
 
@@ -9,7 +10,7 @@ const meta: Meta<FieldComponent> = {
   component: FieldComponent,
   decorators: [
     moduleMetadata({
-      imports: [FieldModule],
+      imports: [FieldModule, JsonPipe],
     }),
   ],
   tags: ['autodocs'],
@@ -145,6 +146,24 @@ export const MultipleFields: Story = {
           <input type="password" name="password" ngModel required minlength="8" />
         </tui-field>
       </form>
+    `,
+  }),
+};
+
+export const ValidSubmit: Story = {
+  render: () => ({
+    props: { submitted: [] as unknown[] },
+    template: `
+      <form (tngValidSubmit)="submitted = [...submitted, $event]" [tngValidSubmitShape]="{ email: 'string', password: 'string' }" class="flex flex-col gap-4 max-w-sm">
+        <tui-field label="Email">
+          <input type="email" name="email" ngModel autocomplete="username" required email />
+        </tui-field>
+        <tui-field label="Password" hint="Submit without filling in the fields to see their errors.">
+          <input type="password" name="password" ngModel autocomplete="current-password" required />
+        </tui-field>
+        <button type="submit" class="self-start rounded-md bg-primary px-4 py-2 text-white">Sign in</button>
+      </form>
+      <pre class="mt-4 text-sm">{{ submitted | json }}</pre>
     `,
   }),
 };

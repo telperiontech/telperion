@@ -278,6 +278,46 @@ export class UsersComponent {
 
 ---
 
+### Forms
+
+**Import:** `@telperion/ng-pack/forms`
+
+Helpers that keep template-driven form logic in the template.
+
+#### Key Features
+
+- ✅ `(tngValidSubmit)` — emits `NgForm.value` only on a valid submit, so templates stop repeating `form.valid && …`
+- 👆 Invalid submits mark every control as touched (fields show their errors) and focus the first invalid control
+- 🧾 `[tngValidSubmitShape]` — types the emitted value (no `any`) and checks it at runtime against the registered controls
+- 🌊 Built on `outputFromObservable`: the output is a stream derived from `NgForm.ngSubmit`
+
+#### Quick Start
+
+```typescript
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ValidSubmitDirective } from '@telperion/ng-pack/forms';
+import { Subject } from 'rxjs';
+
+@Component({
+  imports: [FormsModule, ValidSubmitDirective],
+  template: `
+    <form (tngValidSubmit)="submits.next($event)" [tngValidSubmitShape]="{ email: 'string', password: 'string' }">
+      <input type="email" name="email" ngModel required email />
+      <input type="password" name="password" ngModel required />
+      <button type="submit">Sign in</button>
+    </form>
+  `
+})
+export class LoginComponent {
+  protected readonly submits = new Subject<{ email: string; password: string }>();
+}
+```
+
+[Full documentation →](./forms/README.md)
+
+---
+
 ### Template Signal Forms
 
 **Import:** `@telperion/ng-pack/template-signal-forms`
@@ -386,7 +426,10 @@ export class ChildDirective {
 
 ### Running Unit Tests
 
-Run `pnpm nx test ng-pack` to execute the unit tests.
+Run `pnpm nx test ng-pack` to execute the unit tests. It runs both suites:
+
+- `pnpm nx run ng-pack:test/unit` — plain specs (`*.spec.ts`) in Node, without the Angular compiler
+- `pnpm nx run ng-pack:test/testbed` — specs that render templates through TestBed (`*.testbed.spec.ts`), in jsdom
 
 ### Building
 

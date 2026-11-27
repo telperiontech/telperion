@@ -21,6 +21,12 @@ export abstract class BaseFieldComponent {
   isRequired = signal(false);
   hasFocus = computed(() => this.focusWatcher()?.hasFocus() ?? false);
 
+  /**
+   * Whether the field shows its error: the control is invalid and was edited or touched (left after
+   * focusing, or marked as touched, e.g. by `tngValidSubmit` on an invalid submit).
+   */
+  showErrors = computed(() => !!this.errors() && (!this.isPristine() || this.isTouched()));
+
   constructor() {
     effect((cleanUp) => {
       const child = this.child();

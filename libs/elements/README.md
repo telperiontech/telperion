@@ -313,6 +313,7 @@ Framework-agnostic, form-associated button built with Lit. Behaves like the nati
 - Form-associated via `ElementInternals` &mdash; `type="submit"` calls `form.requestSubmit()`, `type="reset"` calls `form.reset()`, and `.form` mirrors `HTMLButtonElement.form`
 - Tab-selectable out of the box (`tabindex="0"`); `disabled` removes the button from the tab order, blocks click/keyboard activation, and sets `aria-disabled`
 - `Space` / `Enter` activation matching native button semantics
+- Implicit submission: `Enter` in a text field clicks the form's first submit button when it is a `<tp-button type="submit">` (and submits nothing while it is disabled), as browsers do for native buttons
 - Announces `role="button"` to assistive technology through element internals
 - Palette-driven color via the shared `ShadeMixerLitElement` mixin: pick a `color` token (`primary`, `secondary`, `success`, &hellip;) and tune intensity with `shade` (`0`&ndash;`1000`, `500` is the base color); `mixer` (`none` / `black` / `white`) is auto-derived from `shade`
 - **Themable design system**: every palette token (`--tp-color-primary`, `--tp-color-success`, &hellip;) is overridable at `:root` or any ancestor; add brand-specific names with a single rule (`tp-button[color="brand"] { --tp-element-color: …; }`)

@@ -95,6 +95,15 @@
         "cwd": "libs/ng-ui/.tmp/dist"
       }
     },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "configFile": "libs/ng-ui/vitest.config.mts",
+        "passWithNoTests": true,
+        "coverage": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },

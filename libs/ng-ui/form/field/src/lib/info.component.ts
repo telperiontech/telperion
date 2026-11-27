@@ -31,7 +31,7 @@ export class FieldInfoComponent {
 
   #firstError = computed(() => Object.entries(this.field.errors() ?? {})[0] ?? null);
   hint = this.field.hint;
-  showError = computed(() => !this.field.isPristine() && this.field.errors());
+  showError = this.field.showErrors;
   error = computed(() => {
     const [errorName, errorValue] = this.#firstError() ?? [];
 

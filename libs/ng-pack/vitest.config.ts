@@ -15,7 +15,8 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'node',
     include: ['*/src/**/*.spec.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', '.tmp/**', 'src/**'],
+    // TestBed specs run through vitest.testbed.config.ts
+    exclude: ['**/node_modules/**', '**/dist/**', '.tmp/**', 'src/**', '**/*.testbed.spec.ts'],
     setupFiles: ['test-setup.ts'],
     reporters: ['default'],
     coverage: {

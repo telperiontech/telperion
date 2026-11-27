@@ -48,6 +48,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    // Specs that need a real browser run through vitest.browser.config.ts (test/browser)
+    exclude: ['src/**/*.browser.spec.ts'],
 
     reporters: ['default'],
     coverage: {

@@ -8,6 +8,7 @@ Framework-agnostic, form-associated button web component built with [Lit](https:
 - Form-associated via `ElementInternals` &mdash; `type="submit"` calls `form.requestSubmit()`, `type="reset"` calls `form.reset()`, and `.form` mirrors `HTMLButtonElement.form`
 - Tab-selectable out of the box (`tabindex="0"`); `disabled` removes it from the tab order and blocks click + keyboard activation
 - Keyboard activation on `Space` / `Enter`, just like native `<button>`
+- Implicit submission: `Enter` in a text field clicks the form's first submit button when it is a `<tp-button type="submit">`, and submits nothing while it is disabled
 - Announces `role="button"` and toggles `aria-disabled` automatically
 - Palette-driven color via `color` (`primary`, `secondary`, `success`, &hellip;) and `shade` (`0`&ndash;`1000`); `mixer` is auto-derived from `shade`
 - Light-DOM rendering &mdash; consumer CSS / Tailwind / design tokens apply directly
@@ -161,11 +162,27 @@ const button = document.querySelector("tp-button");
 console.log(button.form); // -> <form> | null
 ```
 
+### Implicit submission (`Enter` in a field)
+
+Browsers only treat native `<button>` / `<input type="submit">` elements as a form's default button, so on its own a form whose only submit control is a custom element either submits without asking the button (one text field, even while the button is disabled) or ignores `Enter` (two or more text fields). `<tp-button type="submit">` takes the default button's role itself, following the [HTML spec](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission):
+
+- `Enter` in a text field of the form clicks the form's **first submit button in tree order** (native or `<tp-button>`) when that is a `<tp-button>`. Later submit buttons do nothing.
+- If that button is `disabled`, nothing is submitted.
+- Text fields are the inputs the spec lists as blocking implicit submission: `text`, `search`, `url`, `tel`, `email`, `password`, `date`, `month`, `week`, `time`, `datetime-local` and `number` (the same types Chrome and Firefox submit on). `Enter` in a `<textarea>`, a checkbox, a select, … is left alone.
+- `Enter` during IME composition, or after another handler called `preventDefault()`, is left alone.
+- If the form's first submit button is a native one, the browser handles it as usual.
+- `Enter` on the `<tp-button>` itself keeps its normal activation.
+
+The button listens for `keydown` on its form owner only while it is connected and `type="submit"`, and follows it when it moves to another form (also through the `form` attribute). Fields outside the `<form>` element that join it through `form="…"` are not covered, because their key events do not reach the form. To keep `Enter` from submitting in one field, call `event.preventDefault()` in its `keydown` handler.
+
+The behaviour comes from `ImplicitSubmissionController` (exported from `@telperion/elements/button`), a Lit reactive controller that other form-associated custom buttons can reuse.
+
 ## Accessibility
 
 - The element exposes `role="button"` through `ElementInternals`.
 - Disabled buttons set `aria-disabled="true"` and receive `tabindex="-1"`, so screen readers and keyboard users skip them.
 - Activation via `Space` and `Enter` matches native button behaviour and dispatches a regular `click` event.
+- `Enter` in a text field submits the form through its first submit button, as with native buttons (see [Implicit submission](#implicit-submission-enter-in-a-field)).
 
 ## Examples
 

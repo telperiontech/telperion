@@ -20,7 +20,7 @@ import { FieldInfoComponent } from "./info.component";
   `,
   host: {
     "class": "group",
-    "[class.invalid]": "!isPristine() && errors()"
+    "[class.invalid]": "showErrors()"
   }
 })
 export class CheckFieldComponent extends BaseFieldComponent {
