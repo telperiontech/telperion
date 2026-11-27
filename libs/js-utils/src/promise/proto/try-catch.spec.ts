@@ -21,4 +21,23 @@ describe('Promise Try Catch Proto Function', () => {
         done();
       });
   });
+
+  it('should put the default result into the result slot when rejected', async () => {
+    const [error, result] = await Promise.reject<string>('foo').tryCatch('default');
+
+    expect(error).toBe('foo');
+    expect(result).toBe('default');
+  });
+
+  it('should narrow the result when the error is checked against null', async () => {
+    const [error, result] = await Promise.resolve({ name: 'foo' }).tryCatch();
+
+    if (error !== null) {
+      throw error;
+    }
+
+    const name: string = result.name;
+
+    expect(name).toBe('foo');
+  });
 });

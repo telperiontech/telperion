@@ -27,11 +27,19 @@
         "passWithNoTests": true
       }
     },
+    "test/coverage": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "libs/node-utils/jest.config.ts",
+        "passWithNoTests": true,
+        "codeCoverage": true
+      }
+    },
     "publish": {
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx run node-utils:publish/prepare --packageVersion=$PACKAGE_VERSION",
+          "nx run node-utils:publish/prepare",
           "nx run node-utils:publish/to-npm"
         ],
         "parallel": false

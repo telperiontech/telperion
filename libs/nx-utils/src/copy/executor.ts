@@ -10,7 +10,7 @@ import { glob } from 'glob';
 import * as regexParser from 'regex-parser';
 import * as sharp from 'sharp';
 
-import { ensureDirectory } from "@thalesrc/node-utils";
+import { ensureDirectory } from "@telperion/node-utils";
 
 import { CopyExecutorSchema } from './schema';
 

@@ -161,11 +161,18 @@ Powerful Nx executors for monorepo projects. Includes executors for file copying
 
 **Highlights**: Copy with transforms, Package.json filling, Parallel execution, TypeScript builder, File watcher, Platform runner
 
-#### [@thalesrc/node-utils](libs/node-utils)
+#### [@telperion/node-utils](libs/node-utils)
+[![npm](https://img.shields.io/npm/v/@telperion/node-utils.svg)](https://www.npmjs.com/package/@telperion/node-utils)
+[![npm](https://img.shields.io/npm/dm/@telperion/node-utils.svg)](https://www.npmjs.com/package/@telperion/node-utils)
+[![codecov](https://codecov.io/gh/telperiontech/telperion/graph/badge.svg?token=dz46LY3onk&flag=node-utils)](https://app.codecov.io/gh/telperiontech/telperion/tree/main?flags%5B0%5D=node-utils)
 
-Node.js-specific utility functions for server-side development, file system operations, and CLI tools.
+Node.js-specific utility functions for server-side development, file system operations, and CLI tools. Formerly published as `@thalesrc/node-utils`.
 
-**Highlights**: File system utilities, CLI helpers, Node.js utilities
+**Sub-modules:**
+- **crypto**: `AesGcmCipher`, AES-256-GCM string encryption with key rotation and associated data
+- **testing/typeorm**: `MemoryRepository`, an in-memory TypeORM repository for unit tests (`typeorm` is an optional peer dependency)
+
+**Highlights**: File system utilities, CLI helpers, Encryption at rest, TypeORM test doubles
 
 ---
 

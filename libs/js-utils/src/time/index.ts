@@ -5,3 +5,4 @@ export * from "@telperion/js-utils/time/days";
 export * from "@telperion/js-utils/time/weeks";
 export * from "@telperion/js-utils/time/months";
 export * from "@telperion/js-utils/time/years";
+export * from "@telperion/js-utils/time/parse-duration";

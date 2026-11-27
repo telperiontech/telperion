@@ -336,14 +336,14 @@ export class ExampleComponent {
   private fetcher = constructFetcher();
 
   async fetchData() {
-    const [error, response] = await this.fetcher.get('/api/data');
+    const [error, response] = await this.fetcher.get<Data>('/api/data');
     
     if (error) {
       console.error('Error:', error);
       return;
     }
     
-    console.log('Data:', response);
+    console.log('Data:', response); // narrowed to Data
   }
 }
 ```

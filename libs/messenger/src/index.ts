@@ -1,4 +1,4 @@
-export { Request } from './request.decorator';
+export { Request, type RequestOptions, type SingleRequestDecorator } from './request.decorator';
 export { Listen } from './listen.decorator';
 export type { Message } from './message.interface';
 export type { MessageResponse } from './message-response.type';

@@ -1,6 +1,6 @@
 # npm Trusted Publishing Migration
 
-_Last updated: 2026-11-07_
+_Last updated: 2026-11-27_
 
 ## Why
 
@@ -40,7 +40,7 @@ Not yet confirmed:
 | @telperion/paintlet | paintlet.publish.yml | tag | v6 | telperiontech/telperion |
 | @telperion/reactive-storage | reactive-storage.publish.yml | tag | v4 | missing |
 | @telperion/rx-utils | rx-utils.publish.yml | tag | v4 | missing |
-| @thalesrc/node-utils | node-utils.publish.yml | repository_dispatch | v4 | thalesrc/thalesrc (old repo) |
+| @telperion/node-utils (formerly @thalesrc/node-utils) | node-utils.publish.yml | tag | v6 | telperiontech/telperion |
 | @thalesrc/nx-utils | nx-utils.publish.yml | repository_dispatch | v4 | missing |
 | @thalesrc/react-utils | react-utils.publish.yml | repository_dispatch | v4 | missing |
 | @telperion/ts-utils | ts-utils.publish.yml | repository_dispatch | v4 | missing |
@@ -51,7 +51,7 @@ Not affected: `docker-frp`, `frp-gate`, `osw-home`, `osw-shell` and `auto-proxy`
 
 Keep one workflow per package, so each package trusts its own workflow file. Try the change on one package before touching the rest.
 
-- [ ] Set `repository.url` to `https://github.com/telperiontech/telperion.git` in every published package.json (8 are missing it, and `node-utils` points at the old repo). Check that the `fill-package-json` step keeps it in the built output.
+- [ ] Set `repository.url` to `https://github.com/telperiontech/telperion.git` in every published package.json (8 are missing it). Check that the `fill-package-json` step keeps it in the built output.
 - [ ] In each workflow, add `permissions: { id-token: write, contents: read }` to the publish job.
 - [ ] Move all workflows to `actions/setup-node@v6` with `node-version-file: 'package.json'`. Raise the root `engines.node` from `^22.13` to `^22.14`.
 - [ ] Add a step `npm install -g npm@latest` before publishing, so npm is 11.10.0 or later.
@@ -65,8 +65,9 @@ Keep one workflow per package, so each package trusts its own workflow file. Try
 ## Open questions and risks
 
 - When exactly does npm turn off granular tokens? Finish the pilot before that date.
-- Do the 4 `repository_dispatch` workflows (`node-utils`, `nx-utils`, `react-utils`, `ts-utils`) work with OIDC as they are, or should they move to tag triggers like the others?
-- Should the `@thalesrc/*` packages stay under that scope, or be republished as `@telperion/*`? Trust is set per package, so this changes the list.
+- Do the 3 `repository_dispatch` workflows (`nx-utils`, `react-utils`, `ts-utils`) work with OIDC as they are, or should they move to tag triggers like the others?
+- Should the remaining `@thalesrc/*` packages stay under that scope, or be republished as `@telperion/*` (as `node-utils` was)? Trust is set per package, so this changes the list.
+- `@telperion/node-utils` is a new npm package: its first publish may need a token (see the next question).
 - Can a new package's first publish use OIDC, or does it need one manual publish with a token?
 - Should the 14 workflows be merged into one release workflow? Bulk `npm trust` makes this possible, but it is a bigger change than this migration needs.
 

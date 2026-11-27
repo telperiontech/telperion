@@ -131,6 +131,7 @@ A utility function that creates a proxy wrapper around Angular's `HttpClient` to
 
 - 🎯 Converts all HttpClient methods to Promise-based API
 - ✅ Returns `[error, response]` tuple for predictable error handling
+- 🔍 The tuple is a discriminated union: `if (error) return;` narrows the response to `T`
 - 🔄 Automatically uses `firstValueFrom` to convert Observables
 - 🛡️ No try-catch blocks needed in your code
 - 💉 Uses Angular's dependency injection
@@ -217,22 +218,48 @@ async fetchWithHeaders() {
 
 #### API
 
-The fetcher provides the same methods as `HttpClient` but with Promise-based signatures:
+The fetcher provides the same methods as `HttpClient` but with Promise-based signatures. `E` defaults to `FetcherError` (`HttpErrorResponse | Error`):
 
-- `get<T>(url, options?)` → `Promise<[error, T]>`
-- `post<T>(url, body, options?)` → `Promise<[error, T]>`
-- `put<T>(url, body, options?)` → `Promise<[error, T]>`
-- `patch<T>(url, body, options?)` → `Promise<[error, T]>`
-- `delete<T>(url, options?)` → `Promise<[error, T]>`
-- `head<T>(url, options?)` → `Promise<[error, T]>`
-- `options<T>(url, options?)` → `Promise<[error, T]>`
-- `request<T>(method, url, options?)` → `Promise<[error, T]>`
+- `get<T, E>(url, options?)` → `Promise<[E, null] | [null, T]>`
+- `post<T, E>(url, body, options?)` → `Promise<[E, null] | [null, T]>`
+- `put<T, E>(url, body, options?)` → `Promise<[E, null] | [null, T]>`
+- `patch<T, E>(url, body, options?)` → `Promise<[E, null] | [null, T]>`
+- `delete<T, E>(url, options?)` → `Promise<[E, null] | [null, T]>`
+- `head<T, E>(url, options?)` → `Promise<[E, null] | [null, T]>`
+- `options<T, E>(url, options?)` → `Promise<[E, null] | [null, T]>`
+- `request<T, E>(method, url, options?)` → `Promise<[E, null] | [null, T]>`
+
+The `Fetcher` and `FetcherError` types are exported from `@telperion/ng-pack/utils`. The tuple type is `TryCatchResult` from `@telperion/js-utils/promise` (`@telperion/js-utils` 4.0.0 or later).
 
 #### Return Value
 
 All methods return a Promise that resolves to a tuple:
 - **Success**: `[null, response]` - Error is null, response contains the data
-- **Failure**: `[error, null]` - Error contains the error object, response is null
+- **Failure**: `[error, null]` - Error contains the error object, response is null. The error is never `null` or `undefined`.
+
+Because the tuple is a discriminated union, checking the error narrows the response:
+
+```typescript
+const [error, user] = await this.fetcher.get<User>('/api/me');
+
+if (error) {
+  return; // error: HttpErrorResponse | Error
+}
+
+user.name; // user: User
+```
+
+If an interceptor can throw something other than an `Error`, pass `unknown` as the error type and check against `null` (an `unknown` error could be falsy, so `if (error)` doesn't narrow it):
+
+```typescript
+const [error, user] = await this.fetcher.get<User, unknown>('/api/me');
+
+if (error !== null) {
+  return;
+}
+
+user.name; // user: User
+```
 
 #### Benefits
 

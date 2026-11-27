@@ -28,7 +28,16 @@
     "deepest",
     "never",
     "arrayize",
-    "gather"
+    "gather",
+    "retry",
+    "duration",
+    "parse duration",
+    "error message",
+    "describe error",
+    "url",
+    "open redirect",
+    "safe redirect",
+    "trailing slash"
   ],
   "homepage": "https://open-source.telperion.tr/js-utils",
   "repository": {
@@ -55,6 +64,8 @@
     "array/",
     "class/",
     "class/mixin",
+    "error/",
+    "error/describe-error",
     "array/proto/async-map",
     "array/proto/compact",
     "array/proto/difference",
@@ -118,11 +129,13 @@
     "promise/proto/try-catch",
     "promise/static/chain",
     "promise/static/never",
+    "promise/static/retry",
     "promise/static/timeout",
     "promise/static/try-one-by-one",
     "promise/chain",
     "promise/never",
     "promise/promisify",
+    "promise/retry",
     "promise/revert",
     "promise/timeout",
     "promise/try-catch",
@@ -139,6 +152,10 @@
     "time/days",
     "time/weeks",
     "time/months",
-    "time/years"
+    "time/years",
+    "time/parse-duration",
+    "url/",
+    "url/safe-relative-path",
+    "url/without-trailing-slash"
   ]
 }

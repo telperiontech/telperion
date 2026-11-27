@@ -135,7 +135,7 @@ export const libraries: Library[] = [
 		type: 'npm',
 	},
 	{
-		name: '@thalesrc/node-utils',
+		name: '@telperion/node-utils',
 		packageName: 'node-utils',
 		tagline: 'Node.js server utilities',
 		description: 'Battle-tested helpers that streamline backend operations.',

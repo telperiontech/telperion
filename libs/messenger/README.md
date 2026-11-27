@@ -47,6 +47,34 @@ The library uses two main abstractions:
 - **`@Request(path)`**: Marks a method as a message sender
 - **`@Listen(path)`**: Marks a method as a message listener
 
+#### Requests are sent eagerly
+
+A `@Request` method sends its message **when it is called**, not when the returned `Observable` is subscribed. Calling it without subscribing still sends the message, and subscribing twice does not send it twice. Subscribe right away: responses that arrive before the subscription are not replayed.
+
+#### Single-response requests
+
+A request that is answered once can return a `Promise` of the first response instead of an `Observable`, with `{ single: true }`. No `firstValueFrom` is needed at the call site:
+
+```typescript
+import { IframeMessageClient, Request } from '@telperion/messenger/iframe';
+
+class SignInFrameClient extends IframeMessageClient {
+  @Request('sign-in/done', { single: true })
+  done(result: SignInResult): Promise<boolean> {
+    return null!; // Implementation handled by decorator
+  }
+}
+
+const accepted = await client.done({ next: '/home' });
+```
+
+The promise:
+- resolves with the first response (a `@Listen` handler returning `void` or `Promise<void>` responds with `undefined`),
+- rejects with the error the host throws or the transport reports (also when sending fails),
+- rejects with rxjs' `EmptyError` when the host completes without responding (e.g. a handler returning `EMPTY`).
+
+TypeScript only accepts `{ single: true }` on methods typed to return a `Promise`. Without the option, `@Request` keeps returning an `Observable` of all responses.
+
 ## Usage
 
 ### Iframe Communication
@@ -716,13 +744,14 @@ service.initialize(peerConnection);
 
 ### Decorators
 
-- **`@Request(path: string)`** - Decorator for sending messages
+- **`@Request(path: string, options?: RequestOptions)`** - Decorator for sending messages; `{ single: true }` returns a `Promise` of the first response
 - **`@Listen(path: string)`** - Decorator for receiving messages
 
 ### Types
 
 - **`Message`** - Message payload structure
 - **`MessageResponse`** - Response payload structure
+- **`RequestOptions`** - Options of `@Request` (`single`)
 - **`UpcomingMessage<T>`** - Incoming message with sender info (iframe)
 
 ## Requirements

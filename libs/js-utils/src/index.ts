@@ -15,12 +15,14 @@ export {
   uniquifyByKey
 } from '@telperion/js-utils/array';
 export * from '@telperion/js-utils/class';
+export * from '@telperion/js-utils/error';
 export * from '@telperion/js-utils/function';
 export * from '@telperion/js-utils/map';
 export * from '@telperion/js-utils/math';
 export { clone, deepest, deepFreeze, jsonEqual, map } from '@telperion/js-utils/object';
 export * from '@telperion/js-utils/promise';
 export * from '@telperion/js-utils/time';
+export * from '@telperion/js-utils/url';
 // export {  } from '@telperion/js-utils/string';
 
 export * from '@telperion/js-utils/compact';

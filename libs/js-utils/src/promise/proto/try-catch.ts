@@ -1,4 +1,4 @@
-import { tryCatch } from '@telperion/js-utils/promise/try-catch';
+import { tryCatch, TryCatchResult } from '@telperion/js-utils/promise/try-catch';
 
 declare global {
   export interface Promise<T> {
@@ -15,22 +15,34 @@ declare global {
      * async function fooFunction() {
      *   const [error, result] = await anAsyncCall().tryCatch();
      *
-     *   if (error) {
+     *   if (error !== null) {
      *     // handle error
+     *     return;
      *   }
      *
-     *   // do stuff
+     *   result; // narrowed to the resolved type
      * }
      *
      * ```
      * * * *
+     * @see tryCatch
+     */
+    tryCatch<E = unknown>(): Promise<TryCatchResult<T, E>>;
+
+    /**
+     * #### Promise Try Catch
+     *
+     * Merges result and error in the same callback
+     *
+     * * * *
+     * @see tryCatch
      * @param defaultResult Setting this will put the value into the result field when the promise throws error
      */
-    tryCatch<E = unknown>(defaultResult?: T): Promise<[E, T]>;
+    tryCatch<E = unknown>(defaultResult: T): Promise<TryCatchResult<T, E, T>>;
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-Promise.prototype.tryCatch = function(this: Promise<any>, defaultResult?: any): ReturnType<typeof tryCatch<any, any>> {
-  return tryCatch(this, defaultResult);
+Promise.prototype.tryCatch = function(this: Promise<any>, ...defaultResult: [any?]): Promise<TryCatchResult<any, any, any>> {
+  return tryCatch(this, ...(defaultResult as [any]));
 };

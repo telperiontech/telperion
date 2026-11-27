@@ -1,7 +1,7 @@
 import { PromiseExecutor } from '@nx/devkit';
 import { FillPackageJsonExecutorSchema } from './schema';
 import { tryCatch } from '@thalesrc/js-utils/promise/try-catch';
-import { ensureDirectory } from '@thalesrc/node-utils';
+import { ensureDirectory } from '@telperion/node-utils';
 import { writeFile } from 'fs/promises';
 import { orderConditions } from '../fill-package-json-v2/export-conditions';
 

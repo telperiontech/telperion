@@ -230,6 +230,21 @@ console.log(user.greet()); // "Hello, John"
 console.log(user.getAge()); // Time since creation
 ```
 
+### Error
+
+#### [Describe Error](https://open-source.telperion.tr/js-utils/error/describe-error)
+Turns any thrown value into a message for logs and wrapped errors. Never throws, always returns a string. Follows `cause` and the inner errors of an `AggregateError`.
+
+```typescript
+import { describeError } from "@telperion/js-utils/error";
+
+describeError(new Error('boom')); // 'boom'
+describeError(new Error('Request failed', { cause: new Error('ECONNRESET') })); // 'Request failed; caused by: ECONNRESET'
+describeError(new AggregateError([new Error('a'), 'b'], 'All failed')); // 'All failed [a; b]'
+describeError('plain'); // 'plain'
+describeError({ code: 'E_FAIL' }); // '{"code":"E_FAIL"}'
+```
+
 ### Function
 
 #### [Debounce](https://open-source.telperion.tr/js-utils/modules/_function_debounce_.html)
@@ -403,6 +418,21 @@ function foo(promise = NEVER) {
 }
 ```
 
+#### [Retry](https://open-source.telperion.tr/js-utils/promise/retry)
+Runs a promise-returning task again when it fails, waiting between attempts, as long as the error qualifies and retries are left. Rejects with the last error.
+
+```typescript
+import { retry } from "@telperion/js-utils/promise";
+import { seconds } from "@telperion/js-utils/time";
+
+// Retry only network failures, waiting 2 s, 4 s and 8 s
+const session = await retry(() => refreshSession(), {
+  count: 3, // retries after the first attempt (default 3)
+  delay: attempt => seconds(2 ** attempt), // ms, or a function of the retry number (1, 2, 3…) and the error (default 0)
+  when: error => error instanceof TypeError, // retry only when true (default: always)
+});
+```
+
 #### [Revert](https://open-source.telperion.tr/js-utils/modules/_promise_revert_.html)
 Exchanges resolve state with rejection of a promise
 
@@ -433,13 +463,32 @@ timeout(1000)
 #### [Try Catch](https://open-source.telperion.tr/js-utils/modules/_promise_try_catch_.html)
 Merges result and error in the same callback
 
+The result is a discriminated union, `[error, null] | [null, result]`, so checking the error narrows the result. A promise that rejects with `null` or `undefined` gets a `NullishRejectionError` in the error slot, so a `null` error always means success.
+
 ```typescript
 import { tryCatch } from "@telperion/js-utils/promise";
 
-const promise = anAsyncCall();
+const [error, result] = await tryCatch(anAsyncCall());
 
-const [error, result] = await tryCatch(promise);
+if (error !== null) {
+  // handle error
+  return;
+}
+
+result; // narrowed to the resolved type
+
+// With an error type that can't be falsy, a truthiness check narrows too
+const [userError, user] = await tryCatch<User, Error>(getUser());
+
+if (userError) throw userError;
+
+user; // User
+
+// With a default result, the result slot is always set
+const [, settings] = await tryCatch(loadSettings(), DEFAULT_SETTINGS);
 ```
+
+With the default `unknown` error type, use `error !== null`: TypeScript can't rule out a falsy error such as `0` or `''`, so `if (error)` doesn't narrow the result.
 
 #### [Try One By One](https://open-source.telperion.tr/js-utils/modules/_promise_try_one_by_one_.html)
 Tries a set of promises one by one with given order. Breaks the call when a promise resolved. Otherwise keeps trying incoming promises until the list is finished.
@@ -536,6 +585,41 @@ Converts years to milliseconds (assumes 365 days per year)
 import { years } from "@telperion/js-utils/time";
 
 const licenseExpiry = Date.now() + years(1); // ~1 year from now
+```
+
+#### [Parse Duration](https://open-source.telperion.tr/js-utils/time/parse-duration)
+Parses a `<number><unit>` string into milliseconds. Units: `ms`, `s`, `m`, `h`, `d`, `w`. The amount must be a non-negative whole number (write `90m`, not `1.5h`); whitespace around the value is ignored. Throws on anything else.
+
+```typescript
+import { parseDuration } from "@telperion/js-utils/time";
+
+parseDuration('15m'); // 900000
+parseDuration('30d'); // 2592000000
+parseDuration('1.5h'); // throws: Invalid duration "1.5h", expected a whole number followed by ms, s, m, h, d or w (e.g. 15m or 30d)
+```
+
+### URL
+
+#### [Safe Relative Path](https://open-source.telperion.tr/js-utils/url/safe-relative-path)
+Guards against open redirects: keeps a value only when it is a same-origin path starting with a single `/`, else returns the fallback. Rejects protocol-relative and absolute URLs, backslashes, control characters (`/	/evil.com`) and their percent-encoded forms (`/%2F%2Fevil.com`, `/%5Cevil.com`, checked through up to 3 rounds of decoding).
+
+```typescript
+import { safeRelativePath } from "@telperion/js-utils/url";
+
+safeRelativePath('/settings?tab=profile'); // '/settings?tab=profile'
+safeRelativePath('//evil.com'); // '/'
+safeRelativePath('/%2F%2Fevil.com'); // '/'
+safeRelativePath(query.next, { fallback: '/home', maxLength: 512 }); // defaults: fallback '/', maxLength 2048
+```
+
+#### [Without Trailing Slash](https://open-source.telperion.tr/js-utils/url/without-trailing-slash)
+Removes all trailing slashes from a URL or path
+
+```typescript
+import { withoutTrailingSlash } from "@telperion/js-utils/url";
+
+withoutTrailingSlash('https://api.example.com/'); // 'https://api.example.com'
+withoutTrailingSlash('/docs///'); // '/docs'
 ```
 
 ### Etc.
