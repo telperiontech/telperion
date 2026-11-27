@@ -1,0 +1,12 @@
+# Applies to builds that use the repo root as a (named) build context, e.g. the
+# "workspace" context of apps/beacon/Dockerfile: never send dependencies,
+# build outputs or caches.
+.git
+.nx
+.angular
+**/node_modules
+**/dist
+**/.tmp
+**/.angular
+**/coverage
+tmp

@@ -1,0 +1,16 @@
+:root {
+  --bcn-bg: light-dark(#fafaf9, #0c0a09);
+  --bcn-fg: light-dark(#1c1917, #e7e5e4);
+  --bcn-muted: light-dark(#78716c, #a8a29e);
+  --bcn-border: light-dark(#e7e5e4, #292524);
+  --bcn-accent: #d97706;
+
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  background: var(--bcn-bg);
+  color: var(--bcn-fg);
+}
+
+body {
+  margin: 0;
+}

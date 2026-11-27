@@ -1,0 +1,117 @@
+name: Beacon / Publish
+
+# Runs when a tag like beacon-v1.2.3 is pushed, including one created by
+# `gh release create beacon-v1.2.3 --title ... --notes ...`.
+on:
+  push:
+    tags:
+      - 'beacon-v[0-9]+.[0-9]+.[0-9]+'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: telperiontech/beacon
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: apps/beacon/Dockerfile
+          failure-threshold: error
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # The repo root is the "workspace" build context: the UI stage compiles
+      # the workspace libraries it imports (@telperion/ng-pack, @telperion/ng-ui).
+      - name: Run unit tests (UI build, go vet, go test)
+        run: docker build --build-context workspace=. --target test --progress plain apps/beacon
+
+  build-and-publish:
+    needs: [unit-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set package version env variable
+        run: echo "PACKAGE_VERSION=${GITHUB_REF_NAME#beacon-v}" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.PACKAGE_VERSION }}
+          labels: |
+            org.opencontainers.image.title=Telperion Beacon
+            org.opencontainers.image.description=Self-hosted panel for the release lifecycle of packages across repos: tagged, built, published, deployed
+            org.opencontainers.image.vendor=Telperion
+            org.opencontainers.image.version=${{ env.PACKAGE_VERSION }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}/tree/main/apps/beacon
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}/tree/main/apps/beacon
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
+          annotations: |
+            org.opencontainers.image.title=Telperion Beacon
+            org.opencontainers.image.description=Self-hosted panel for the release lifecycle of packages across repos: tagged, built, published, deployed
+            org.opencontainers.image.vendor=Telperion
+            org.opencontainers.image.version=${{ env.PACKAGE_VERSION }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}/tree/main/apps/beacon
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}/tree/main/apps/beacon
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/beacon
+          file: apps/beacon/Dockerfile
+          build-contexts: |
+            workspace=.
+          target: runtime
+          push: true
+          build-args: |
+            VERSION=${{ env.PACKAGE_VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=beacon
+          cache-to: type=gha,mode=max,scope=beacon
+
+      - name: Create release summary
+        run: |
+          {
+            echo "## 🐳 Published Beacon"
+            echo ""
+            echo "**Version:** \`${PACKAGE_VERSION}\`"
+            echo "**Platforms:** \`linux/amd64\`, \`linux/arm64\`"
+            echo ""
+            echo "- \`${REGISTRY}/${IMAGE_NAME}:${PACKAGE_VERSION}\`"
+            echo "- \`${REGISTRY}/${IMAGE_NAME}:latest\`"
+          } >> "$GITHUB_STEP_SUMMARY"

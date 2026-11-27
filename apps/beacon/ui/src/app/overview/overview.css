@@ -1,0 +1,13 @@
+.empty {
+  max-width: 40rem;
+  margin: 4rem auto;
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.25rem;
+}
+
+p {
+  color: var(--bcn-muted);
+}
