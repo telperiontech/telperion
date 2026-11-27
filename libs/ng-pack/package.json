@@ -43,7 +43,7 @@
   "dependencies": {
     "@telperion/extra-ts-types": "^1.5.0",
     "@telperion/js-utils": "^4.0.0",
-    "@telperion/reactive-storage": "^1.3.2",
+    "@telperion/reactive-storage": "^1.3.3",
     "@telperion/rx-utils": "^1.6.0"
   },
   "devDependencies": {

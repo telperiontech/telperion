@@ -21,7 +21,7 @@
     "@angular/core": "*",
     "@angular/forms": "*",
     "rxjs": "*",
-    "@telperion/ng-pack": "^4.2.0"
+    "@telperion/ng-pack": "^4.2.1"
   },
   "devDependencies": {
     "@angular/cli": "*"

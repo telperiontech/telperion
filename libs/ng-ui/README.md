@@ -8,7 +8,7 @@ Angular UI element library organized as ng-packagr secondary entry points.
 pnpm add @telperion/ng-ui @telperion/ng-pack
 ```
 
-`@telperion/ng-pack` (^4.2.0) is a peer dependency, so the app and `ng-ui` share one copy of
+`@telperion/ng-pack` (^4.2.1) is a peer dependency, so the app and `ng-ui` share one copy of
 its injection tokens and directives. npm 7+ and pnpm install it automatically when it is missing.
 
 ## Entry points
