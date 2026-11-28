@@ -20,6 +20,7 @@ type File struct {
 	Targets  map[string]TargetFile `yaml:"targets,omitempty"`
 	CDEvents *CDEventsFile         `yaml:"cdevents,omitempty"`
 	Projects []ProjectFile         `yaml:"projects"`
+	Recipes  []RecipeFile          `yaml:"recipes,omitempty"`
 }
 
 // GitHubFile is the GitHub App Beacon reads (and releases) through.

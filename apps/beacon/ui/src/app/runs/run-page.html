@@ -7,19 +7,53 @@
     <span class="text-sm text-neutral-500" [title]="r.created | date: 'medium'">
       started {{ r.created | age: now() }} ago by {{ r.actor }} ({{ r.source }})
     </span>
-    @if (r.state === 'running') {
-      <button
-        type="button"
-        class="ml-auto rounded-md border border-neutral-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-neutral-700"
-        [disabled]="cancelling() === 'busy'"
-        (click)="cancels.next()"
-      >
-        Cancel run
-      </button>
-    }
+    <span class="ml-auto flex gap-2">
+      @if (r.plan) {
+        <a [routerLink]="['/plans/new']" [queryParams]="{ run: r.id }"
+          class="rounded-md border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-700">Edit as a new plan</a>
+      }
+      @if (r.state === 'running') {
+        <button
+          type="button"
+          class="rounded-md border border-neutral-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-neutral-700"
+          [disabled]="cancelling() === 'busy'"
+          (click)="cancels.next()"
+        >
+          Cancel run
+        </button>
+      } @else if (r.state === 'failed' || r.state === 'cancelled') {
+        <button
+          type="button"
+          class="rounded-md bg-primary px-3 py-1 text-sm font-medium text-white disabled:opacity-50"
+          title="Done steps stay done; failed, skipped and cancelled ones start again with the same versions"
+          [disabled]="resuming() === 'busy'"
+          (click)="resumes.next()"
+        >
+          Resume
+        </button>
+      }
+    </span>
   </header>
+  @if (r.recipe || r.failFast) {
+    <p class="mb-3 text-sm text-neutral-500">
+      @if (r.recipe) {
+        From the recipe <span class="font-mono">{{ r.recipe }}</span>.
+      }
+      @if (r.failFast) {
+        Fail-fast: a failed step cancels the steps that have not started.
+      }
+    </p>
+  }
   @if (cancelling() === 'failed') {
     <p class="mb-3 text-sm text-danger" role="alert">The run could not be cancelled.</p>
+  }
+  @if (resuming() === 'failed') {
+    <p class="mb-3 text-sm text-danger" role="alert">The run could not be resumed.</p>
+  }
+  @if (r.steps.length > 1) {
+    <div class="mb-4 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <bcn-plan-graph [steps]="r.steps" />
+    </div>
   }
 
   <ol class="flex flex-col gap-3">
@@ -27,14 +61,19 @@
       <li class="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         <div class="flex flex-wrap items-center gap-3">
           <bcn-state-badge [state]="s.state" />
+          @if (r.steps.length > 1) {
+            <span class="font-mono text-xs text-neutral-500">{{ s.key }}</span>
+          }
           <span class="font-medium">{{ s.type }}</span>
           <a [routerLink]="['/packages', s.package]" class="hover:underline">{{ s.package }}</a>
-          <span class="font-mono">
-            @if (s.from) {
-              {{ s.from }} →
-            }
-            {{ s.version }}
-          </span>
+          @if (s.version) {
+            <span class="font-mono">
+              @if (s.from) {
+                {{ s.from }} →
+              }
+              {{ s.version }}
+            </span>
+          }
           @if (s.target) {
             <span class="text-neutral-500">on {{ s.target }}</span>
           }
@@ -61,6 +100,23 @@
           }
           @if (s.until) {
             <dt>done when</dt><dd>{{ s.until }}</dd>
+          }
+          @if (s.needs?.length) {
+            <dt>after</dt><dd class="font-mono">{{ s.needs?.join(', ') }}</dd>
+          }
+          @if (s.file) {
+            <dt>file</dt><dd class="font-mono">{{ s.file }} ({{ s.via === 'pr' ? 'pull request' : 'commit' }})</dd>
+          }
+          @for (d of s.deps ?? []; track d.package) {
+            @if (d.to) {
+              <dt>range</dt><dd class="font-mono">{{ d.name }} {{ d.from }} → {{ d.to }}</dd>
+            }
+          }
+          @if (s.pr) {
+            <dt>pull request</dt><dd><a [href]="s.url" target="_blank" rel="noopener" class="hover:underline">#{{ s.pr }}</a></dd>
+          }
+          @if (s.attempt) {
+            <dt>attempt</dt><dd>{{ s.attempt + 1 }}</dd>
           }
           @if (s.fired) {
             <dt>fired</dt><dd [title]="s.fired | date: 'medium'">{{ s.fired | age: now() }} ago</dd>

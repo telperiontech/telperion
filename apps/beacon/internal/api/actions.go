@@ -17,16 +17,18 @@ import (
 type Runner interface {
 	Kick()
 	Cancel(ctx context.Context, run int64) error
+	Resume(ctx context.Context, run int64) error
 }
 
-// startBody is POST /api/actions: the action and what the user confirmed on
-// its preview.
+// startBody is POST /api/actions: the action, recipe or plan, and what the
+// user confirmed on its preview.
 type startBody struct {
 	plan.Request
 	Confirm plan.Confirm `json:"confirm"`
 }
 
-// preview answers what an action would do; nothing is written.
+// preview answers what an action, recipe or plan would do; nothing is
+// written.
 func (s server) preview(w http.ResponseWriter, r *http.Request) {
 	var req plan.Request
 	if !readJSON(w, r, &req) {

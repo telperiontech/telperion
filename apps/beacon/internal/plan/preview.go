@@ -10,7 +10,6 @@ import (
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter"
 	"github.com/telperiontech/telperion/apps/beacon/internal/catalog"
 	"github.com/telperiontech/telperion/apps/beacon/internal/model"
-	"github.com/telperiontech/telperion/apps/beacon/internal/observe"
 	"github.com/telperiontech/telperion/apps/beacon/internal/semver"
 	"github.com/telperiontech/telperion/apps/beacon/internal/store"
 )
@@ -20,10 +19,13 @@ import (
 type Preview struct {
 	Request  Request       `json:"request"`
 	Title    string        `json:"title"`
-	Steps    []StepPreview `json:"steps"`
-	Errors   []string      `json:"errors"`   // the plan cannot start
-	Warnings []string      `json:"warnings"` // it can, but look first
-	Major    bool          `json:"major"`    // a major version change: confirmed separately
+	Recipe   string        `json:"recipe,omitempty"`
+	FailFast bool          `json:"failFast,omitempty"`
+	Plan     *model.Plan   `json:"plan,omitempty"` // the plan previewed (nil when it could not be read)
+	Steps    []StepPreview `json:"steps"`          // in run order: each after its needs
+	Errors   []string      `json:"errors"`         // the plan cannot start
+	Warnings []string      `json:"warnings"`       // it can, but look first
+	Major    bool          `json:"major"`          // a major version change: confirmed separately
 	// Fingerprint changes whenever anything the user confirms changes.
 	Fingerprint string `json:"fingerprint"`
 }
@@ -39,12 +41,15 @@ type StepPreview struct {
 
 // planner reads the world once for a preview.
 type planner struct {
-	env     Env
-	cat     catalog.Catalog
-	plat    Platform
-	states  map[string]*store.PackageState
-	active  []model.Run
-	preview *Preview
+	env        Env
+	cat        catalog.Catalog
+	plat       Platform
+	states     map[string]*store.PackageState
+	active     []model.Run
+	unreleased map[string]model.Unreleased
+	refs       map[string]adapter.Refs // by repo URL
+	versions   map[string]string       // package → the version a release step of the plan reaches
+	preview    *Preview
 }
 
 // Preview computes what req would do. The error is for a failure to read the
@@ -66,7 +71,7 @@ func (e Env) planner(ctx context.Context, req Request) (*planner, error) {
 	if err != nil {
 		return nil, err
 	}
-	states, err := e.Store.States(ctx, req.Package)
+	states, err := e.Store.States(ctx, "")
 	if err != nil {
 		return nil, err
 	}
@@ -74,24 +79,73 @@ func (e Env) planner(ctx context.Context, req Request) (*planner, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &planner{env: e, cat: c, plat: plat, states: states, active: active,
+	unreleased, err := e.Store.Unreleased(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &planner{env: e, cat: c, plat: plat, states: states, active: active, unreleased: unreleased,
+		refs: map[string]adapter.Refs{}, versions: map[string]string{},
 		preview: &Preview{Request: req, Errors: []string{}, Warnings: []string{}, Steps: []StepPreview{}}}, nil
 }
 
 func (pl *planner) run(ctx context.Context, req Request) Preview {
-	p, ok := pl.cat.Package(req.Package)
+	out := pl.preview
+	p, recipe, err := req.plan(pl.cat)
+	if err != nil {
+		pl.fail("%v", err)
+		return pl.finish()
+	}
+	out.Plan, out.Recipe, out.FailFast = &p, recipe, p.FailFast
+	if req.action() {
+		pl.action(ctx, p.Steps[0])
+		return pl.finish()
+	}
+	out.Title = planTitle(p)
+	if errs := pl.cat.CheckPlan(p); len(errs) > 0 {
+		out.Errors = append(out.Errors, errs...)
+		return pl.finish()
+	}
+	ordered, _ := p.Order()
+	for _, ps := range ordered {
+		pl.step(ctx, ps)
+	}
+	return pl.finish()
+}
+
+// action previews a one-click action, with the checks CheckPlan does for
+// plans (an action may also be a re-run, which plans do not have).
+func (pl *planner) action(ctx context.Context, ps model.PlanStep) {
+	p, ok := pl.cat.Package(ps.Package)
 	switch {
 	case !ok:
-		pl.fail("unknown package %q", req.Package)
-	case req.Kind == model.StepRelease:
-		pl.release(ctx, p, req)
-	case req.Kind == model.StepDeploy:
-		pl.deploy(p, req)
-	case req.Kind == model.StepRerun:
-		pl.rerun(p, req)
+		pl.fail("unknown package %q", ps.Package)
+	case ps.Type == model.StepRelease:
+		pl.release(ctx, p, ps)
+	case ps.Type == model.StepDeploy:
+		pl.deploy(p, ps)
+	case ps.Type == model.StepRerun:
+		pl.rerun(p, ps)
 	default:
-		pl.fail("unknown action %q (release, deploy or rerun)", req.Kind)
+		pl.fail("unknown action %q (release, deploy or rerun)", ps.Type)
 	}
+	if len(pl.preview.Steps) == 1 {
+		pl.preview.Title = actionTitle(pl.preview.Steps[0].Step)
+	}
+}
+
+func (pl *planner) step(ctx context.Context, ps model.PlanStep) {
+	p, _ := pl.cat.Package(ps.Package) // CheckPlan found it
+	switch ps.Type {
+	case model.StepRelease:
+		pl.release(ctx, p, ps)
+	case model.StepUpdateDeps:
+		pl.updateDeps(ctx, p, ps)
+	case model.StepDeploy:
+		pl.deploy(p, ps)
+	}
+}
+
+func (pl *planner) finish() Preview {
 	out := pl.preview
 	for _, s := range out.Steps {
 		out.Major = out.Major || s.Major
@@ -108,131 +162,26 @@ func (pl *planner) warn(format string, args ...any) {
 	pl.preview.Warnings = append(pl.preview.Warnings, fmt.Sprintf(format, args...))
 }
 
-func (pl *planner) add(sp StepPreview) {
-	sp.State = model.StepReady
+// add appends a step: waiting when it has needs, ready otherwise.
+func (pl *planner) add(ps model.PlanStep, sp StepPreview) {
+	sp.Key, sp.Needs, sp.State = ps.Key, ps.Needs, model.StepReady
+	if len(ps.Needs) > 0 {
+		sp.State = model.StepWaiting
+	}
 	sp.Waits = pl.waits(sp.Step)
 	pl.preview.Steps = append(pl.preview.Steps, sp)
 }
 
-func (pl *planner) release(ctx context.Context, p catalog.Package, req Request) {
-	trig, ok := pl.plat.Trigger(p)
-	if !ok {
-		pl.fail("%s has no release trigger (set release: in the config)", p.Name)
-		return
+// repoRefs reads a repo's refs once per preview.
+func (pl *planner) repoRefs(ctx context.Context, repo catalog.Repo) (adapter.Refs, error) {
+	if r, ok := pl.refs[repo.URL]; ok {
+		return r, nil
 	}
-	if req.Version == "" && !semver.Bump(req.Bump).Valid() {
-		pl.fail("choose major, minor or patch")
-		return
+	r, err := pl.plat.Refs(ctx, repo)
+	if err == nil {
+		pl.refs[repo.URL] = r
 	}
-	refs, err := pl.plat.Refs(ctx, p.Repo)
-	if err != nil {
-		pl.fail("cannot read the refs of %s: %v", p.Repo.URL, err)
-		return
-	}
-	m, err := catalog.NewTagMatcher(p.Tag, p.Name)
-	if err != nil {
-		pl.fail("tag pattern: %v", err)
-		return
-	}
-	latestTag := observe.LatestTag(refs, m)
-	latest, _ := m.Version(latestTag)
-	version := req.Version
-	if version == "" {
-		version, _ = semver.Next(latest, semver.Bump(req.Bump))
-	} else if _, ok := semver.Parse(version); !ok {
-		pl.fail("%q is not a semantic version", version)
-		return
-	}
-	branch, commit, ok := refs.Head(p.Branch)
-	if !ok {
-		pl.fail("the branch %q of %s was not found", branch, p.Repo.URL)
-		return
-	}
-	tag := m.Tag(version)
-	_, exists := refs.Tag(tag)
-	sp := StepPreview{Step: model.Step{
-		Key: p.Name, Type: model.StepRelease, Package: p.Name, Bump: req.Bump, Version: version, From: latest,
-		Tag: tag, Until: lastStage(p), Branch: branch, Commit: commit, Adopted: exists,
-	}}
-	if req.Version != "" {
-		sp.Bump = string(semver.Kind(latest, version))
-	}
-	switch {
-	case exists:
-		sp.Action = "follow the existing tag " + tag + " (nothing is created)"
-		pl.warn("the tag %s exists already: Beacon follows its chain instead of releasing again", tag)
-	default:
-		sp.Action = trig.Describe(adapter.ReleaseRequest{Package: p, Version: version, Tag: tag, Bump: sp.Bump, Branch: branch, Commit: commit})
-		sp.Major = semver.Kind(latest, version) == semver.Major
-		if latest != "" && semver.CompareStrings(version, latest) <= 0 {
-			pl.warn("%s is not newer than the latest release %s", version, latest)
-		}
-	}
-	if u, err := pl.env.Store.Unreleased(ctx); err == nil {
-		if n, ok := u[p.Name]; ok && n.Tag == latestTag {
-			sp.Unreleased = &n.Commits
-			if n.Commits == 0 && !exists {
-				pl.warn("%s has no changes since %s", p.Name, latestTag)
-			}
-		}
-	}
-	pl.preview.Title = fmt.Sprintf("release %s %s", p.Name, version)
-	if sp.Bump != "" {
-		pl.preview.Title += " (" + sp.Bump + ")"
-	}
-	pl.add(sp)
-}
-
-func (pl *planner) deploy(p catalog.Package, req Request) {
-	target, ok := pl.cat.Target(req.Target)
-	if _, _, can := pl.plat.Deployer(p, req.Target); !can {
-		pl.fail("%s cannot be deployed to %q (only Coolify targets of the package can)", p.Name, req.Target)
-		return
-	}
-	if _, valid := semver.Parse(req.Version); !valid {
-		pl.fail("%q is not a semantic version", req.Version)
-		return
-	}
-	cells := pl.cells(p, req.Version)
-	running := pl.running(p, req.Target)
-	sp := StepPreview{Step: model.Step{
-		Key: p.Name + "@" + req.Target, Type: model.StepDeploy, Package: p.Name, Version: req.Version, From: running,
-		Target: req.Target, Until: model.Deployed, Adopted: running == req.Version,
-	}}
-	sp.Action = fmt.Sprintf("deploy %s %s on %s", p.Name, req.Version, req.Target)
-	if running != "" {
-		sp.Action += " (runs " + running + " now)"
-	}
-	if sp.Adopted {
-		pl.warn("%s runs %s already: nothing is deployed", req.Target, req.Version)
-	}
-	if c, has := cells[model.Published]; has && c.State != model.OK {
-		pl.warn("%s %s is not published (its published stage is %s)", p.Name, req.Version, c.State)
-	}
-	if ok && target.Limit < 1 {
-		pl.fail("target %s has no deploy slots", req.Target)
-	}
-	pl.preview.Title = fmt.Sprintf("deploy %s %s on %s", p.Name, req.Version, req.Target)
-	pl.add(sp)
-}
-
-func (pl *planner) rerun(p catalog.Package, req Request) {
-	if _, ok := pl.plat.Rerunner(p); !ok {
-		pl.fail("%s's CI cannot be re-run (needs GitHub Actions and the GitHub App)", p.Name)
-		return
-	}
-	cells := pl.cells(p, req.Version)
-	if c := cells[model.Built]; c.State != model.Failed {
-		pl.fail("the build of %s %s is not failed (it is %s)", p.Name, req.Version, c.State)
-		return
-	}
-	m, _ := catalog.NewTagMatcher(p.Tag, p.Name)
-	sp := StepPreview{Step: model.Step{
-		Key: p.Name, Type: model.StepRerun, Package: p.Name, Version: req.Version, Tag: m.Tag(req.Version), Until: lastStage(p),
-	}}
-	sp.Action = fmt.Sprintf("re-run the failed jobs of %s for %s", p.CI.GitHubActions.Workflow, sp.Tag)
-	pl.preview.Title = fmt.Sprintf("re-run the build of %s %s", p.Name, req.Version)
-	pl.add(sp)
+	return r, err
 }
 
 // cells are the package's cells for one version (empty if unknown).
@@ -259,10 +208,7 @@ func (pl *planner) waits(st model.Step) []string {
 	var out []string
 	for _, r := range pl.active {
 		for _, o := range r.Steps {
-			if o.State.Terminal() {
-				continue
-			}
-			if o.Package == st.Package {
+			if !o.State.Terminal() && o.Package == st.Package {
 				out = append(out, fmt.Sprintf("run #%d has an active step on %s", r.ID, st.Package))
 			}
 		}
@@ -303,17 +249,41 @@ func versionCells(p catalog.Package, ps *store.PackageState, version string) map
 	return map[model.Stage]model.Cell{}
 }
 
+// latestPublished is the highest version of a package that is published (or
+// tagged, for a package without an artifact): what a dependency range or a
+// deploy uses when the plan does not release the package.
+func latestPublished(p catalog.Package, ps *store.PackageState) string {
+	if ps == nil {
+		return ""
+	}
+	stage := model.Published
+	if p.Artifact == nil {
+		stage = model.Tagged
+	}
+	var versions []string
+	for _, r := range ps.Rows {
+		if r.Stage == stage && r.State == model.OK {
+			versions = append(versions, r.Version)
+		}
+	}
+	return semver.Latest(versions)
+}
+
 func fingerprint(p *Preview) string {
 	type key struct {
+		Key                                         string
 		Type                                        model.StepType
 		Package, Version, Tag, Commit, Target, From string
 		Adopted                                     bool
+		Needs                                       []string
+		Deps                                        []model.DepChange
+		Via                                         model.Via
 	}
 	keys := make([]key, 0, len(p.Steps))
 	for _, s := range p.Steps {
-		keys = append(keys, key{s.Type, s.Package, s.Version, s.Tag, s.Commit, s.Target, s.From, s.Adopted})
+		keys = append(keys, key{s.Key, s.Type, s.Package, s.Version, s.Tag, s.Commit, s.Target, s.From, s.Adopted, s.Needs, s.Deps, s.Via})
 	}
-	b, _ := json.Marshal([]any{keys, p.Errors})
+	b, _ := json.Marshal([]any{keys, p.Errors, p.FailFast})
 	sum := sha256.Sum256(b)
 	return hex.EncodeToString(sum[:12])
 }

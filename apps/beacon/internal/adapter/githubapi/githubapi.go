@@ -28,6 +28,9 @@ type Call struct {
 	Path   string // after /repos/{owner}/{name}, e.g. /releases
 	Body   any    // JSON-encoded when set
 	Write  bool   // use a write token
+	// PullRequests: use a token that may also open pull requests (it can
+	// read and write them); implies Write.
+	PullRequests bool
 	// ETagKey makes the request conditional (platform.ErrNotModified when
 	// nothing changed); it scopes the remembered ETag.
 	ETagKey string
@@ -68,7 +71,10 @@ func (a API) Do(ctx context.Context, c Call, out any) error {
 }
 
 func (a API) token(ctx context.Context, c Call) (string, error) {
-	if c.Write {
+	switch {
+	case c.PullRequests:
+		return a.Tokens.PullRequestToken(ctx, c.Repo)
+	case c.Write:
 		return a.Tokens.WriteToken(ctx, c.Repo)
 	}
 	return a.Tokens.Token(ctx, c.Repo)

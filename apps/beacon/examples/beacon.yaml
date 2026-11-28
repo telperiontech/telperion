@@ -60,3 +60,18 @@ projects:
       beacon:
         path: apps/beacon
         artifact: { oci: { image: ghcr.io/telperiontech/beacon, platforms: [linux/amd64, linux/arm64] } }
+
+# Saved plans (the Plans page previews and starts them). A step runs once the
+# steps it needs are done. update-deps sets ^<version> in the package's
+# package.json; via: pr opens a pull request and waits for its merge (the
+# App then also needs Pull requests: read and write).
+recipes:
+  - name: utils-wave
+    fail-fast: true
+    steps:
+      js-utils: { release: js-utils, bump: minor }
+      rx-utils: { release: rx-utils, bump: patch }
+      ng-pack-deps:
+        update-deps: { package: ng-pack, deps: [js-utils, rx-utils], via: pr }
+        needs: [js-utils, rx-utils]
+      ng-pack: { release: ng-pack, bump: minor, needs: [ng-pack-deps] }

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/telperiontech/telperion/apps/beacon/internal/catalog"
+	"github.com/telperiontech/telperion/apps/beacon/internal/model"
 )
 
 // Change is one difference between the stored catalog and the file.
@@ -40,6 +41,8 @@ func Diff(cur, next catalog.Catalog) []Change {
 		byName(next.Packages, func(p catalog.Package) string { return p.Name }))...)
 	out = append(out, diffNamed("cdevents source", byName(cur.CDEvents, func(s catalog.CDEventsSource) string { return s.Name }),
 		byName(next.CDEvents, func(s catalog.CDEventsSource) string { return s.Name }))...)
+	out = append(out, diffNamed("recipe", byName(managed(cur.Recipes), func(p model.Plan) string { return p.Name }),
+		byName(next.Recipes, func(p model.Plan) string { return p.Name }))...)
 	return out
 }
 
@@ -101,4 +104,16 @@ func merge(a, b map[string]any) map[string]any {
 	}
 	maps.Copy(m, b)
 	return m
+}
+
+// managed leaves out the recipes saved from the UI: applying the file never
+// touches them (a file recipe of the same name replaces one, though).
+func managed(plans []model.Plan) []model.Plan {
+	var out []model.Plan
+	for _, p := range plans {
+		if p.Managed {
+			out = append(out, p)
+		}
+	}
+	return out
 }

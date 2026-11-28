@@ -13,6 +13,7 @@ export class StateBadge {
     done: 'bg-success/15 text-success border-success/40',
     running: 'bg-warning/15 text-warning border-warning/40 animate-pulse',
     triggering: 'bg-warning/15 text-warning border-warning/40 animate-pulse',
+    paused: 'bg-primary/10 text-primary border-primary/40',
     failed: 'bg-danger/15 text-danger border-danger/40',
     skipped: 'bg-danger/10 text-danger border-danger/30',
     blocked: 'bg-neutral-100 text-neutral-600 border-neutral-300 dark:bg-neutral-800 dark:text-neutral-300',

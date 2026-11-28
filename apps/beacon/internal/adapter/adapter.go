@@ -122,6 +122,8 @@ type Deployer interface {
 type GitHubTokens interface {
 	Token(ctx context.Context, repo string) (string, error)
 	WriteToken(ctx context.Context, repo string) (string, error)
+	// PullRequestToken may also push branches and open pull requests.
+	PullRequestToken(ctx context.Context, repo string) (string, error)
 }
 
 // ErrNoApp: a GitHub write without a GitHub App.
@@ -135,3 +137,6 @@ func (Anonymous) Token(context.Context, string) (string, error) { return "", nil
 
 // WriteToken fails: anonymous access cannot write.
 func (Anonymous) WriteToken(context.Context, string) (string, error) { return "", ErrNoApp }
+
+// PullRequestToken fails: anonymous access cannot write.
+func (Anonymous) PullRequestToken(context.Context, string) (string, error) { return "", ErrNoApp }

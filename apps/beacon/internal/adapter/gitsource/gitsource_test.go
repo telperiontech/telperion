@@ -51,8 +51,9 @@ func TestParseAdvertisement(t *testing.T) {
 
 type fixedToken string
 
-func (f fixedToken) Token(context.Context, string) (string, error)      { return string(f), nil }
-func (f fixedToken) WriteToken(context.Context, string) (string, error) { return string(f), nil }
+func (f fixedToken) Token(context.Context, string) (string, error)            { return string(f), nil }
+func (f fixedToken) WriteToken(context.Context, string) (string, error)       { return string(f), nil }
+func (f fixedToken) PullRequestToken(context.Context, string) (string, error) { return string(f), nil }
 
 func TestRefsUsesAppToken(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

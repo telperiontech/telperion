@@ -23,6 +23,7 @@ targets:
 projects:
   - name: telperion
     repo: telperiontech/telperion
+    release: { github-release: { notes: generate } }
     ci: { github-actions: { workflow: "{package}.publish.yml" } }
     packages:
 `, keyFile, base, base, base)
@@ -53,5 +54,15 @@ projects:
 				p.name, base, p.name)
 		}
 	}
+	b.WriteString(`
+recipes:
+  - name: libs-wave
+    steps:
+      lib-01: { release: lib-01, bump: minor }
+      lib-02-deps: { update-deps: { package: lib-02, deps: [lib-01], via: pr }, needs: [lib-01] }
+      lib-02: { release: lib-02, bump: patch, needs: [lib-02-deps] }
+      lib-03: { release: lib-03, bump: patch, needs: [lib-01] }
+      svc-05-live: { deploy: svc-05, target: coolify-main }
+`)
 	return b.String()
 }

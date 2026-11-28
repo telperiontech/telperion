@@ -17,8 +17,9 @@ import (
 
 type tokens struct{}
 
-func (tokens) Token(context.Context, string) (string, error)      { return "read", nil }
-func (tokens) WriteToken(context.Context, string) (string, error) { return "write", nil }
+func (tokens) Token(context.Context, string) (string, error)            { return "read", nil }
+func (tokens) WriteToken(context.Context, string) (string, error)       { return "write", nil }
+func (tokens) PullRequestToken(context.Context, string) (string, error) { return "pr", nil }
 
 func TestFire(t *testing.T) {
 	var created map[string]any

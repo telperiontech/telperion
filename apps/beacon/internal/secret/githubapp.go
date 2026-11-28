@@ -30,6 +30,8 @@ import (
 var (
 	ReadPermissions  = map[string]string{"metadata": "read", "contents": "read", "actions": "read"}
 	WritePermissions = map[string]string{"metadata": "read", "contents": "write", "actions": "write"}
+	// PullRequestPermissions: update-deps with via: pr (branch, commit, PR).
+	PullRequestPermissions = map[string]string{"metadata": "read", "contents": "write", "pull_requests": "write"}
 )
 
 // GitHubApp mints installation tokens for repos: a JWT signed with the App's
@@ -50,7 +52,16 @@ type GitHubApp struct {
 type tokenKey struct {
 	install int64
 	repo    string // "" for a read token
+	kind    tokenKind
 }
+
+type tokenKind int
+
+const (
+	readToken tokenKind = iota
+	writeToken
+	prToken
+)
 
 type token struct {
 	value   string
@@ -95,16 +106,22 @@ func ParseRSAKey(b []byte) (*rsa.PrivateKey, error) {
 
 // Token returns a read-only installation token for the repo "owner/name".
 func (a *GitHubApp) Token(ctx context.Context, repo string) (string, error) {
-	return a.mint(ctx, repo, false)
+	return a.mint(ctx, repo, readToken)
 }
 
 // WriteToken returns a token that may write to the repo "owner/name" (and
 // only to it).
 func (a *GitHubApp) WriteToken(ctx context.Context, repo string) (string, error) {
-	return a.mint(ctx, repo, true)
+	return a.mint(ctx, repo, writeToken)
 }
 
-func (a *GitHubApp) mint(ctx context.Context, repo string, write bool) (string, error) {
+// PullRequestToken returns a token that may push a branch and open pull
+// requests in the repo "owner/name" (and only in it).
+func (a *GitHubApp) PullRequestToken(ctx context.Context, repo string) (string, error) {
+	return a.mint(ctx, repo, prToken)
+}
+
+func (a *GitHubApp) mint(ctx context.Context, repo string, kind tokenKind) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	id, ok := a.installs[repo]
@@ -119,9 +136,13 @@ func (a *GitHubApp) mint(ctx context.Context, repo string, write bool) (string, 
 		a.installs[repo] = id
 	}
 	key, req := tokenKey{install: id}, map[string]any{"permissions": ReadPermissions}
-	if write {
+	if kind != readToken {
 		_, name, _ := strings.Cut(repo, "/")
-		key.repo, req = repo, map[string]any{"permissions": WritePermissions, "repositories": []string{name}}
+		perms := WritePermissions
+		if kind == prToken {
+			perms = PullRequestPermissions
+		}
+		key.repo, key.kind, req = repo, kind, map[string]any{"permissions": perms, "repositories": []string{name}}
 	}
 	if t, ok := a.tokens[key]; ok && a.now().Before(t.expires.Add(-5*time.Minute)) {
 		return t.value, nil
@@ -136,8 +157,11 @@ func (a *GitHubApp) mint(ctx context.Context, repo string, write bool) (string, 
 		if platform.IsStatus(err, 404) {
 			delete(a.installs, repo) // uninstalled: look it up again next time
 		}
-		if write && platform.IsStatus(err, 422) {
+		switch {
+		case kind == writeToken && platform.IsStatus(err, 422):
 			return "", fmt.Errorf("mint a write token for %s (does the App have Contents and Actions: read and write?): %w", repo, err)
+		case kind == prToken && platform.IsStatus(err, 422):
+			return "", fmt.Errorf("mint a pull request token for %s (does the App have Contents and Pull requests: read and write?): %w", repo, err)
 		}
 		return "", fmt.Errorf("mint an installation token for %s: %w", repo, err)
 	}

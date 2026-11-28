@@ -13,7 +13,7 @@ import (
 // Confirm is what the user agreed to on the preview.
 type Confirm struct {
 	Fingerprint string `json:"fingerprint"`
-	Major       bool   `json:"major"` // the separate tick for a major version change
+	Major       bool   `json:"major"` // the separate tick for the major version changes
 }
 
 // Start computes the preview again and, if it is what the user confirmed,
@@ -32,7 +32,10 @@ func (e Env) Start(ctx context.Context, req Request, c Confirm, kick func()) (in
 		return 0, p, ErrConfirm
 	}
 	a := audit.From(ctx)
-	run := model.Run{Title: p.Title, Source: a.Source, Actor: a.Who}
+	run := model.Run{Title: p.Title, Source: a.Source, Actor: a.Who, Recipe: p.Recipe, FailFast: p.FailFast}
+	if !req.action() {
+		run.Plan = p.Plan
+	}
 	pkgs := make([]string, 0, len(p.Steps))
 	for _, s := range p.Steps {
 		st := s.Step

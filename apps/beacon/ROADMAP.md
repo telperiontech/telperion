@@ -64,6 +64,20 @@ the Coolify deploy endpoints are unverified against a live instance.
   restart safety via stored trigger intents. DAG view in the UI.
 - Preview screen with every version change, majors confirmed separately.
 
+Built as (0.3): plans and recipes share one structure (`model.Plan`); actions, recipes and ad-hoc
+plans go through the same preview, start and runner. `catalog.CheckPlan` validates recipes at apply
+and plans at preview (cycles, unknown packages and targets, a step using a version released in the
+plan without needing it). The runner moves steps in rounds and fires the release steps of one repo
+and branch together (one repo lock, one commit). `update-deps` edits `package.json` ranges in place
+(`internal/manifest`) through the GitHub contents API (`adapter/githubcontents`); `via: pr` mints a
+token with Pull requests only for that step, and the paused step has no stall timeout. Resume keeps
+done steps, retries the others with their stored versions and re-runs the failed build of an
+adopted tag. Recipes saved in the UI are unmanaged rows; the file wins on a name clash. The UI has
+the Plans page, the template-driven plan builder, YAML export and an SVG DAG view. Left open: the
+generic `update-deps` form (a version string in any file, e.g. an image tag in a compose file in
+another repo); a `github-dispatch` batch is one dispatch per package, not one dispatch with a list;
+majors are confirmed with one tick that names them all, not one tick each.
+
 1.0 when the owner's real chains (utility libraries → ng-pack/ng-ui → services → deploys) run through
 Beacon.
 

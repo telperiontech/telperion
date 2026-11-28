@@ -1,12 +1,14 @@
 // Package plan runs Beacon's writes. Every write is a step of a plan run: a
-// one-click action (release, deploy, re-run) is a one-step plan, so previews,
-// locks, limits, audit and the step state machine are one code path. Phase 3
-// adds multi-step plans (needs:) on the same machinery.
+// one-click action (release, deploy, re-run) is a one-step plan, and recipes
+// and ad-hoc plans are DAGs of release, update-deps and deploy steps ordered
+// by needs. Previews, locks, limits, audit and the step state machine are one
+// code path for all of them.
 //
 // A step is done when the chain says so, not when it was triggered: firing
 // only moves it to running; observations move it to done or failed. Before
 // every write the step checks whether its result already exists and adopts
-// it, so a retried or restarted step never fires twice for one version.
+// it, so a retried, resumed or restarted step never fires twice for one
+// version.
 package plan
 
 import (
@@ -29,6 +31,7 @@ type Platform interface {
 	Trigger(p catalog.Package) (adapter.Trigger, bool)
 	Rerunner(p catalog.Package) (adapter.Rerunner, bool)
 	Deployer(p catalog.Package, target string) (adapter.Deployer, catalog.Deploy, bool)
+	Committer(p catalog.Package) (adapter.Committer, bool)
 }
 
 // Env is the planner's and runner's world.
@@ -39,15 +42,6 @@ type Env struct {
 	Publish  func(observe.Notice)
 	Log      *slog.Logger
 	Now      func() time.Time
-}
-
-// Request is a one-click action.
-type Request struct {
-	Kind    model.StepType `json:"kind"`              // release | deploy | rerun
-	Package string         `json:"package"`           // the package
-	Bump    string         `json:"bump,omitempty"`    // release: major | minor | patch
-	Version string         `json:"version,omitempty"` // release: an exact version instead of a bump; deploy, rerun: the version
-	Target  string         `json:"target,omitempty"`  // deploy
 }
 
 // Errors of Start. The preview that goes with them says why.
@@ -63,7 +57,7 @@ const (
 	// trigger did not create it).
 	TagTimeout = 30 * time.Minute
 	// StallTimeout: a running step with no observed progress for this long
-	// failed.
+	// failed. A paused step (a pull request waiting for its merge) has none.
 	StallTimeout = 2 * time.Hour
 )
 

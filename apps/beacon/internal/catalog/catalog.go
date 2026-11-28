@@ -17,6 +17,7 @@ type Catalog struct {
 	Projects []Project        `json:"projects"`
 	Packages []Package        `json:"packages"`
 	CDEvents []CDEventsSource `json:"cdevents,omitempty"`
+	Recipes  []model.Plan     `json:"recipes,omitempty"`
 }
 
 // SecretRef names where a secret comes from: an environment variable or a file.

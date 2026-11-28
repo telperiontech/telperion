@@ -14,6 +14,18 @@ export const routes: Routes = [
     title: 'Package · Beacon',
   },
   {
+    path: 'plans',
+    canActivate: [authGuard],
+    loadComponent: () => import('./plans/plans-page').then(m => m.PlansPage),
+    title: 'Plans · Beacon',
+  },
+  {
+    path: 'plans/new',
+    canActivate: [authGuard],
+    loadComponent: () => import('./plans/plan-builder').then(m => m.PlanBuilder),
+    title: 'New plan · Beacon',
+  },
+  {
     path: 'runs',
     canActivate: [authGuard],
     loadComponent: () => import('./runs/runs-page').then(m => m.RunsPage),

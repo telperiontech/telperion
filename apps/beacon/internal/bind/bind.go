@@ -14,6 +14,7 @@ import (
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubactions"
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubapi"
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubcompare"
+	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubcontents"
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubdispatch"
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubrelease"
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/gitsource"
@@ -43,6 +44,7 @@ type Set struct {
 	release   githubrelease.Trigger
 	dispatch  githubdispatch.Trigger
 	hook      webhook.Trigger
+	files     githubcontents.Committer
 }
 
 // New builds the adapters. Without a GitHub App in the catalog, GitHub is
@@ -70,6 +72,7 @@ func New(c catalog.Catalog, client *platform.Client) (*Set, error) {
 		release:   githubrelease.Trigger{API: api},
 		dispatch:  githubdispatch.Trigger{API: api},
 		hook:      webhook.Trigger{Client: client},
+		files:     githubcontents.Committer{API: api},
 	}
 	if c.GitHub != nil {
 		s.Changes = githubcompare.Changes{API: api, WebURL: webURL}
@@ -107,6 +110,15 @@ func (s *Set) Rerunner(p catalog.Package) (adapter.Rerunner, bool) {
 	return s.CI, true
 }
 
+// Committer writes files of the package's repo (update-deps): GitHub repos,
+// with the GitHub App.
+func (s *Set) Committer(p catalog.Package) (adapter.Committer, bool) {
+	if p.Repo.GitHub == "" || s.Catalog.GitHub == nil {
+		return nil, false
+	}
+	return s.files, true
+}
+
 // Deployer deploys the package to a target, if the target's runtime can.
 func (s *Set) Deployer(p catalog.Package, target string) (adapter.Deployer, catalog.Deploy, bool) {
 	d, ok := p.DeployTo(target)
@@ -125,9 +137,12 @@ type Cache struct {
 	set *Set
 }
 
-// For returns the Set of c, building it when the catalog changed.
+// For returns the Set of c, building it when the catalog changed (recipes
+// do not count: they bind no adapter).
 func (k *Cache) For(c catalog.Catalog) (*Set, error) {
-	b, err := json.Marshal(c)
+	key := c
+	key.Recipes = nil
+	b, err := json.Marshal(key)
 	if err != nil {
 		return nil, err
 	}

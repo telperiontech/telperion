@@ -29,7 +29,7 @@ import { StateBadge } from '../shared/state-badge';
             <td class="text-neutral-500">{{ r.source }}</td>
           </tr>
         } @empty {
-          <tr><td colspan="5" class="py-2 text-neutral-500">Nothing has run yet. Start a release from a package's page.</td></tr>
+          <tr><td colspan="5" class="py-2 text-neutral-500">Nothing has run yet. Start a release from a package's page, or a plan from Plans.</td></tr>
         }
       </tbody>
     </table>

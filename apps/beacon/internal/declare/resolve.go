@@ -44,6 +44,7 @@ func (f *File) Resolve(env Env) (catalog.Catalog, error) {
 	}
 	r.crossChecks(c)
 	r.cdeventsPackages(c)
+	c.Recipes = r.recipes(f.Recipes, c)
 	return c, errors.Join(r.errs...)
 }
 

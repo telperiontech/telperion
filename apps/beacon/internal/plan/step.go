@@ -3,7 +3,6 @@ package plan
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter"
@@ -11,8 +10,9 @@ import (
 	"github.com/telperiontech/telperion/apps/beacon/internal/model"
 )
 
-// advance moves one step by at most one state. Errors are the store's; a
-// platform error fails the step or leaves it to try again.
+// advance moves one step by at most one state. Release steps in triggering
+// are fired by fireReleases instead. Errors are the store's; a platform error
+// fails the step or leaves it to try again.
 func (r *Runner) advance(ctx context.Context, w *world, run *model.Run, st *model.Step) error {
 	p, ok := w.cat.Package(st.Package)
 	if !ok && !st.State.Terminal() {
@@ -28,6 +28,8 @@ func (r *Runner) advance(ctx context.Context, w *world, run *model.Run, st *mode
 		return r.fire(ctx, w, run, p, st)
 	case model.StepRunning:
 		r.watch(ctx, w, run, p, st)
+	case model.StepPaused:
+		r.watchPR(ctx, w, run, p, st)
 	}
 	return nil
 }
@@ -55,6 +57,9 @@ func (r *Runner) acquire(ctx context.Context, w *world, run *model.Run, st *mode
 	}
 	if !ok {
 		st.State, st.Detail = model.StepBlocked, fmt.Sprintf("waits for run #%d (it has an active step on %s)", holder, st.Package)
+		if holder == run.ID {
+			st.Detail = fmt.Sprintf("waits for another step of this run on %s", st.Package)
+		}
 		return nil
 	}
 	if st.Type == model.StepDeploy {
@@ -68,16 +73,15 @@ func (r *Runner) acquire(ctx context.Context, w *world, run *model.Run, st *mode
 }
 
 // fire starts what the step does, after checking that its result does not
-// exist already. The intent (commit, fire time) is stored before the write,
-// so a restart in between does not fire a second time.
+// exist already. The intent (fire time) is stored before the write, so a
+// restart in between does not fire a second time.
 func (r *Runner) fire(ctx context.Context, w *world, run *model.Run, p catalog.Package, st *model.Step) error {
-	if w.now.Sub(later(st.Fired, st.Progress)) > StallTimeout {
-		r.fail(w, st, "could not fire for "+StallTimeout.String()+": "+st.Detail)
+	if r.stalled(w, st) {
 		return nil
 	}
 	switch st.Type {
-	case model.StepRelease:
-		return r.fireRelease(ctx, w, run, p, st)
+	case model.StepUpdateDeps:
+		return r.fireUpdateDeps(ctx, w, run, p, st)
 	case model.StepDeploy:
 		return r.fireDeploy(ctx, w, run, p, st)
 	case model.StepRerun:
@@ -97,58 +101,13 @@ func (r *Runner) fire(ctx context.Context, w *world, run *model.Run, p catalog.P
 	return nil
 }
 
-func (r *Runner) fireRelease(ctx context.Context, w *world, run *model.Run, p catalog.Package, st *model.Step) error {
-	trig, ok := w.plat.Trigger(p)
-	if !ok {
-		r.fail(w, st, "the package has no release trigger")
-		return nil
+// stalled fails a step that could not fire for StallTimeout.
+func (r *Runner) stalled(w *world, st *model.Step) bool {
+	if w.now.Sub(later(st.Fired, st.Progress)) <= StallTimeout {
+		return false
 	}
-	ok, holder, err := r.Store.Lock(ctx, repoLock(p.Repo), run.ID, st.Key)
-	if err != nil {
-		return err
-	}
-	if !ok {
-		st.Detail = fmt.Sprintf("waits for the repo lock (run #%d is writing to it)", holder)
-		return nil
-	}
-	defer func() { _ = r.Store.Unlock(context.WithoutCancel(ctx), repoLock(p.Repo), run.ID, st.Key) }()
-
-	refs, err := w.plat.Refs(ctx, p.Repo)
-	if err != nil {
-		st.Detail = "cannot read the repo, retrying: " + err.Error()
-		return nil
-	}
-	if _, exists := refs.Tag(st.Tag); exists {
-		st.Adopted, st.Detail = true, "the tag "+st.Tag+" exists; following it"
-		r.running(w, st)
-		return nil
-	}
-	if !st.Fired.IsZero() && p.Release.GitHubRelease == nil {
-		// Beacon stopped between storing the intent and the answer: the
-		// dispatch or webhook may have gone out. Never send it twice.
-		st.Detail = "Beacon restarted while firing; watching for the tag"
-		r.running(w, st)
-		return nil
-	}
-	_, commit, ok := refs.Head(st.Branch)
-	if !ok {
-		r.fail(w, st, "the branch "+st.Branch+" was not found")
-		return nil
-	}
-	st.Commit, st.Fired = commit, w.now
-	if err := r.Store.SaveStep(ctx, run.ID, *st); err != nil {
-		return err
-	}
-	fired, err := trig.Fire(ctx, adapter.ReleaseRequest{
-		Package: p, Version: st.Version, Tag: st.Tag, Bump: st.Bump, Branch: st.Branch, Commit: commit, Plan: run.ID,
-	})
-	if err != nil {
-		r.fail(w, st, "release: "+err.Error())
-		return nil
-	}
-	st.URL, st.Detail, st.Adopted = fired.URL, fired.Detail, strings.HasPrefix(fired.Detail, "adopted")
-	r.running(w, st)
-	return nil
+	r.fail(w, st, "could not fire for "+StallTimeout.String()+": "+st.Detail)
+	return true
 }
 
 func (r *Runner) fireDeploy(ctx context.Context, w *world, run *model.Run, p catalog.Package, st *model.Step) error {
@@ -195,11 +154,10 @@ func (r *Runner) running(w *world, st *model.Step) {
 
 // watch decides a running step from observations.
 func (r *Runner) watch(ctx context.Context, w *world, run *model.Run, p catalog.Package, st *model.Step) {
-	cells := versionCells(p, w.states[p.Name], st.Version)
 	if st.Type == model.StepDeploy {
 		r.watchDeploy(ctx, w, run, p, st)
 	} else {
-		r.watchChain(w, p, st, cells)
+		r.watchChain(w, p, st, versionCells(p, w.states[p.Name], st.Version))
 	}
 	if !st.State.Terminal() && w.now.Sub(later(st.Fired, st.Progress)) > StallTimeout {
 		r.fail(w, st, "no progress for "+StallTimeout.String())
@@ -210,7 +168,7 @@ func (r *Runner) watch(ctx context.Context, w *world, run *model.Run, p catalog.
 // failed after the step fired (a re-run starts from a failed build).
 func (r *Runner) watchChain(w *world, p catalog.Package, st *model.Step, cells map[model.Stage]model.Cell) {
 	if c := cells[st.Until]; c.State == model.OK {
-		st.State, st.Detail, st.Finished = model.StepDone, string(st.Until)+" "+st.Version, w.now
+		r.done(w, st, string(st.Until)+" "+st.Version)
 		return
 	}
 	for _, stage := range p.Chain() {
@@ -242,7 +200,7 @@ func (r *Runner) watchChain(w *world, p catalog.Package, st *model.Step, cells m
 // status is asked every StatusEvery for failures and progress.
 func (r *Runner) watchDeploy(ctx context.Context, w *world, run *model.Run, p catalog.Package, st *model.Step) {
 	if targetCell(w, p, st).State == model.OK {
-		st.State, st.Detail, st.Finished = model.StepDone, st.Target+" runs "+st.Version, w.now
+		r.done(w, st, st.Target+" runs "+st.Version)
 		return
 	}
 	key := statusKey(run.ID, st.Key)
@@ -276,6 +234,13 @@ func targetCell(w *world, p catalog.Package, st *model.Step) model.TargetCell {
 		}
 	}
 	return model.TargetCell{State: model.Missing}
+}
+
+func (r *Runner) done(w *world, st *model.Step, detail string) {
+	st.State, st.Detail, st.Finished = model.StepDone, detail, w.now
+	if st.Fired.IsZero() {
+		st.Fired = w.now
+	}
 }
 
 func (r *Runner) fail(w *world, st *model.Step, detail string) {

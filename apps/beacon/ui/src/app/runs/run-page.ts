@@ -10,14 +10,19 @@ import { Run } from '../core/api';
 import { Clock } from '../core/clock';
 import { Live } from '../core/live';
 import { AgePipe } from '../shared/age.pipe';
+import { PlanGraph } from '../shared/plan-graph';
 import { StateBadge } from '../shared/state-badge';
 
-type CancelState = 'idle' | 'busy' | 'failed';
+/** Where a cancel or resume request stands. */
+type RequestState = 'idle' | 'busy' | 'failed';
 
-/** One plan run and its steps, as they move. Live. */
+/**
+ * One plan run and its steps, as they move: cancel a running run, resume a failed or cancelled one
+ * (done steps stay done), or copy its plan into the plan builder. Live.
+ */
 @Component({
   selector: 'bcn-run-page',
-  imports: [RouterLink, DatePipe, AgePipe, StateBadge],
+  imports: [RouterLink, DatePipe, AgePipe, StateBadge, PlanGraph],
   templateUrl: './run-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -36,18 +41,25 @@ export class RunPage {
     reloadOn: inject(Live).runChanges(() => this.id()),
   });
 
-  protected readonly cancels = new Subject<void>();
-
-  protected readonly cancelling = toSignal(
-    this.cancels.pipe(
-      exhaustMap(() =>
-        this.#http.post(`/api/runs/${this.id()}/cancel`, null).pipe(
-          map((): CancelState => 'idle'),
-          catchError(() => of<CancelState>('failed')),
-          startWith<CancelState>('busy'),
+  /** POSTs to /api/runs/:id/<what> for each value of requests, one at a time. */
+  private static requestState(http: HttpClient, id: () => number, what: string, requests: Subject<void>) {
+    return toSignal(
+      requests.pipe(
+        exhaustMap(() =>
+          http.post(`/api/runs/${id()}/${what}`, null).pipe(
+            map((): RequestState => 'idle'),
+            catchError(() => of<RequestState>('failed')),
+            startWith<RequestState>('busy'),
+          ),
         ),
       ),
-    ),
-    { initialValue: 'idle' as CancelState },
-  );
+      { initialValue: 'idle' as RequestState },
+    );
+  }
+
+  protected readonly cancels = new Subject<void>();
+  protected readonly cancelling = RunPage.requestState(this.#http, () => this.id(), 'cancel', this.cancels);
+
+  protected readonly resumes = new Subject<void>();
+  protected readonly resuming = RunPage.requestState(this.#http, () => this.id(), 'resume', this.resumes);
 }

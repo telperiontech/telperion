@@ -2,7 +2,19 @@ package store
 
 // migrations are applied in order (go-kit sqlitex, PRAGMA user_version).
 // Never edit a released migration: append a new one.
-var migrations = []string{schemaV1, schemaV2}
+var migrations = []string{schemaV1, schemaV2, schemaV3}
+
+// schemaV3: recipes, and what a run was started from (Phase 3).
+const schemaV3 = `
+CREATE TABLE recipes (
+	name    TEXT PRIMARY KEY,
+	spec    TEXT NOT NULL,
+	managed INTEGER NOT NULL DEFAULT 1
+);
+ALTER TABLE plan_runs ADD COLUMN recipe TEXT NOT NULL DEFAULT '';
+ALTER TABLE plan_runs ADD COLUMN fail_fast INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE plan_runs ADD COLUMN plan TEXT NOT NULL DEFAULT '';
+`
 
 // schemaV2: unreleased changes, plan runs, locks (Phase 2).
 const schemaV2 = `

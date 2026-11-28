@@ -119,31 +119,80 @@ export interface RunRef {
 
 export type ActionKind = 'release' | 'deploy' | 'rerun';
 
-/** A one-click action (POST /api/actions/preview, /api/actions). */
-export interface ActionRequest {
-  kind: ActionKind;
+/** What a step of a plan does. A re-run is a one-click action only. */
+export type PlanStepType = 'release' | 'update-deps' | 'deploy';
+export type StepType = PlanStepType | 'rerun';
+export type Via = 'commit' | 'pr';
+
+/** One step of a plan as written (model.PlanStep). */
+export interface PlanStep {
+  key: string;
+  type: PlanStepType;
   package: string;
-  bump?: string; // major | minor | patch
+  needs?: string[];
+  bump?: string;
   version?: string;
+  until?: Stage;
+  noBatch?: boolean;
+  deps?: string[];
+  via?: Via;
   target?: string;
 }
 
+/** A plan: a recipe (named; managed when it comes from the config file) or an ad-hoc plan. */
+export interface Plan {
+  name?: string;
+  failFast?: boolean;
+  steps: PlanStep[];
+  managed?: boolean;
+}
+
+/**
+ * What to preview or start (POST /api/actions/preview, /api/actions): a one-click action (kind
+ * and its fields), a recipe by name, or an ad-hoc plan.
+ */
+export interface ActionRequest {
+  kind?: ActionKind;
+  package?: string;
+  bump?: string; // major | minor | patch
+  version?: string;
+  target?: string;
+  recipe?: string;
+  plan?: Plan;
+}
+
+/** One dependency range an update-deps step sets. */
+export interface DepChange {
+  package: string;
+  name: string;
+  version: string;
+  from?: string;
+  to: string;
+}
+
 export type StepState =
-  | 'waiting' | 'ready' | 'blocked' | 'triggering' | 'running' | 'done' | 'failed' | 'skipped' | 'cancelled';
+  | 'waiting' | 'ready' | 'blocked' | 'triggering' | 'running' | 'paused' | 'done' | 'failed' | 'skipped' | 'cancelled';
 export type RunState = 'running' | 'done' | 'failed' | 'cancelled';
 
 export interface Step {
   key: string;
-  type: ActionKind;
+  type: StepType;
   package: string;
   bump?: string;
-  version: string;
+  version?: string;
   from?: string;
   tag?: string;
   target?: string;
   until?: Stage;
   branch?: string;
   commit?: string;
+  needs?: string[];
+  noBatch?: boolean;
+  via?: Via;
+  file?: string;
+  deps?: DepChange[];
+  pr?: number;
+  attempt?: number;
   adopted?: boolean;
   state: StepState;
   detail?: string;
@@ -162,6 +211,9 @@ export interface StepPreview extends Step {
 export interface Preview {
   request: ActionRequest;
   title: string;
+  recipe?: string;
+  failFast?: boolean;
+  plan?: Plan;
   steps: StepPreview[];
   errors: string[];
   warnings: string[];
@@ -175,6 +227,9 @@ export interface Run {
   state: RunState;
   source: string;
   actor: string;
+  recipe?: string;
+  failFast?: boolean;
+  plan?: Plan;
   created: string;
   finished?: string;
   steps: Step[];

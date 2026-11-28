@@ -66,6 +66,12 @@ recipes:
   default branch, read from the ref advertisement) and `path` (its folder; unreleased changes count
   only commits that touch it), and `release: none` turns a project's trigger off for one package.
   CDEvents sources are a list (`cdevents.sources`), each with its own `token_env`/`token_file`.
+- **As built in Phase 3**, a recipe is `{ name, fail-fast, steps }`; each step has exactly one of
+  `release: <package>` (with `bump` or `version`, `until`, `batch: false`), `update-deps: { package,
+  deps, via }` (`via` is `commit` by default) and `deploy: <package>` (with `target`, optional
+  `version`), plus `needs`. Steps are keyed by name, so their order in the file does not matter.
+  Recipes saved in the UI are kept next to the file's (unmanaged); `apply` leaves them alone unless
+  the file has a recipe of the same name, which replaces it. `export` writes both.
 - **Validation** checks every reference (targets, packages in recipes and CDEvents sources), tag
   patterns that would match the same tag for two packages, recipes with cycles.
 

@@ -1,7 +1,7 @@
 // Command fakeplatform impersonates every platform Beacon reads, for the RSS
 // check (test/rss): git smart HTTP, the GitHub App and Actions APIs, an npm
 // registry, an OCI registry, Coolify and http-check endpoints, all on one
-// listener, over a synthetic catalog of ~30 packages whose versions keep
+// listener (and the writes of plans, see writes.go), over a synthetic catalog of ~30 packages whose versions keep
 // moving through their chains.
 //
 // At start it writes a GitHub App private key and a Beacon config for this
@@ -40,6 +40,8 @@ func main() {
 	routeGit(mux, w)
 	routeGitHub(mux, w)
 	routeCompare(mux)
+	routeWrites(mux, *base)
+	routeCoolifyDeploys(mux)
 	routeNPM(mux, w)
 	routeOCI(mux, w)
 	routeRuntime(mux, w)

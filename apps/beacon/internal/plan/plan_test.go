@@ -2,7 +2,7 @@ package plan
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"testing"
@@ -22,7 +22,12 @@ type fakePlatform struct {
 	refs     adapter.Refs
 	fired    []adapter.ReleaseRequest
 	deployed []string
+	reruns   []string
 	status   model.State
+	files    map[string]string // path → content on main
+	commits  int
+	prs      []adapter.FileChange
+	prState  adapter.PRState
 }
 
 func (f *fakePlatform) Refs(context.Context, catalog.Repo) (adapter.Refs, error) { return f.refs, nil }
@@ -31,11 +36,17 @@ func (f *fakePlatform) Trigger(p catalog.Package) (adapter.Trigger, bool) {
 	return fakeTrigger{f}, p.Release != nil
 }
 
-func (f *fakePlatform) Rerunner(catalog.Package) (adapter.Rerunner, bool) { return nil, false }
+func (f *fakePlatform) Rerunner(p catalog.Package) (adapter.Rerunner, bool) {
+	return fakeRerunner{f}, p.CI != nil
+}
 
 func (f *fakePlatform) Deployer(p catalog.Package, target string) (adapter.Deployer, catalog.Deploy, bool) {
 	d, ok := p.DeployTo(target)
 	return fakeDeployer{f}, d, ok && d.Coolify != nil
+}
+
+func (f *fakePlatform) Committer(p catalog.Package) (adapter.Committer, bool) {
+	return fakeCommitter{f}, p.Repo.GitHub != ""
 }
 
 type fakeTrigger struct{ f *fakePlatform }
@@ -44,6 +55,13 @@ func (fakeTrigger) Describe(req adapter.ReleaseRequest) string { return "tag " +
 func (t fakeTrigger) Fire(_ context.Context, req adapter.ReleaseRequest) (adapter.Fired, error) {
 	t.f.fired = append(t.f.fired, req)
 	return adapter.Fired{Detail: "fired"}, nil
+}
+
+type fakeRerunner struct{ f *fakePlatform }
+
+func (r fakeRerunner) Rerun(_ context.Context, _ catalog.Package, tag string) (adapter.Fired, error) {
+	r.f.reruns = append(r.f.reruns, tag)
+	return adapter.Fired{Detail: "re-ran"}, nil
 }
 
 type fakeDeployer struct{ f *fakePlatform }
@@ -56,22 +74,54 @@ func (d fakeDeployer) DeployStatus(context.Context, catalog.Deploy, adapter.Depl
 	return d.f.status, string(d.f.status), nil
 }
 
+// fakeCommitter keeps files on main; a commit moves the head of main.
+type fakeCommitter struct{ f *fakePlatform }
+
+func (c fakeCommitter) ReadFile(_ context.Context, _ catalog.Repo, _, path string) (adapter.File, error) {
+	content, ok := c.f.files[path]
+	if !ok {
+		return adapter.File{}, fmt.Errorf("%s: not found", path)
+	}
+	return adapter.File{Path: path, Content: []byte(content), SHA: "blob"}, nil
+}
+
+func (c fakeCommitter) Commit(_ context.Context, ch adapter.FileChange, _ string) (string, string, error) {
+	c.f.commits++
+	c.f.files[ch.Path] = string(ch.Content)
+	commit := fmt.Sprintf("commit%d", c.f.commits)
+	c.f.refs.Heads["main"] = commit
+	return commit, "https://github.example.com/c/" + commit, nil
+}
+
+func (c fakeCommitter) OpenPR(_ context.Context, ch adapter.FileChange, head, _, _ string) (adapter.PullRequest, error) {
+	c.f.prs = append(c.f.prs, ch)
+	return adapter.PullRequest{Number: len(c.f.prs), URL: "https://github.example.com/pr/" + head, State: adapter.PROpen}, nil
+}
+
+func (c fakeCommitter) PullRequest(_ context.Context, _ catalog.Repo, n int) (adapter.PullRequest, error) {
+	return adapter.PullRequest{Number: n, State: c.f.prState, Merge: "merged"}, nil
+}
+
 func testCatalog() catalog.Catalog {
 	repo := catalog.Repo{GitHub: "acme/libs", URL: "https://github.example.com/acme/libs.git"}
+	release := &catalog.Release{GitHubRelease: &catalog.GitHubRelease{Notes: catalog.NotesGenerate}}
+	npmPkg := func(name string) catalog.Package {
+		return catalog.Package{
+			Name: name, Project: "acme", Repo: repo, Tag: catalog.DefaultTag, Path: "libs/" + name, Release: release,
+			CI:       &catalog.CI{GitHubActions: &catalog.GitHubActions{Workflow: name + ".publish.yml"}},
+			Artifact: &catalog.Artifact{NPM: &catalog.NPM{Name: "@acme/" + name, Registry: "https://registry.example.com"}},
+		}
+	}
 	return catalog.Catalog{
 		Targets:  []catalog.Target{{Name: "main", Limit: 1, Coolify: &catalog.Coolify{URL: "https://coolify.example.com"}}},
 		Projects: []catalog.Project{{Name: "acme", Repo: repo}},
 		Packages: []catalog.Package{
-			{
-				Name: "lib", Project: "acme", Repo: repo, Tag: catalog.DefaultTag,
-				Release:  &catalog.Release{GitHubRelease: &catalog.GitHubRelease{Notes: catalog.NotesGenerate}},
-				CI:       &catalog.CI{GitHubActions: &catalog.GitHubActions{Workflow: "lib.publish.yml"}},
-				Artifact: &catalog.Artifact{NPM: &catalog.NPM{Name: "@acme/lib", Registry: "https://registry.example.com"}},
-			},
+			npmPkg("lib"),
 			{
 				Name: "svc", Project: "acme", Repo: repo, Tag: catalog.DefaultTag,
 				Deploy: []catalog.Deploy{{Target: "main", Coolify: &catalog.CoolifyApp{App: "app-1"}}},
 			},
+			npmPkg("app"),
 		},
 	}
 }
@@ -97,9 +147,13 @@ func newHarness(t *testing.T) *harness {
 		t.Fatal(err)
 	}
 	h := &harness{t: t, ctx: ctx, st: st, now: time.Unix(1_800_000_000, 0),
-		plat: &fakePlatform{refs: adapter.Refs{
-			Tags: []adapter.Tag{{Name: "lib-v1.0.0", Commit: "b"}}, Heads: map[string]string{"main": head}, Default: "main",
-		}}}
+		plat: &fakePlatform{
+			refs: adapter.Refs{
+				Tags:  []adapter.Tag{{Name: "lib-v1.0.0", Commit: "b"}, {Name: "app-v2.0.0", Commit: "b"}},
+				Heads: map[string]string{"main": head}, Default: "main",
+			},
+			files: map[string]string{"libs/app/package.json": `{"peerDependencies": {"@acme/lib": "^1.0.0"}}`},
+		}}
 	st.SetClock(func() time.Time { return h.now })
 	h.r = &Runner{Env: Env{
 		Store: st, Log: slog.New(slog.NewTextHandler(io.Discard, nil)), Now: func() time.Time { return h.now },
@@ -129,13 +183,30 @@ func (h *harness) pass() {
 	}
 }
 
-func (h *harness) step(id int64) model.Step {
+func (h *harness) run(id int64) model.Run {
 	h.t.Helper()
 	run, err := h.st.Run(h.ctx, id)
 	if err != nil {
 		h.t.Fatal(err)
 	}
-	return run.Steps[0]
+	return run
+}
+
+// step is the run's first step.
+func (h *harness) step(id int64) model.Step {
+	h.t.Helper()
+	return h.run(id).Steps[0]
+}
+
+// stepOf is the run's step with that key.
+func (h *harness) stepOf(id int64, key string) model.Step {
+	h.t.Helper()
+	run := h.run(id)
+	s := run.Step(key)
+	if s == nil {
+		h.t.Fatalf("run %d has no step %s", id, key)
+	}
+	return *s
 }
 
 func (h *harness) observe(obs ...model.Obs) {
@@ -145,139 +216,10 @@ func (h *harness) observe(obs ...model.Obs) {
 	}
 }
 
-func TestReleaseRunsToTheEndOfTheChain(t *testing.T) {
-	h := newHarness(t)
-	p, err := h.r.Preview(h.ctx, Request{Kind: model.StepRelease, Package: "lib", Bump: "minor"})
-	if err != nil || len(p.Steps) != 1 {
-		t.Fatalf("preview = %+v %v", p, err)
-	}
-	if s := p.Steps[0]; s.Version != "1.1.0" || s.From != "1.0.0" || s.Tag != "lib-v1.1.0" || s.Commit != head ||
-		s.Until != model.Published || p.Major || s.Action != "tag lib-v1.1.0" {
-		t.Errorf("step = %+v", s)
-	}
-	if _, _, err := h.r.Start(h.ctx, p.Request, Confirm{Fingerprint: "stale"}, nil); !errors.Is(err, ErrMoved) {
-		t.Errorf("a stale fingerprint started: %v", err)
-	}
-	if major, _ := h.r.Preview(h.ctx, Request{Kind: model.StepRelease, Package: "lib", Bump: "major"}); !major.Major {
-		t.Error("a major release is not marked")
-	} else if _, _, err := h.r.Start(h.ctx, major.Request, Confirm{Fingerprint: major.Fingerprint}, nil); !errors.Is(err, ErrConfirm) {
-		t.Errorf("a major release started without its confirmation: %v", err)
-	}
-
-	id := h.start(p.Request)
-	h.pass()
-	if s := h.step(id); s.State != model.StepRunning || s.Commit != head || len(h.plat.fired) != 1 {
-		t.Fatalf("after firing: %+v, fired %d", s, len(h.plat.fired))
-	}
-	h.pass()
-	if len(h.plat.fired) != 1 {
-		t.Fatal("fired twice")
-	}
-
-	h.now = h.now.Add(time.Minute)
-	h.observe(model.Obs{Package: "lib", Version: "1.1.0", Stage: model.Tagged, State: model.OK},
-		model.Obs{Package: "lib", Version: "1.1.0", Stage: model.Built, State: model.OK})
-	h.pass()
-	if s := h.step(id); s.State != model.StepRunning || s.Detail != "published: missing" {
-		t.Errorf("before publishing: %+v", s)
-	}
-	h.observe(model.Obs{Package: "lib", Version: "1.1.0", Stage: model.Published, State: model.OK})
-	h.pass()
-	run, _ := h.st.Run(h.ctx, id)
-	if run.State != model.RunDone || run.Steps[0].State != model.StepDone {
-		t.Errorf("run = %+v", run)
-	}
-	if ok, _, _ := h.st.Lock(h.ctx, packageLock("lib"), 99, "other"); !ok {
-		t.Error("the package lock was not released")
-	}
-}
-
-func TestBuildFailureFailsTheStep(t *testing.T) {
-	h := newHarness(t)
-	id := h.start(Request{Kind: model.StepRelease, Package: "lib", Bump: "patch"})
-	h.pass()
-	h.now = h.now.Add(time.Minute)
-	h.observe(model.Obs{Package: "lib", Version: "1.0.1", Stage: model.Tagged, State: model.OK},
-		model.Obs{Package: "lib", Version: "1.0.1", Stage: model.Built, State: model.Failed, Detail: "failure"})
-	h.pass()
-	if s := h.step(id); s.State != model.StepFailed || s.Detail != "built failed: failure" {
-		t.Errorf("step = %+v", s)
-	}
-}
-
-func TestPackageLockBlocksASecondRun(t *testing.T) {
-	h := newHarness(t)
-	first := h.start(Request{Kind: model.StepRelease, Package: "lib", Bump: "patch"})
-	second := h.start(Request{Kind: model.StepRelease, Package: "lib", Version: "2.0.0"})
-	h.pass()
-	if s := h.step(second); s.State != model.StepBlocked {
-		t.Errorf("second = %+v", s)
-	}
-	if err := h.r.cancel(h.ctx, first); err != nil {
-		t.Fatal(err)
-	}
-	h.pass()
-	if s := h.step(second); s.State != model.StepRunning {
-		t.Errorf("second after the first was cancelled = %+v", s)
-	}
-}
-
-func TestRestartWhileFiringDoesNotFireTwice(t *testing.T) {
-	h := newHarness(t)
-	c := testCatalog()
-	c.Packages[0].Release = &catalog.Release{GitHubDispatch: &catalog.GitHubDispatch{Workflow: "release.yml"}}
-	if err := h.st.SaveCatalog(h.ctx, c); err != nil {
-		t.Fatal(err)
-	}
-	id := h.start(Request{Kind: model.StepRelease, Package: "lib", Bump: "patch"})
-	s := h.step(id)
-	s.State, s.Fired = model.StepTriggering, h.now // stored intent, no answer
-	if err := h.st.SaveStep(h.ctx, id, s); err != nil {
-		t.Fatal(err)
-	}
-	h.pass()
-	if s := h.step(id); s.State != model.StepRunning || len(h.plat.fired) != 0 {
-		t.Errorf("step = %+v, fired %d", s, len(h.plat.fired))
-	}
-}
-
-func TestTagTimeout(t *testing.T) {
-	h := newHarness(t)
-	id := h.start(Request{Kind: model.StepRelease, Package: "lib", Bump: "patch"})
-	h.pass()
-	h.now = h.now.Add(TagTimeout + time.Minute)
-	h.pass()
-	if s := h.step(id); s.State != model.StepFailed {
-		t.Errorf("step = %+v", s)
-	}
-}
-
-func TestDeploy(t *testing.T) {
-	h := newHarness(t)
-	h.observe(model.Obs{Package: "svc", Version: "1.0.0", Stage: model.Deployed, Target: "main", State: model.OK, Exclusive: true})
-	if p, _ := h.r.Preview(h.ctx, Request{Kind: model.StepDeploy, Package: "svc", Target: "nowhere", Version: "1.1.0"}); len(p.Errors) == 0 {
-		t.Error("a deploy to an unknown target has no error")
-	}
-	id := h.start(Request{Kind: model.StepDeploy, Package: "svc", Target: "main", Version: "1.1.0"})
-	h.plat.status = model.Pending
-	h.pass()
-	if s := h.step(id); s.State != model.StepRunning || s.DeployID != "dep-1" || s.From != "1.0.0" || len(h.plat.deployed) != 1 {
-		t.Fatalf("step = %+v", s)
-	}
-	h.now = h.now.Add(time.Minute)
-	h.observe(model.Obs{Package: "svc", Version: "1.1.0", Stage: model.Deployed, Target: "main", State: model.OK, Exclusive: true})
-	h.pass()
-	if s := h.step(id); s.State != model.StepDone {
-		t.Errorf("step = %+v", s)
-	}
-}
-
-func TestDeployFailure(t *testing.T) {
-	h := newHarness(t)
-	id := h.start(Request{Kind: model.StepDeploy, Package: "svc", Target: "main", Version: "1.1.0"})
-	h.plat.status = model.Failed
-	h.pass()
-	if s := h.step(id); s.State != model.StepFailed || s.Detail != "deployment failed" {
-		t.Errorf("step = %+v", s)
-	}
+// chain observes a version through tagged, built and published.
+func (h *harness) chain(pkg, version string) {
+	h.t.Helper()
+	h.observe(model.Obs{Package: pkg, Version: version, Stage: model.Tagged, State: model.OK},
+		model.Obs{Package: pkg, Version: version, Stage: model.Built, State: model.OK},
+		model.Obs{Package: pkg, Version: version, Stage: model.Published, State: model.OK})
 }

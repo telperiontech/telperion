@@ -26,6 +26,9 @@ var _ adapter.Trigger = Trigger{}
 func (t Trigger) Describe(req adapter.ReleaseRequest) string {
 	cfg := settings(req)
 	at := fmt.Sprintf("at %s on %s", short(req.Commit), req.Branch)
+	if req.Commit == "" {
+		at = "at the head of " + req.Branch + " when it fires" // after the steps it needs
+	}
 	switch {
 	case cfg.TagOnly:
 		return fmt.Sprintf("create the tag %s %s", req.Tag, at)

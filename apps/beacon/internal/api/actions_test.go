@@ -25,6 +25,7 @@ func (fakePlatform) Rerunner(catalog.Package) (adapter.Rerunner, bool) { return 
 func (fakePlatform) Deployer(catalog.Package, string) (adapter.Deployer, catalog.Deploy, bool) {
 	return nil, catalog.Deploy{}, false
 }
+func (fakePlatform) Committer(catalog.Package) (adapter.Committer, bool) { return nil, false }
 
 // fakeRunner cancels by marking the run; the real runner is tested in plan.
 type fakeRunner struct{ st *store.Store }
@@ -35,6 +36,13 @@ func (f fakeRunner) Cancel(ctx context.Context, id int64) error {
 		return err
 	}
 	return f.st.FinishRun(ctx, id, model.RunCancelled)
+}
+
+func (f fakeRunner) Resume(ctx context.Context, id int64) error {
+	if _, err := f.st.Run(ctx, id); err != nil {
+		return err
+	}
+	return f.st.ReopenRun(ctx, id)
 }
 
 func TestActions(t *testing.T) {

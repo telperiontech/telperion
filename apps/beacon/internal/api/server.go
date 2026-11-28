@@ -47,6 +47,11 @@ func New(o Options) http.Handler {
 	api.HandleFunc("GET /api/runs", s.runs)
 	api.HandleFunc("GET /api/runs/{id}", s.run)
 	api.HandleFunc("POST /api/runs/{id}/cancel", s.cancel)
+	api.HandleFunc("POST /api/runs/{id}/resume", s.resume)
+	api.HandleFunc("GET /api/recipes", s.recipes)
+	api.HandleFunc("PUT /api/recipes/{name}", s.saveRecipe)
+	api.HandleFunc("DELETE /api/recipes/{name}", s.deleteRecipe)
+	api.HandleFunc("POST /api/recipes/yaml", s.recipeYAML)
 	api.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
 		writeError(w, http.StatusNotFound, "no such endpoint")
 	})

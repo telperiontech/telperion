@@ -51,6 +51,15 @@ projects:
         deploy:
           - http-check: { url: "https://docs.example.com/version.json", version: { json: /version } }
           - cdevents: { environment: staging }
+
+recipes:
+  - name: gate-wave
+    fail-fast: true
+    steps:
+      js-utils: { release: js-utils, bump: minor }
+      gate-deps: { update-deps: { package: frp-gate, deps: [js-utils], via: pr }, needs: [js-utils] }
+      gate: { release: frp-gate, bump: patch, until: published, batch: false, needs: [gate-deps] }
+      gate-live: { deploy: frp-gate, target: coolify-main, needs: [gate] }
 `
 
 func testEnv() Env {
@@ -135,6 +144,19 @@ projects: [{name: a, repo: o/r, packages: {a: {}}}]`,
 		"webhook no secret":   `projects: [{name: a, repo: o/r, release: {webhook: {url: "https://x.example.com"}}, packages: {x: {}}}]`,
 		"bad placeholder": `github: {app_id: 1, private_key_file: /run/secrets/app.pem}
 projects: [{name: a, repo: o/r, release: {github-dispatch: {workflow: r.yml, inputs: {v: "{nope}"}}}, packages: {x: {}}}]`,
+		"recipe cycle": `github: {app_id: 1, private_key_file: /run/secrets/app.pem}
+projects: [{name: a, repo: o/r, release: {github-release: {}}, packages: {x: {}}}]
+recipes: [{name: r, steps: {a: {release: x, bump: patch, needs: [b]}, b: {deploy: x, target: t, needs: [a]}}}]`,
+		"recipe stray field": `github: {app_id: 1, private_key_file: /run/secrets/app.pem}
+projects: [{name: a, repo: o/r, release: {github-release: {}}, packages: {x: {}}}]
+recipes: [{name: r, steps: {a: {release: x, bump: patch, target: t}}}]`,
+		"recipe two kinds": `github: {app_id: 1, private_key_file: /run/secrets/app.pem}
+projects: [{name: a, repo: o/r, release: {github-release: {}}, packages: {x: {}}}]
+recipes: [{name: r, steps: {a: {release: x, bump: patch, deploy: x}}}]`,
+		"recipe unknown package": `projects: [{name: a, repo: o/r, packages: {x: {}}}]
+recipes: [{name: r, steps: {a: {release: nope, bump: patch}}}]`,
+		"recipe unknown key": `projects: [{name: a, repo: o/r, packages: {x: {}}}]
+recipes: [{name: r, steps: {a: {release: x, bmp: patch}}}]`,
 		"path outside": `projects: [{name: a, repo: o/r, packages: {x: {path: ../x}}}]`,
 		"cdevents unknown": `cdevents: {sources: [{name: s, token_env: HOOK_SECRET, packages: [nope]}]}
 projects: [{name: a, repo: o/r, packages: {x: {}}}]`,
@@ -176,7 +198,7 @@ func TestApplyExportRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := len(res.Changes); got != 1+1+2+4+1 { // github, target, 2 projects, 4 packages, cdevents source
+	if got := len(res.Changes); got != 1+1+2+4+1+1 { // github, target, 2 projects, 4 packages, cdevents source, recipe
 		t.Errorf("changes = %v", res.Changes)
 	}
 	if again, _ := Apply(ctx, st, c, false); len(again.Changes) != 0 {
@@ -221,5 +243,52 @@ func TestApplyRemovesObservations(t *testing.T) {
 	}
 	if _, err := Parse([]byte("")); err == nil || errors.Is(err, nil) {
 		t.Error("an empty file parsed")
+	}
+}
+
+func TestRecipes(t *testing.T) {
+	ctx := context.Background()
+	st, _ := store.Open(ctx, ":memory:")
+	defer st.Close()
+	c, err := mustResolve(t, example).Resolve(testEnv())
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, ok := c.Recipe("gate-wave")
+	if !ok || !r.FailFast || !r.Managed || len(r.Steps) != 4 {
+		t.Fatalf("recipe = %+v", r)
+	}
+	if s, _ := r.Step("gate"); s.Type != model.StepRelease || s.Package != "frp-gate" || !s.NoBatch || s.Until != model.Published {
+		t.Errorf("gate = %+v", s)
+	}
+	if s, _ := r.Step("gate-deps"); s.Type != model.StepUpdateDeps || s.Via != model.ViaPR || s.Deps[0] != "js-utils" {
+		t.Errorf("gate-deps = %+v", s)
+	}
+	if _, err := Apply(ctx, st, c, false); err != nil {
+		t.Fatal(err)
+	}
+	ui := model.Plan{Name: "mine", Steps: []model.PlanStep{{Key: "a", Type: model.StepRelease, Package: "js-utils", Bump: "patch"}}}
+	if err := st.SaveRecipe(ctx, ui); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.SaveRecipe(ctx, model.Plan{Name: "gate-wave"}); !errors.Is(err, store.ErrManaged) {
+		t.Errorf("a UI save replaced a file recipe: %v", err)
+	}
+	if again, _ := Apply(ctx, st, c, false); len(again.Changes) != 0 {
+		t.Errorf("a UI recipe shows up as a change: %v", again.Changes)
+	}
+	stored, _ := st.LoadCatalog(ctx)
+	if mine, ok := stored.Recipe("mine"); !ok || mine.Managed {
+		t.Errorf("the UI recipe after apply = %+v %v", mine, ok)
+	}
+	out, err := ExportRecipes(ui)
+	if err != nil || !strings.Contains(string(out), "recipes:\n    - name: mine\n      steps:\n        a:\n            release: js-utils\n            bump: patch\n") {
+		t.Errorf("export =\n%s %v", out, err)
+	}
+	if err := st.DeleteRecipe(ctx, "gate-wave"); !errors.Is(err, store.ErrManaged) {
+		t.Errorf("a file recipe was deleted: %v", err)
+	}
+	if err := st.DeleteRecipe(ctx, "mine"); err != nil {
+		t.Error(err)
 	}
 }

@@ -4,10 +4,10 @@ A small self-hosted panel for the release lifecycle of packages across repos: wh
 stands (tagged, built, published, deployed), which versions are stuck between two stages, and
 buttons to release, deploy and re-run. See the [design](DESIGN.md) and the [roadmap](ROADMAP.md).
 
-**Status: Phase 2 (single actions).** Beacon observes tags, CI runs, registries and deployments and
-shows the gaps between them, live. A release, a deploy or a re-run of a failed build is a button
-with a preview, and Beacon follows it to the end of the chain. Chained release plans come in
-Phase 3.
+**Status: Phase 3 (release plans).** Beacon observes tags, CI runs, registries and deployments
+and shows the gaps between them, live. A release, a deploy or a re-run of a failed build is a button
+with a preview, and Beacon follows it to the end of the chain. Plans chain releases, dependency
+updates and deploys (`needs:`), from recipes in the config file or built in the UI.
 
 ## Quick start
 
@@ -93,6 +93,15 @@ projects:
         ci: cdevents                      # built is only reported, by CDEvents
         deploy:
           - cdevents: { environment: staging }
+
+recipes:                    # saved plans, see Plans below
+  - name: gate-wave
+    fail-fast: true         # a failed step cancels the steps that have not started
+    steps:
+      js-utils:  { release: js-utils, bump: minor }
+      gate-deps: { update-deps: { package: frp-gate, deps: [js-utils], via: pr }, needs: [js-utils] }
+      gate:      { release: frp-gate, bump: patch, needs: [gate-deps] }
+      gate-live: { deploy: frp-gate, target: coolify-main, needs: [gate] }
 ```
 
 - A package's **chain** is its configured stages: `tagged` always, `built` with `ci`, `published`
@@ -114,8 +123,9 @@ projects:
 - Without a `github` block GitHub is read anonymously (60 requests an hour; polling slows down to
   fit), unreleased changes are not counted, and nothing can be written to GitHub.
 - **GitHub App permissions:** Metadata read, Contents and Actions read (observing) or read and
-  write (releases, dispatches, re-runs). Beacon mints read-only tokens for polling and, for each
-  action, a write token limited to that one repo. Webhook events: `push`, `create`, `release`,
+  write (releases, dispatches, re-runs, `update-deps` commits), and Pull requests read and write
+  only for `update-deps` with `via: pr`. Beacon mints read-only tokens for polling and, for each
+  write, a token limited to that one repo (with Pull requests only for pull request steps). Webhook events: `push`, `create`, `release`,
   `workflow_run`, `registry_package`.
 - **Not verified yet:** the Coolify adapter (running version and deploys) follows the v4 API docs
   (`docker_registry_image_tag`, `status`, `/deploy?uuid=`, `/deployments/{uuid}`) and has not run
@@ -149,6 +159,33 @@ The `webhook` trigger POSTs `{"event": "release", "package", "version", "tag", "
 "commit", "plan"}` with `X-Beacon-Signature-256: sha256=<hex HMAC-SHA256 of the body>` (GitHub's
 scheme) and `X-Beacon-Delivery`, which is the same for a retried step.
 
+## Plans
+
+A plan is a set of steps ordered by `needs:` (a DAG); steps run in parallel once the steps they
+need are done, and several plans can run at once. Recipes (`recipes:` in the file) and plans built
+on the **Plans** page are the same thing: a built plan can be saved as a recipe in Beacon or shown
+as YAML to paste into the file, and a run's plan can be copied back into the builder. A run is a
+copy of its plan, so editing a recipe never changes a running plan.
+
+| Step | Does | Done when |
+| --- | --- | --- |
+| `release: <package>` with `bump` or `version` | Fires the package's trigger at the branch head as read when it fires (so it includes what the steps it needs committed) | `until:` (`tagged`, `built`, `published`, `deployed`), or the end of its chain |
+| `update-deps: { package, deps, via }` | Sets `^<version>` for each dependency in the package's `<path>/package.json`: the version its release step in the plan reached, or its latest published one. Only plain ranges are rewritten; the rest of the file stays as it is. `via: commit` (default) commits to the branch; `via: pr` opens a pull request and **pauses** the step | The commit is made; with `via: pr`, the pull request is merged (closed without a merge: failed) |
+| `deploy: <package>` with `target` | Deploys `version`, or the plan's release of the package, or its latest published version | The target reports the version |
+
+- **Preview** shows every step in run order and as a graph: each version change (majors are named
+  in the confirmation), each tag and commit, each range change and whether it is a commit or a pull
+  request, the deploys, what is adopted, and what would wait. It reports cycles, unknown packages,
+  missing triggers, and a step that uses a version released in the plan without needing that
+  release.
+- **Same-repo batching:** release steps of one repo and branch that fire together take one repo
+  lock and tag one commit (`batch: false` opts a step out). Each is still followed on its own.
+- **On failure** the steps that need the failed one are skipped and independent branches go on;
+  with `fail-fast: true` the steps that have not started are cancelled. Started steps are never
+  stopped. **Resume** runs a failed or cancelled run again: done steps stay done, and the others
+  start over with the versions computed at the first attempt. An existing tag is followed, and its
+  failed build is re-run.
+
 ### Push events
 
 - **GitHub App webhooks** (`POST /hooks/github`, checked with the webhook secret) make Beacon poll
@@ -168,7 +205,7 @@ Run them next to the server with `docker exec beacon beacon ...` (same database,
 | Command | Does |
 | --- | --- |
 | `beacon apply [-f FILE] [--dry-run]` | Applies a config file (default `$BEACON_CONFIG`); the server picks it up within 30 s |
-| `beacon export` | Prints the stored config as YAML |
+| `beacon export` | Prints the stored config as YAML, with the recipes saved in Beacon |
 | `beacon backup FILE` or `beacon backup -` | Writes a consistent copy of the database (`-`: to stdout) |
 | `beacon healthcheck` | Exit 0 when the server answers `/healthz` |
 
@@ -182,10 +219,14 @@ the admin password):
 | `GET /api/overview` | Packages with their newest version, gaps, unreleased changes, possible actions and active run; stuck gaps first |
 | `GET /api/packages/{name}` | Every version with its chain, recent events and runs |
 | `GET /api/packages/{name}/events?before=&limit=` | Older events |
-| `POST /api/actions/preview` | `{"kind": "release", "package", "bump"}` (or `"version"`), `{"kind": "deploy", "package", "version", "target"}`, `{"kind": "rerun", "package", "version"}` → the preview; writes nothing |
+| `POST /api/actions/preview` | `{"kind": "release", "package", "bump"}` (or `"version"`), `{"kind": "deploy", "package", "version", "target"}`, `{"kind": "rerun", "package", "version"}`, `{"recipe": name}` or `{"plan": {"failFast", "steps": [{"key", "type", "package", "needs", ...}]}}` → the preview; writes nothing |
 | `POST /api/actions` | The same request plus `"confirm": {"fingerprint", "major"}` from the preview → `201 {"run": id}`; `409` (moved), `422` (errors) or `428` (major not ticked) with the current preview |
 | `GET /api/runs?before=&limit=`, `GET /api/runs/{id}` | Plan runs and their steps |
 | `POST /api/runs/{id}/cancel` | Cancels a running run |
+| `POST /api/runs/{id}/resume` | Runs a failed or cancelled run again from where it stopped |
+| `GET /api/recipes` | The recipes, from the file (`managed`) and saved in Beacon |
+| `PUT /api/recipes/{name}`, `DELETE /api/recipes/{name}` | Saves (a plan as the body; `422` with its problems) or deletes a recipe saved in Beacon; a file recipe answers `409` |
+| `POST /api/recipes/yaml` | A plan → `{"yaml"}`: its `recipes:` section for the config file |
 | `GET /api/status` | The poll jobs: tier, last and next poll, last error |
 | `GET /api/audit?before=&limit=` | Logins, config applies, runs, unmatched CDEvents |
 | `GET /api/events` | Server-sent events: `{"packages": [...], "runs": [...]}` whenever packages or runs change |

@@ -15,10 +15,18 @@ var ErrNoRun = errors.New("no such plan run")
 // CreateRun stores a new run and its steps and returns its id.
 func (s *Store) CreateRun(ctx context.Context, r model.Run) (int64, error) {
 	var id int64
+	planJSON := ""
+	if r.Plan != nil {
+		b, err := json.Marshal(r.Plan)
+		if err != nil {
+			return 0, err
+		}
+		planJSON = string(b)
+	}
 	err := s.WithTx(ctx, func(tx *Store) error {
 		res, err := tx.q.ExecContext(ctx,
-			"INSERT INTO plan_runs (title, state, source, actor, created) VALUES (?, ?, ?, ?, ?)",
-			r.Title, model.RunRunning, r.Source, r.Actor, tx.unix())
+			"INSERT INTO plan_runs (title, state, source, actor, created, recipe, fail_fast, plan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+			r.Title, model.RunRunning, r.Source, r.Actor, tx.unix(), r.Recipe, r.FailFast, planJSON)
 		if err != nil {
 			return err
 		}
@@ -56,6 +64,12 @@ func (s *Store) FinishRun(ctx context.Context, run int64, state model.RunState) 
 	return err
 }
 
+// ReopenRun sets a finished run running again (resume).
+func (s *Store) ReopenRun(ctx context.Context, run int64) error {
+	_, err := s.q.ExecContext(ctx, "UPDATE plan_runs SET state = ?, finished = 0 WHERE id = ?", model.RunRunning, run)
+	return err
+}
+
 // Run returns one run with its steps.
 func (s *Store) Run(ctx context.Context, id int64) (model.Run, error) {
 	runs, err := s.runs(ctx, "WHERE id = ?", id)
@@ -89,7 +103,7 @@ func (s *Store) PackageRuns(ctx context.Context, pkg string, limit int) ([]model
 
 func (s *Store) runs(ctx context.Context, where string, args ...any) ([]model.Run, error) {
 	rows, err := s.q.QueryContext(ctx,
-		"SELECT id, title, state, source, actor, created, finished FROM plan_runs "+where, args...)
+		"SELECT id, title, state, source, actor, created, finished, recipe, fail_fast, plan FROM plan_runs "+where, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +111,17 @@ func (s *Store) runs(ctx context.Context, where string, args ...any) ([]model.Ru
 	for rows.Next() {
 		var r model.Run
 		var created, finished int64
-		if err := rows.Scan(&r.ID, &r.Title, &r.State, &r.Source, &r.Actor, &created, &finished); err != nil {
+		var planJSON string
+		if err := rows.Scan(&r.ID, &r.Title, &r.State, &r.Source, &r.Actor, &created, &finished, &r.Recipe, &r.FailFast, &planJSON); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		if planJSON != "" {
+			r.Plan = &model.Plan{}
+			if err := json.Unmarshal([]byte(planJSON), r.Plan); err != nil {
+				rows.Close()
+				return nil, err
+			}
 		}
 		r.Created = time.Unix(created, 0)
 		if finished > 0 {

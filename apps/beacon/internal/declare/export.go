@@ -36,6 +36,9 @@ func Export(c catalog.Catalog) ([]byte, error) {
 		}
 		f.Projects = append(f.Projects, pf)
 	}
+	for _, p := range c.Recipes {
+		f.Recipes = append(f.Recipes, exportRecipe(p))
+	}
 	return yaml.Marshal(f)
 }
 

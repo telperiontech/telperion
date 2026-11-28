@@ -7,6 +7,7 @@ import { FieldModule } from '@telperion/ng-ui/form/field';
 import { Subject, catchError, exhaustMap, map, merge, of, startWith, tap } from 'rxjs';
 
 import { ActionRequest, Preview } from '../core/api';
+import { PlanGraph } from '../shared/plan-graph';
 
 /** What came of the last confirmation. */
 type Outcome =
@@ -22,13 +23,13 @@ interface Confirmation {
 }
 
 /**
- * The preview of one action and its confirmation. Nothing is written until the user starts it;
+ * The preview of an action, recipe or ad-hoc plan, and its confirmation. Nothing is written until the user starts it;
  * the server checks that the preview still holds and answers with the new one if it moved.
  * On start it opens the run.
  */
 @Component({
   selector: 'bcn-action-preview',
-  imports: [FieldModule],
+  imports: [FieldModule, PlanGraph],
   templateUrl: './action-preview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -41,10 +42,18 @@ export class ActionPreview {
     return { status: 'error', error: message };
   }
 
+  /** The major version changes, named for the confirmation: " (lib 1.4.0 → 2.0.0)". */
+  private static majors(p: Preview): string {
+    const list = p.steps.filter(s => s.major).map(s => `${s.package} ${s.from ?? ''} → ${s.version}`);
+    return list.length ? ` (${list.join(', ')})` : '';
+  }
+
   readonly #http = inject(HttpClient);
   readonly #router = inject(Router);
 
-  /** The action to preview. */
+  protected readonly majors = ActionPreview.majors;
+
+  /** The action, recipe or plan to preview. */
   readonly request = input.required<ActionRequest>();
   /** The user closed the preview without starting. */
   readonly closed = output<void>();

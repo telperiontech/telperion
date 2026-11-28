@@ -37,7 +37,10 @@ func (s *Store) LoadCatalog(ctx context.Context) (catalog.Catalog, error) {
 	if c.Projects, err = loadSpecs[catalog.Project](ctx, s.q, "SELECT spec FROM projects ORDER BY name"); err != nil {
 		return c, err
 	}
-	c.Packages, err = loadSpecs[catalog.Package](ctx, s.q, "SELECT spec FROM packages ORDER BY name")
+	if c.Packages, err = loadSpecs[catalog.Package](ctx, s.q, "SELECT spec FROM packages ORDER BY name"); err != nil {
+		return c, err
+	}
+	c.Recipes, err = s.recipes(ctx)
 	return c, err
 }
 
@@ -120,6 +123,9 @@ func (s *Store) SaveCatalog(ctx context.Context, c catalog.Catalog) error {
 		if _, err := s.q.ExecContext(ctx, "INSERT INTO packages (name, project, spec) VALUES (?, ?, ?)", p.Name, p.Project, spec); err != nil {
 			return err
 		}
+	}
+	if err := s.saveManagedRecipes(ctx, c.Recipes); err != nil {
+		return err
 	}
 	for _, name := range gone {
 		for _, table := range []string{"versions", "stage_states", "unreleased"} {
