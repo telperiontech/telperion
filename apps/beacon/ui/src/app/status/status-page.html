@@ -1,0 +1,29 @@
+<h1 class="mb-4 text-xl font-semibold">Polling</h1>
+<table class="w-full text-left text-sm">
+  <thead class="text-neutral-500">
+    <tr><th class="py-1">Job</th><th>Tier</th><th>Last poll</th><th>Next</th><th>Error</th></tr>
+  </thead>
+  <tbody>
+    @for (j of jobs(); track j.key) {
+      <tr class="border-t border-neutral-200 align-top dark:border-neutral-800">
+        <td class="py-1 font-mono">{{ j.key }}</td>
+        <td [class.text-danger]="j.tier === 'backoff'" [class.text-warning]="j.tier === 'hot'">{{ j.tier }}</td>
+        <td>
+          @if (j.lastPoll) {
+            <span [title]="j.lastPoll | date: 'medium'">{{ j.lastPoll | age: now() }} ago</span>
+          } @else {
+            –
+          }
+        </td>
+        <td [title]="j.nextPoll | date: 'medium'">{{ j.nextPoll | date: 'shortTime' }}</td>
+        <td class="text-danger">
+          @if (j.lastError) {
+            {{ j.lastError }} ({{ j.failures }}×)
+          }
+        </td>
+      </tr>
+    } @empty {
+      <tr><td colspan="5" class="py-2 text-neutral-500">No poll jobs: no packages are configured.</td></tr>
+    }
+  </tbody>
+</table>

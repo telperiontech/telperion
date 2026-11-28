@@ -348,6 +348,40 @@ Execute a command for each item in a list or glob pattern.
 
 ---
 
+### 🗜️ Gzip Budget
+
+Fail when the gzipped initial bundle of a built web app is over budget. The initial bundle is every
+local script, stylesheet and `modulepreload` that `index.html` references, each gzipped. Angular's
+`budgets` measure raw sizes only; this checks what a browser actually downloads.
+
+**Usage:**
+
+```json
+{
+  "targets": {
+    "check-budget": {
+      "executor": "@thalesrc/nx-utils:gzip-budget",
+      "dependsOn": ["build"],
+      "options": {
+        "outputPath": "dist/apps/my-app/browser",
+        "maximumWarning": "200kB",
+        "maximumError": "250kB"
+      }
+    }
+  }
+}
+```
+
+**Options:**
+
+- `outputPath` (required): The build output directory holding `index.html`, relative to the workspace root
+- `maximumError` (required): Fails above this gzipped size (`b`, `kB`, `MB`, as in Angular budgets)
+- `maximumWarning`: Warns above this gzipped size
+- `index`: The page to read (default: `index.html`)
+- `level`: gzip level 1–9 (default: `6`, a typical server setting)
+
+---
+
 ## Development
 
 ### Building

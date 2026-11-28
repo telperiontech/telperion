@@ -11,6 +11,7 @@ Reactive, signal-based HTTP fetcher for Angular built on top of `HttpClient` and
 - ⚠️ **Built-in `error` and `loading` signals** — first-class request state, no manual bookkeeping
 - 🧯 **Fallback value** — used as the initial signal value and as the emitted value on request error
 - 🔄 **Manual `reload()`** — re-trigger the current request without changing options; returns a `Promise` that resolves once the new response is in
+- 📡 **`reloadOn` option** — the declarative `reload()`: every emission of an `Observable` (server-sent events, a timer) re-runs the request
 - ⏳ **`loaded` promise** — `await` the next successful (or fallback-on-error) emission without subscribing to signals
 - 🧩 **Works inside or outside an injection context** — pass an `Injector` when needed
 - 🎯 **Fully typed generics** — `Result`, `Body`, `Params`, and `QueryParams`
@@ -233,6 +234,37 @@ export class StatsComponent {
 }
 ```
 
+### Reload on Events
+
+When something outside the request decides that the data is stale (a server-sent event saying
+"this changed", a timer, another form's submit), pass it as `reloadOn`. Every emission re-runs the
+current request, exactly like `reload()`, without a subscription or a method call in your class.
+The emitted values are ignored.
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { SseClient } from '@telperion/ng-pack/sse-client';
+import { fetcherSignal } from '@telperion/ng-pack/fetcher-signal';
+import { debounceTime, interval } from 'rxjs';
+
+@Component({ /* ... */ })
+export class OverviewComponent {
+  // re-read the overview whenever the server announces a change
+  overview = fetcherSignal<Overview | null>({
+    url: '/api/overview',
+    fallback: null,
+    reloadOn: inject(SseClient).start('/api/events').pipe(debounceTime(300))
+  });
+
+  // or poll
+  status = fetcherSignal<Status[]>({ url: '/api/status', fallback: [], reloadOn: interval(15_000) });
+}
+```
+
+`reloadOn` is subscribed while the fetcher has a request to run and is subscribed again when the
+other options change, so share a hot source (e.g. with `share()`) when several fetchers listen to
+the same stream.
+
 ### Awaiting the Next Response
 
 `loaded` is a getter that returns a fresh `Promise<void>` resolving the next time `loading` flips back to `false` — that is, after the next successful response or after the fallback is emitted on error. It is useful in tests, route resolvers, effects, and anywhere you need to `await` the fetcher without subscribing to the signal.
@@ -305,6 +337,7 @@ Each field accepts a plain value, `Signal`, `Promise`, or `Observable` of that v
 | `queryParams` | `Record<string, string> \| HttpParams`                     | `{}`    | Query string parameters.                                                      |
 | `params`      | `Record<string, string>`                                   | `{}`    | Values for `:name` placeholders in `url`. Missing keys throw at request time. |
 | `fallback`    | `Result`                                                   | `null`  | Initial signal value AND the value emitted when the request errors.           |
+| `reloadOn`    | `Observable<unknown>` (only an Observable)                 | –       | Every emission re-runs the current request, like `reload()`.                  |
 
 ---
 

@@ -1,0 +1,164 @@
+<a routerLink="/plans" class="text-sm text-neutral-500 hover:underline">← Plans</a>
+<h1 class="mt-2 mb-1 text-xl font-semibold">New plan</h1>
+<p class="mb-4 text-sm text-neutral-500">
+  Steps run in parallel once the steps they need are done. A release tags the head of its branch when it fires, so a
+  release after an update-deps step includes its commit.
+</p>
+
+<form class="flex flex-col gap-4" (tngValidSubmit)="submits.next($event)">
+  <div class="flex flex-wrap items-end gap-4">
+    <tui-field label="Name" hint="Needed to save it as a recipe">
+      <input type="text" name="name" [ngModel]="draft().name" pattern="[a-z0-9][a-z0-9._\-]{0,62}" />
+    </tui-field>
+    <label class="flex items-center gap-2 pb-2 text-sm">
+      <input type="checkbox" name="failFast" [ngModel]="draft().failFast" />
+      Fail-fast: a failed step cancels the steps that have not started
+    </label>
+  </div>
+
+  <datalist id="bcn-targets">
+    @for (t of targets(); track t) {
+      <option [value]="t"></option>
+    }
+  </datalist>
+
+  @for (row of draft().rows; track row.id) {
+    <fieldset
+      [ngModelGroup]="'s' + row.id"
+      class="grid gap-3 rounded-lg border border-neutral-200 bg-white p-4 sm:grid-cols-3 dark:border-neutral-800 dark:bg-neutral-900"
+    >
+      <tui-field label="Key" hint="Other steps name it in their needs">
+        <input type="text" name="key" [ngModel]="row.step.key ?? ''" required pattern="[a-z0-9][a-z0-9._@\-]{0,62}" />
+      </tui-field>
+      <tui-field label="Does">
+        <select name="type" [ngModel]="row.step.type ?? 'release'" #type="ngModel" required>
+          <option value="release">release</option>
+          <option value="update-deps">update dependencies</option>
+          <option value="deploy">deploy</option>
+        </select>
+      </tui-field>
+      <tui-field [label]="type.value === 'update-deps' ? 'In the manifest of' : 'Package'">
+        <select name="package" [ngModel]="row.step.package ?? ''" required>
+          <option value="" disabled>choose…</option>
+          @for (p of packages(); track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </tui-field>
+
+      @if (type.value === 'release') {
+        <tui-field label="Bump">
+          <select name="bump" [ngModel]="row.step.bump ?? (row.step.version ? '' : 'patch')">
+            <option value="patch">patch</option>
+            <option value="minor">minor</option>
+            <option value="major">major</option>
+            <option value="">an exact version</option>
+          </select>
+        </tui-field>
+        <tui-field label="Exact version" hint="Instead of a bump">
+          <input type="text" name="version" [ngModel]="row.step.version ?? ''" pattern="\d+\.\d+\.\d+([\-+][0-9A-Za-z.\-]+)?" />
+        </tui-field>
+        <tui-field label="Done when" hint="Default: the end of its chain">
+          <select name="until" [ngModel]="row.step.until ?? ''">
+            <option value="">the end of the chain</option>
+            <option value="tagged">tagged</option>
+            <option value="built">built</option>
+            <option value="published">published</option>
+            <option value="deployed">deployed</option>
+          </select>
+        </tui-field>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="batch" [ngModel]="!row.step.noBatch" />
+          Tag together with the repo's other ready releases
+        </label>
+      }
+      @if (type.value === 'update-deps') {
+        <tui-field label="Set ^version of" hint="The version each reaches in this plan, or its latest">
+          <select name="deps" multiple [ngModel]="row.step.deps ?? []" required size="4">
+            @for (p of packages(); track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+        </tui-field>
+        <tui-field label="Write as">
+          <select name="via" [ngModel]="row.step.via ?? 'commit'">
+            <option value="commit">a commit on the branch</option>
+            <option value="pr">a pull request (the plan waits for its merge)</option>
+          </select>
+        </tui-field>
+      }
+      @if (type.value === 'deploy') {
+        <tui-field label="Target">
+          <input type="text" name="target" list="bcn-targets" [ngModel]="row.step.target ?? ''" required />
+        </tui-field>
+        <tui-field label="Version" hint="Default: the plan's release, or the latest published">
+          <input type="text" name="version" [ngModel]="row.step.version ?? ''" pattern="\d+\.\d+\.\d+([\-+][0-9A-Za-z.\-]+)?" />
+        </tui-field>
+      }
+
+      <tui-field label="After" hint="Keys of the steps it needs, comma-separated">
+        <input type="text" name="needs" [ngModel]="row.step.needs?.join(', ') ?? ''" />
+      </tui-field>
+      <div class="flex items-end justify-end sm:col-span-3">
+        <button type="button" class="text-sm text-danger hover:underline" (click)="removes.next(row.id)">Remove step</button>
+      </div>
+    </fieldset>
+  }
+
+  <div class="flex flex-wrap gap-3">
+    <button type="button" class="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700" (click)="adds.next()">
+      Add a step
+    </button>
+    <button type="submit" class="rounded-md bg-primary px-4 py-1.5 font-medium text-white" [disabled]="draft().rows.length === 0">
+      Preview
+    </button>
+  </div>
+</form>
+
+@if (request(); as r) {
+  <div class="mt-6 flex flex-col gap-3">
+    <bcn-action-preview [request]="r" (closed)="closes.next()" />
+
+    <div class="flex flex-wrap items-center gap-3 text-sm">
+      <button
+        type="button"
+        class="rounded-md border border-neutral-300 px-3 py-1 disabled:opacity-50 dark:border-neutral-700"
+        [disabled]="!r.plan.name || saved().status === 'busy'"
+        [title]="r.plan.name ? '' : 'Give the plan a name first'"
+        (click)="saves.next()"
+      >
+        Save as a recipe
+      </button>
+      <button
+        type="button"
+        class="rounded-md border border-neutral-300 px-3 py-1 disabled:opacity-50 dark:border-neutral-700"
+        [disabled]="exported().status === 'busy'"
+        (click)="exports.next()"
+      >
+        Show as YAML
+      </button>
+    </div>
+
+    @if (saved(); as s) {
+      @if (s.status === 'error') {
+        <div class="text-sm text-danger" role="alert">
+          <p>Not saved: {{ s.error }}</p>
+          @for (e of s.errors ?? []; track e) {
+            <p>{{ e }}</p>
+          }
+        </div>
+      }
+    }
+
+    @if (exported(); as x) {
+      @if (x.status === 'ok') {
+        <div>
+          <p class="mb-1 text-sm text-neutral-500">Paste this into the config file to keep the plan as a managed recipe:</p>
+          <pre class="overflow-x-auto rounded-md bg-neutral-100 p-3 text-xs dark:bg-neutral-800">{{ x.value }}</pre>
+        </div>
+      } @else if (x.status === 'error') {
+        <p class="text-sm text-danger" role="alert">{{ x.error }}</p>
+      }
+    }
+  </div>
+}

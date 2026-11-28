@@ -1,0 +1,29 @@
+@if (overview.error() && !overview()) {
+  <p class="text-danger" role="alert">The overview could not be loaded.</p>
+} @else if (overview(); as o) {
+  <header class="mb-4 flex items-baseline justify-between">
+    <h1 class="text-xl font-semibold">Packages</h1>
+    <p class="text-sm text-neutral-500">
+      {{ packages().length }} packages,
+      @if (gapCount()) {
+        <span class="font-medium text-danger">{{ gapCount() }} with gaps</span>
+      } @else {
+        no gaps
+      }
+    </p>
+  </header>
+  @if (packages().length === 0) {
+    <section class="mx-auto mt-16 max-w-xl text-center text-neutral-500">
+      <h2 class="mb-2 text-lg font-medium text-current">No packages yet</h2>
+      <p>Packages come from Beacon's YAML config: set <code>BEACON_CONFIG</code> or run <code>beacon apply -f FILE</code>.</p>
+    </section>
+  } @else {
+    <ul class="grid gap-3">
+      @for (p of packages(); track p.name) {
+        <li><bcn-package-card [pkg]="p" /></li>
+      }
+    </ul>
+  }
+} @else {
+  <p class="text-neutral-500">Loading…</p>
+}

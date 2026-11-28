@@ -1,0 +1,100 @@
+{
+  "name": "beacon-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/beacon/ui/src",
+  "prefix": "bcn",
+  "projectType": "application",
+  "tags": [
+    "scope:beacon",
+    "framework:angular"
+  ],
+  "implicitDependencies": [
+    "nx-utils"
+  ],
+  "metadata": {
+    "description": "Beacon's admin UI. Built into apps/beacon/internal/web/dist, where the Go binary embeds it (go:embed)."
+  },
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{workspaceRoot}/apps/beacon/internal/web/dist"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": {
+          "base": "apps/beacon/internal/web/dist",
+          "browser": ""
+        },
+        "index": "apps/beacon/ui/src/index.html",
+        "browser": "apps/beacon/ui/src/main.ts",
+        "tsConfig": "apps/beacon/ui/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/beacon/ui/public"
+          }
+        ],
+        "styles": [
+          "apps/beacon/ui/src/styles.css"
+        ]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "700kB",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kB",
+              "maximumError": "8kB"
+            }
+          ],
+          "outputHashing": "all",
+          "optimization": {
+            "scripts": true,
+            "styles": {
+              "minify": true,
+              "inlineCritical": false
+            },
+            "fonts": true
+          }
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      }
+    },
+    "check-budget": {
+      "executor": "@thalesrc/nx-utils:gzip-budget",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "outputPath": "apps/beacon/internal/web/dist",
+        "maximumError": "250kB"
+      }
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "port": 10504,
+        "proxyConfig": "apps/beacon/ui/proxy.conf.json"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "beacon-ui:build:development"
+        },
+        "production": {
+          "buildTarget": "beacon-ui:build:production"
+        }
+      }
+    }
+  }
+}

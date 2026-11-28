@@ -1,0 +1,31 @@
+/* Tailwind v4; @telperion/ng-ui's components use its utilities and the theme
+   colours below, so its sources are scanned too. */
+@import "tailwindcss" source(none);
+
+@source "./";
+@source "../../../../libs/ng-ui/form";
+
+@theme {
+  --color-black: #0b0f1a;
+  --color-white: #fafafb;
+  --color-primary: #2563eb;
+  --color-secondary: #10b981;
+  --color-tertiary: #06b6d4;
+  --color-quaternary: #a855f7;
+  --color-success: #10b981;
+  --color-warning: #d97706;
+  --color-danger: #ef4444;
+  --color-neutral: #a3a3a3;
+}
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-neutral-50 font-sans text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}

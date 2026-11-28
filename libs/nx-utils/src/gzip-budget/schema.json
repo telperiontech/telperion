@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "GzipBudget executor",
+  "description": "Fails when the gzipped initial bundle of a built web app (every script, stylesheet and modulepreload index.html references) is over budget. Angular's own budgets measure raw sizes only.",
+  "type": "object",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "The built application's output directory, holding index.html (relative to the workspace root)."
+    },
+    "index": {
+      "type": "string",
+      "description": "The page whose scripts, stylesheets and modulepreloads make the initial bundle.",
+      "default": "index.html"
+    },
+    "maximumError": {
+      "type": "string",
+      "description": "Fails above this gzipped initial size, e.g. \"250kB\" (b, kB, MB).",
+      "pattern": "^\\d+(\\.\\d+)?\\s*(b|kB|MB)$"
+    },
+    "maximumWarning": {
+      "type": "string",
+      "description": "Warns above this gzipped initial size (b, kB, MB).",
+      "pattern": "^\\d+(\\.\\d+)?\\s*(b|kB|MB)$"
+    },
+    "level": {
+      "type": "number",
+      "description": "gzip level, 1-9 (default 6, a typical server setting).",
+      "minimum": 1,
+      "maximum": 9,
+      "default": 6
+    }
+  },
+  "required": ["outputPath", "maximumError"]
+}

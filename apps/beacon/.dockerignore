@@ -1,0 +1,12 @@
+# The Go module and the UI sources; the UI's workspace libraries come from the
+# "workspace" build context (see Dockerfile).
+*
+!go.mod
+!go.sum
+!cmd/
+!internal/
+!test/
+!examples/
+!ui/
+internal/web/dist
+ui/.angular

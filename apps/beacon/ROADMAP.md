@@ -17,7 +17,7 @@ that runs in the owner's setup before the next phase starts.
   registry.
 - **Check:** a tag created by a GitHub App installation token (Releases API and Git refs API) starts a
   `push: tags` workflow, on a throwaway package. The release mechanism depends on it.
-- Decide whether to start `libs/go-kit` (shared with frp-gate) now or copy frp-gate's pieces first.
+- Decided: `libs/go-kit` is started with Phase 1 (Beacon uses it; frp-gate switches over in its own change).
 
 ## Phase 1 (0.1): the overview, read-only
 
@@ -45,6 +45,15 @@ Value: the gaps between tagged, built, published and deployed are visible for ev
 Value: a release of this repo's packages is a button, and its progress to the registry is watched to
 the end.
 
+Built as: `internal/plan` (preview, start, the step state machine, locks and limits; an action is a
+one-step run, so no separate `internal/action`), `internal/bind` (one adapter set and GitHub App per
+catalog, shared by polling and plans), `internal/ingest` (webhooks, CDEvents). Write tokens are
+minted per action and limited to the one repo. Config: `release:`, `branch`, `path` (for unreleased
+changes), `github.webhook_secret_*`, `cdevents.sources`, and `ci: cdevents` / `deploy: - cdevents:`
+for stages that are only reported. Left open: CDEvents `pipelinerun.*` and `service.removed` are
+recorded as unmatched; a `github-dispatch` run is followed through its tag, not identified by id;
+the Coolify deploy endpoints are unverified against a live instance.
+
 ## Phase 3 (0.3 → 1.0): release plans
 
 - DAG plans: recipes in YAML, ad-hoc plans in the UI (template-driven plan builder), saving an ad-hoc
@@ -54,6 +63,20 @@ the end.
 - Failure handling: skip dependents, continue independent branches, optional fail-fast, resume,
   restart safety via stored trigger intents. DAG view in the UI.
 - Preview screen with every version change, majors confirmed separately.
+
+Built as (0.3): plans and recipes share one structure (`model.Plan`); actions, recipes and ad-hoc
+plans go through the same preview, start and runner. `catalog.CheckPlan` validates recipes at apply
+and plans at preview (cycles, unknown packages and targets, a step using a version released in the
+plan without needing it). The runner moves steps in rounds and fires the release steps of one repo
+and branch together (one repo lock, one commit). `update-deps` edits `package.json` ranges in place
+(`internal/manifest`) through the GitHub contents API (`adapter/githubcontents`); `via: pr` mints a
+token with Pull requests only for that step, and the paused step has no stall timeout. Resume keeps
+done steps, retries the others with their stored versions and re-runs the failed build of an
+adopted tag. Recipes saved in the UI are unmanaged rows; the file wins on a name clash. The UI has
+the Plans page, the template-driven plan builder, YAML export and an SVG DAG view. Left open: the
+generic `update-deps` form (a version string in any file, e.g. an image tag in a compose file in
+another repo); a `github-dispatch` batch is one dispatch per package, not one dispatch with a list;
+majors are confirmed with one tick that names them all, not one tick each.
 
 1.0 when the owner's real chains (utility libraries → ng-pack/ng-ui → services → deploys) run through
 Beacon.

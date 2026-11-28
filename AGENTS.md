@@ -14,7 +14,7 @@ When in doubt, split.
 
 ## Local Dev Ports
 
-Local dev servers use this repo's block, 10500-10599, from the owner's port registry (self-host repo, `docs/dev-ports.md`), so they run next to other projects. osw apps 10500+ (shell 10500, home 10501), messenger demo 10502-10503, docs apps 10522-10539, Verdaccio 10550, Storybooks 10560-10563. Never use a framework default port (4200, 5173, 6006); give a new dev server the next free port in its range and add it to the registry.
+Local dev servers use this repo's block, 10500-10599, from the owner's port registry (self-host repo, `docs/dev-ports.md`), so they run next to other projects. osw apps 10500+ (shell 10500, home 10501), messenger demo 10502-10503, Beacon 10504-10506 (UI dev server 10504, admin 10505, ingest 10506), docs apps 10522-10539 (10531 reserved for Beacon's docs app), Verdaccio 10550, Storybooks 10560-10563. Never use a framework default port (4200, 5173, 6006); give a new dev server the next free port in its range and add it to the registry.
 
 ## osw Dev Environment
 

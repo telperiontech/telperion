@@ -1,0 +1,52 @@
+<article
+  class="rounded-lg border bg-white p-4 dark:bg-neutral-900"
+  [class]="pkg().gaps.length > 0 ? 'border-danger' : 'border-neutral-200 dark:border-neutral-800'"
+>
+  <header class="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+    <a [routerLink]="['/packages', pkg().name]" class="font-semibold hover:underline">{{ pkg().name }}</a>
+    <span class="text-sm text-neutral-500">{{ pkg().project }}</span>
+    @if (pkg().latest; as latest) {
+      <span class="font-mono text-sm">{{ latest.version }}</span>
+    }
+    <nav class="ml-auto flex gap-3 text-xs text-neutral-500">
+      @if (pkg().links.repo; as repo) {
+        <a [href]="repo" target="_blank" rel="noopener" class="hover:underline">repo</a>
+      }
+      @if (pkg().links.ci; as ci) {
+        <a [href]="ci" target="_blank" rel="noopener" class="hover:underline">CI</a>
+      }
+      @if (pkg().links.registry; as registry) {
+        <a [href]="registry" target="_blank" rel="noopener" class="hover:underline">registry</a>
+      }
+    </nav>
+  </header>
+
+  <bcn-stage-pipeline [chain]="pkg().chain" [version]="pkg().latest" />
+
+  @if (pkg().unreleased?.commits || pkg().activeRun) {
+    <p class="mt-2 flex flex-wrap gap-3 text-xs">
+      @if (pkg().unreleased; as u) {
+        @if (u.commits > 0) {
+          <a [href]="u.url" target="_blank" rel="noopener" class="text-warning hover:underline">
+            {{ u.commits }} unreleased {{ u.commits === 1 ? 'commit' : 'commits' }}
+          </a>
+        }
+      }
+      @if (pkg().activeRun; as a) {
+        <a [routerLink]="['/runs', a.id]" class="text-warning hover:underline">running: {{ a.title }}</a>
+      }
+    </p>
+  }
+
+  @if (pkg().gaps.length > 0) {
+    <ul class="mt-3 flex flex-col gap-1 text-sm">
+      @for (g of pkg().gaps; track g.version) {
+        <li [class.text-danger]="g.stuck" [class.text-warning]="!g.stuck">
+          <span class="font-mono">{{ g.version }}</span>
+          {{ g.from }}, {{ g.state === 'failed' ? g.to + ' failed' : 'not ' + g.to }}
+          for {{ g.since | age: now() }}
+        </li>
+      }
+    </ul>
+  }
+</article>

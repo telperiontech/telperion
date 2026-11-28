@@ -179,7 +179,8 @@ frp-gate.
 - **Every other secret stays server-side**: Coolify tokens, registry credentials, webhook secrets,
   CDEvents source tokens. In the YAML they are referenced, never written: `token_env`, `token_file`
   (same convention as frp-gate). The API never returns a secret, the UI never receives one, logs mask
-  them. Inbound tokens (CDEvents sources) are stored as SHA-256 hashes.
+  them. Inbound tokens (CDEvents sources) are referenced like every other secret, never stored, and
+  compared in constant time through their SHA-256.
 - **Panel login** starts as one admin password (`BEACON_ADMIN_PASSWORD[_FILE]`), HMAC-signed session
   cookies (`HttpOnly`, `SameSite=Strict`, `Secure`), Go's `http.CrossOriginProtection` for CSRF, 1 s
   delay on a failed login: the frp-gate model. A later phase adds "Sign in with GitHub" through the
@@ -250,10 +251,11 @@ the image build.
 
 Code that could live in a Telperion library, to decide when it is written (nothing is moved now):
 
-- **A first Go library, e.g. `libs/go-kit`.** frp-gate and Beacon would share: admin password login
-  with signed session cookies, SQLite open + migrations by `user_version`, `*_FILE` environment
-  loading, hand-written Prometheus text metrics, the `healthcheck` subcommand, the audit-actor
-  context. Today that would be copied from frp-gate; with two consumers it is worth a module.
+- **A first Go library, [`libs/go-kit`](../../libs/go-kit)** (started in Phase 1). frp-gate and
+  Beacon share: admin password login with signed session cookies, SQLite open + migrations by
+  `user_version`, `*_FILE` environment loading, hand-written Prometheus text metrics, the
+  `healthcheck` subcommand, the audit-actor context, the embedded SPA file server. Beacon uses it;
+  frp-gate still has its own copies and switches over in a separate change.
 - **Go platform clients** (GitHub App token minting, npm registry, OCI distribution, Coolify API):
   generic and reusable, but start inside Beacon (`internal/adapter/...`) and move to a Go library
   only when a second consumer appears.

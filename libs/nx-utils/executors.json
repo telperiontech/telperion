@@ -44,6 +44,11 @@
       "implementation": "./src/run-for-each/executor",
       "schema": "./src/run-for-each/schema.json",
       "description": "Execute a command for each item in a list or glob pattern"
+    },
+    "gzip-budget": {
+      "implementation": "./src/gzip-budget/executor",
+      "schema": "./src/gzip-budget/schema.json",
+      "description": "Fail when the gzipped initial bundle of a built web app (what index.html loads) is over budget"
     }
   }
 }

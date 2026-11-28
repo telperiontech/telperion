@@ -1,0 +1,77 @@
+# Beacon config for this repo's packages (BEACON_CONFIG, or `beacon apply -f`).
+# Secrets are never written here, only *_env / *_file references.
+
+# A GitHub App on the repo. Observing needs Metadata, Contents and Actions:
+# read; the release, re-run and dispatch actions need Contents and Actions:
+# read and write. Without this block GitHub is read anonymously (60 requests
+# an hour, no unreleased changes) and cannot be written to.
+github:
+  app_id: 123456
+  private_key_file: /run/secrets/beacon-github-app.pem
+  # App webhooks (POST /hooks/github on the ingest listener) make Beacon
+  # react at once instead of at the next poll:
+  # webhook_secret_env: BEACON_GITHUB_WEBHOOK_SECRET
+
+# A deployment target; packages name it under deploy.
+# targets:
+#   coolify-main:
+#     coolify: { url: https://coolify.example.com, token_env: COOLIFY_TOKEN }
+#     limit: 1
+
+# Systems that push CDEvents to POST /cdevents, each with its own token.
+# cdevents:
+#   sources:
+#     - { name: home-ci, token_env: BEACON_CDEVENTS_HOME_CI }
+
+projects:
+  - name: telperion
+    repo: telperiontech/telperion
+    # A release creates a GitHub release with the tag {package}-v{version} at
+    # the head of the default branch; the tag starts {package}.publish.yml.
+    release: { github-release: { notes: generate } }
+    ci: { github-actions: { workflow: "{package}.publish.yml" } }
+    packages:
+      dom-utils: { path: libs/dom-utils, artifact: { npm: "@telperion/dom-utils" } }
+      elements: { path: libs/elements, artifact: { npm: "@telperion/elements" } }
+      extra-ts-types: { path: libs/extra-ts-types, artifact: { npm: "@telperion/extra-ts-types" } }
+      js-utils: { path: libs/js-utils, artifact: { npm: "@telperion/js-utils" } }
+      messenger: { path: libs/messenger, artifact: { npm: "@telperion/messenger" } }
+      ng-pack: { path: libs/ng-pack, artifact: { npm: "@telperion/ng-pack" } }
+      ng-ui: { path: libs/ng-ui, artifact: { npm: "@telperion/ng-ui" } }
+      node-utils: { path: libs/node-utils, artifact: { npm: "@telperion/node-utils" } }
+      nx-utils: { path: libs/nx-utils, artifact: { npm: "@thalesrc/nx-utils" } }
+      paintlet: { path: libs/paintlet, artifact: { npm: "@telperion/paintlet" } }
+      react-utils: { path: libs/react-utils, artifact: { npm: "@thalesrc/react-utils" } }
+      reactive-storage: { path: libs/reactive-storage, artifact: { npm: "@telperion/reactive-storage" } }
+      rx-utils: { path: libs/rx-utils, artifact: { npm: "@telperion/rx-utils" } }
+      ts-utils: { path: libs/ts-utils, artifact: { npm: "@telperion/ts-utils" } }
+      auto-proxy:
+        path: libs/auto-proxy
+        artifact: { oci: { image: ghcr.io/telperiontech/auto-proxy, platforms: [linux/amd64, linux/arm64] } }
+      docker-frp:
+        path: libs/docker-frp
+        artifact: { oci: { image: ghcr.io/telperiontech/docker-frp, platforms: [linux/amd64, linux/arm64] } }
+      frp-gate:
+        path: libs/frp-gate
+        artifact: { oci: { image: ghcr.io/telperiontech/frp-gate, platforms: [linux/amd64, linux/arm64] } }
+        # deploy:
+        #   - coolify-main: { app: "<coolify application uuid>" }
+        #   - http-check: { url: "https://gate.example.com/healthz", version: { header: X-Version } }
+      beacon:
+        path: apps/beacon
+        artifact: { oci: { image: ghcr.io/telperiontech/beacon, platforms: [linux/amd64, linux/arm64] } }
+
+# Saved plans (the Plans page previews and starts them). A step runs once the
+# steps it needs are done. update-deps sets ^<version> in the package's
+# package.json; via: pr opens a pull request and waits for its merge (the
+# App then also needs Pull requests: read and write).
+recipes:
+  - name: utils-wave
+    fail-fast: true
+    steps:
+      js-utils: { release: js-utils, bump: minor }
+      rx-utils: { release: rx-utils, bump: patch }
+      ng-pack-deps:
+        update-deps: { package: ng-pack, deps: [js-utils, rx-utils], via: pr }
+        needs: [js-utils, rx-utils]
+      ng-pack: { release: ng-pack, bump: minor, needs: [ng-pack-deps] }
