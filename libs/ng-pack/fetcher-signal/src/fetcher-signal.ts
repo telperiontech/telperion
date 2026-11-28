@@ -6,7 +6,7 @@ import { isFalsy } from '@telperion/js-utils/is-falsy';
 import { defer } from '@telperion/js-utils/function/defer';
 import { toObservable } from "@telperion/ng-pack/utils";
 import { shareLast } from "@telperion/rx-utils/operators/share-last";
-import { combineLatest, Observable, of, map, debounceTime, switchMap, catchError, tap, mergeWith, Subject, mapTo, startWith, filter, firstValueFrom } from "rxjs";
+import { combineLatest, Observable, of, map, debounceTime, switchMap, catchError, tap, mergeWith, Subject, mapTo, startWith, filter, firstValueFrom, merge } from "rxjs";
 
 interface FetcherSignalOptionTypes<
   Result,
@@ -55,6 +55,10 @@ type OptionDefaults<
  * - `queryParams` — query string parameters as a plain object or `HttpParams`.
  * - `params` — values for `:name` URL placeholders (URL-encoded; missing keys throw).
  * - `fallback` — initial signal value AND the value emitted when the request errors.
+ * - `reloadOn` — an `Observable` whose every emission re-runs the current request, like
+ *   `reload()` but declarative (e.g. a server-sent event stream announcing changes). Its values
+ *   are ignored. It is subscribed while the fetcher has a request to run, and subscribed again
+ *   when the other options change.
  */
 export type FetcherSignalOptions<
   Result,
@@ -67,6 +71,8 @@ export type FetcherSignalOptions<
     | Signal<FetcherSignalOptionTypes<Result, Body, Params, QueryParams>[K]>
     | Promise<FetcherSignalOptionTypes<Result, Body, Params, QueryParams>[K]>
     | Observable<FetcherSignalOptionTypes<Result, Body, Params, QueryParams>[K]>;
+} & {
+  reloadOn?: Observable<unknown>;
 }
 
 /**
@@ -75,7 +81,8 @@ export type FetcherSignalOptions<
  * - call the signal to read the latest result (or `fallback` before the first response)
  * - `error` — latest error; reset to `null` on each successful response
  * - `loading` — `true` while a request is in flight, `false` once a value is emitted
- * - `reload()` — re-run the current request without changing options. Returns a
+ * - `reload()` — re-run the current request without changing options (declaratively: the
+ *   `reloadOn` option). Returns a
  *   `Promise<void>` that resolves once the next value (response or fallback-on-error)
  *   has been emitted into the signal.
  * - `loaded` — getter returning a fresh `Promise<void>` that resolves the next time
@@ -124,7 +131,10 @@ export function fetcherSignal<
   options: FetcherSignalOptions<Result, Body, Params, QueryParams>,
   injector?: Injector
 ): FetcherSignal<Result> {
-  const client = injector?.get(HttpClient) ?? inject(HttpClient);
+  // Kept for the whole lifetime: signal options, toSignal and the `loaded` getter (called later,
+  // e.g. from a click handler through reload()) all need it outside the injection context.
+  const contextInjector = injector ?? inject(Injector);
+  const client = contextInjector.get(HttpClient);
   const defaultOptions: OptionDefaults<Result, Body, Params, QueryParams> = {
     url: '',
     method: 'get',
@@ -135,6 +145,7 @@ export function fetcherSignal<
     fallback: null!
   };
 
+  const { reloadOn, ...requestOptions } = options;
   const {
     url,
     method,
@@ -143,7 +154,7 @@ export function fetcherSignal<
     queryParams,
     params,
     fallback
-  } = parseOptions(options);
+  } = parseOptions(requestOptions, contextInjector);
 
   const optionsArray = [
     url ?? of(defaultOptions.url),
@@ -158,6 +169,7 @@ export function fetcherSignal<
   const errorSignal = signal<Error | null>(null);
   const loadingSignal = signal(true);
   const reloadTrigger = new Subject<void>();
+  const reloads = reloadOn ? merge(reloadTrigger, reloadOn) : reloadTrigger;
 
   const result$ = combineLatest(optionsArray).pipe(
     map(([url, method, headers, body, queryParams, params]) => ({
@@ -169,7 +181,7 @@ export function fetcherSignal<
       params: params ?? defaultOptions.params
     })),
     debounceTime(10),
-    switchMap(options => reloadTrigger.pipe(mapTo(options), startWith(options))),
+    switchMap(options => reloads.pipe(mapTo(options), startWith(options))),
     switchMap(({ url, method, headers, body, queryParams, params }) => {
       const finalUrl = parseUrlWithParams(url, params);
 
@@ -190,7 +202,7 @@ export function fetcherSignal<
     mergeWith(sharedFallback)
   );
 
-  const resultSignal = toSignal(result$, { initialValue: defaultOptions.fallback });
+  const resultSignal = toSignal(result$, { initialValue: defaultOptions.fallback, injector: contextInjector });
 
   return Object.assign(resultSignal, {
     error: errorSignal.asReadonly(),
@@ -201,7 +213,7 @@ export function fetcherSignal<
       return defer().then(() => this.loaded);
     },
     get loaded() {
-      return firstValueFrom(toObservable(loadingSignal).pipe(
+      return firstValueFrom(toObservable(loadingSignal, contextInjector).pipe(
         filter(isFalsy),
         mapTo(void 0)
       ))
@@ -224,7 +236,8 @@ function parseOptions<
   Params extends Record<string, string>,
   QueryParams extends Record<string, string> | HttpParams
 >(
-  options: FetcherSignalOptions<Result, Body, Params , QueryParams>
+  options: Omit<FetcherSignalOptions<Result, Body, Params, QueryParams>, 'reloadOn'>,
+  injector: Injector
 ) {
-  return objectMap(options, toObservable) as ParsedFetcherSignalOptions<Result, Body, Params, QueryParams>;
+  return objectMap(options, value => toObservable(value, injector)) as ParsedFetcherSignalOptions<Result, Body, Params, QueryParams>;
 }

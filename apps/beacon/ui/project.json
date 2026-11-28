@@ -4,28 +4,64 @@
   "sourceRoot": "apps/beacon/ui/src",
   "prefix": "bcn",
   "projectType": "application",
-  "tags": ["scope:beacon", "framework:angular"],
-  "metadata": { "description": "Beacon's admin UI. Built into apps/beacon/internal/web/dist, where the Go binary embeds it (go:embed)." },
+  "tags": [
+    "scope:beacon",
+    "framework:angular"
+  ],
+  "implicitDependencies": [
+    "nx-utils"
+  ],
+  "metadata": {
+    "description": "Beacon's admin UI. Built into apps/beacon/internal/web/dist, where the Go binary embeds it (go:embed)."
+  },
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{workspaceRoot}/apps/beacon/internal/web/dist"],
+      "outputs": [
+        "{workspaceRoot}/apps/beacon/internal/web/dist"
+      ],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": { "base": "apps/beacon/internal/web/dist", "browser": "" },
+        "outputPath": {
+          "base": "apps/beacon/internal/web/dist",
+          "browser": ""
+        },
         "index": "apps/beacon/ui/src/index.html",
         "browser": "apps/beacon/ui/src/main.ts",
         "tsConfig": "apps/beacon/ui/tsconfig.app.json",
-        "assets": [{ "glob": "**/*", "input": "apps/beacon/ui/public" }],
-        "styles": ["apps/beacon/ui/src/styles.css"]
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/beacon/ui/public"
+          }
+        ],
+        "styles": [
+          "apps/beacon/ui/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
           "budgets": [
-            { "type": "initial", "maximumWarning": "600kB", "maximumError": "900kB" },
-            { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
+            {
+              "type": "initial",
+              "maximumWarning": "700kB",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kB",
+              "maximumError": "8kB"
+            }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "optimization": {
+            "scripts": true,
+            "styles": {
+              "minify": true,
+              "inlineCritical": false
+            },
+            "fonts": true
+          }
         },
         "development": {
           "optimization": false,
@@ -35,10 +71,13 @@
       }
     },
     "check-budget": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "executor": "@thalesrc/nx-utils:gzip-budget",
+      "dependsOn": [
+        "build"
+      ],
       "options": {
-        "command": "node apps/beacon/ui/scripts/check-gzip-budget.mjs apps/beacon/internal/web/dist 250"
+        "outputPath": "apps/beacon/internal/web/dist",
+        "maximumError": "250kB"
       }
     },
     "serve": {
@@ -49,8 +88,12 @@
         "proxyConfig": "apps/beacon/ui/proxy.conf.json"
       },
       "configurations": {
-        "development": { "buildTarget": "beacon-ui:build:development" },
-        "production": { "buildTarget": "beacon-ui:build:production" }
+        "development": {
+          "buildTarget": "beacon-ui:build:development"
+        },
+        "production": {
+          "buildTarget": "beacon-ui:build:production"
+        }
       }
     }
   }

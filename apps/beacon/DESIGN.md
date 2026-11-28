@@ -250,10 +250,11 @@ the image build.
 
 Code that could live in a Telperion library, to decide when it is written (nothing is moved now):
 
-- **A first Go library, e.g. `libs/go-kit`.** frp-gate and Beacon would share: admin password login
-  with signed session cookies, SQLite open + migrations by `user_version`, `*_FILE` environment
-  loading, hand-written Prometheus text metrics, the `healthcheck` subcommand, the audit-actor
-  context. Today that would be copied from frp-gate; with two consumers it is worth a module.
+- **A first Go library, [`libs/go-kit`](../../libs/go-kit)** (started in Phase 1). frp-gate and
+  Beacon share: admin password login with signed session cookies, SQLite open + migrations by
+  `user_version`, `*_FILE` environment loading, hand-written Prometheus text metrics, the
+  `healthcheck` subcommand, the audit-actor context, the embedded SPA file server. Beacon uses it;
+  frp-gate still has its own copies and switches over in a separate change.
 - **Go platform clients** (GitHub App token minting, npm registry, OCI distribution, Coolify API):
   generic and reusable, but start inside Beacon (`internal/adapter/...`) and move to a Go library
   only when a second consumer appears.

@@ -2,8 +2,19 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "beacon",
   "projectType": "application",
-  "tags": ["docker", "go", "scope:beacon", "release", "self-hosted"],
-  "implicitDependencies": ["beacon-ui", "ng-pack", "ng-ui"],
+  "tags": [
+    "docker",
+    "go",
+    "scope:beacon",
+    "release",
+    "self-hosted"
+  ],
+  "implicitDependencies": [
+    "beacon-ui",
+    "go-kit",
+    "ng-pack",
+    "ng-ui"
+  ],
   "metadata": {
     "description": "Beacon: release lifecycle panel. Go server with the beacon-ui Angular app embedded; built and tested in Docker. The repo root is passed as the 'workspace' build context for the UI stage."
   },
@@ -25,7 +36,14 @@
     "run": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker run --rm -p 10505:7701 -p 10506:7700 -v beacon-dev:/data telperiontech/beacon:latest",
+        "command": "docker run --rm -p 10505:7701 -p 10506:7700 -e BEACON_ADMIN_PASSWORD=change-me-please -v beacon-dev:/data telperiontech/beacon:latest",
+        "cwd": "apps/beacon"
+      }
+    },
+    "rss-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash test/rss/run.sh",
         "cwd": "apps/beacon"
       }
     }

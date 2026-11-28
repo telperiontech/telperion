@@ -1,16 +1,31 @@
-:root {
-  --bcn-bg: light-dark(#fafaf9, #0c0a09);
-  --bcn-fg: light-dark(#1c1917, #e7e5e4);
-  --bcn-muted: light-dark(#78716c, #a8a29e);
-  --bcn-border: light-dark(#e7e5e4, #292524);
-  --bcn-accent: #d97706;
+/* Tailwind v4; @telperion/ng-ui's components use its utilities and the theme
+   colours below, so its sources are scanned too. */
+@import "tailwindcss" source(none);
 
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
-  background: var(--bcn-bg);
-  color: var(--bcn-fg);
+@source "./";
+@source "../../../../libs/ng-ui/form";
+
+@theme {
+  --color-black: #0b0f1a;
+  --color-white: #fafafb;
+  --color-primary: #2563eb;
+  --color-secondary: #10b981;
+  --color-tertiary: #06b6d4;
+  --color-quaternary: #a855f7;
+  --color-success: #10b981;
+  --color-warning: #d97706;
+  --color-danger: #ef4444;
+  --color-neutral: #a3a3a3;
 }
 
-body {
-  margin: 0;
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-neutral-50 font-sans text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+  }
 }

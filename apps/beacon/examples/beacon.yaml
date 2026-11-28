@@ -1,0 +1,45 @@
+# Beacon config for this repo's packages (BEACON_CONFIG, or `beacon apply -f`).
+# Secrets are never written here, only *_env / *_file references.
+
+# A GitHub App with read access (Metadata, Contents, Actions: read) on the repo.
+# Without this block GitHub is read anonymously: 60 requests an hour, and
+# Beacon stretches its polling to fit.
+github:
+  app_id: 123456
+  private_key_file: /run/secrets/beacon-github-app.pem
+
+# A deployment target; packages name it under deploy.
+# targets:
+#   coolify-main:
+#     coolify: { url: https://coolify.example.com, token_env: COOLIFY_TOKEN }
+
+projects:
+  - name: telperion
+    repo: telperiontech/telperion
+    ci: { github-actions: { workflow: "{package}.publish.yml" } }
+    packages:
+      dom-utils: { artifact: { npm: "@telperion/dom-utils" } }
+      elements: { artifact: { npm: "@telperion/elements" } }
+      extra-ts-types: { artifact: { npm: "@telperion/extra-ts-types" } }
+      js-utils: { artifact: { npm: "@telperion/js-utils" } }
+      messenger: { artifact: { npm: "@telperion/messenger" } }
+      ng-pack: { artifact: { npm: "@telperion/ng-pack" } }
+      ng-ui: { artifact: { npm: "@telperion/ng-ui" } }
+      node-utils: { artifact: { npm: "@telperion/node-utils" } }
+      nx-utils: { artifact: { npm: "@thalesrc/nx-utils" } }
+      paintlet: { artifact: { npm: "@telperion/paintlet" } }
+      react-utils: { artifact: { npm: "@thalesrc/react-utils" } }
+      reactive-storage: { artifact: { npm: "@telperion/reactive-storage" } }
+      rx-utils: { artifact: { npm: "@telperion/rx-utils" } }
+      ts-utils: { artifact: { npm: "@telperion/ts-utils" } }
+      auto-proxy:
+        artifact: { oci: { image: ghcr.io/telperiontech/auto-proxy, platforms: [linux/amd64, linux/arm64] } }
+      docker-frp:
+        artifact: { oci: { image: ghcr.io/telperiontech/docker-frp, platforms: [linux/amd64, linux/arm64] } }
+      frp-gate:
+        artifact: { oci: { image: ghcr.io/telperiontech/frp-gate, platforms: [linux/amd64, linux/arm64] } }
+        # deploy:
+        #   - coolify-main: { app: "<coolify application uuid>" }
+        #   - http-check: { url: "https://gate.example.com/healthz", version: { header: X-Version } }
+      beacon:
+        artifact: { oci: { image: ghcr.io/telperiontech/beacon, platforms: [linux/amd64, linux/arm64] } }

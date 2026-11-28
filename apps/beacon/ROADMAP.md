@@ -17,7 +17,7 @@ that runs in the owner's setup before the next phase starts.
   registry.
 - **Check:** a tag created by a GitHub App installation token (Releases API and Git refs API) starts a
   `push: tags` workflow, on a throwaway package. The release mechanism depends on it.
-- Decide whether to start `libs/go-kit` (shared with frp-gate) now or copy frp-gate's pieces first.
+- Decided: `libs/go-kit` is started with Phase 1 (Beacon uses it; frp-gate switches over in its own change).
 
 ## Phase 1 (0.1): the overview, read-only
 

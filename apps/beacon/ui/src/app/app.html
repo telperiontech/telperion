@@ -1,9 +1,17 @@
-<header>
-  <a routerLink="/" class="brand">
+<header class="flex items-center gap-6 border-b border-neutral-200 px-6 py-3 dark:border-neutral-800">
+  <a routerLink="/" class="inline-flex items-center gap-2 font-semibold">
     <img src="favicon.svg" alt="" width="20" height="20" />
     Beacon
   </a>
+  @if (loggedIn()) {
+    <nav class="flex gap-4 text-sm">
+      <a routerLink="/" routerLinkActive="font-medium underline" [routerLinkActiveOptions]="{ exact: true }">Packages</a>
+      <a routerLink="/status" routerLinkActive="font-medium underline">Polling</a>
+      <a routerLink="/audit" routerLinkActive="font-medium underline">Audit</a>
+    </nav>
+    <button type="button" class="ml-auto text-sm text-neutral-500 hover:underline" (click)="logouts.next()">Log out</button>
+  }
 </header>
-<main>
+<main class="mx-auto max-w-5xl p-6">
   <router-outlet />
 </main>

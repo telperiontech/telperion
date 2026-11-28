@@ -1,0 +1,16 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "go-kit",
+  "projectType": "library",
+  "tags": ["go", "library"],
+  "metadata": { "description": "Shared Go packages of the repo's self-hosted services (Beacon; frp-gate later). Used through a go.mod replace, not published." },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build --target test --progress plain .",
+        "cwd": "libs/go-kit"
+      }
+    }
+  }
+}

@@ -32,11 +32,35 @@ jobs:
 
       # The repo root is the "workspace" build context: the UI stage compiles
       # the workspace libraries it imports (@telperion/ng-pack, @telperion/ng-ui).
-      - name: Run unit tests (UI build, go vet, go test)
+      - name: Run unit tests (UI build, go vet, go test of Beacon and go-kit)
         run: docker build --build-context workspace=. --target test --progress plain apps/beacon
 
+  # The memory target (< 64 MB RSS): five minutes of polling a ~30-package
+  # fake catalog, natively on both architectures the image ships for.
+  rss-check:
+    name: rss-check (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js (the check's summary step)
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Run the RSS check
+        run: bash apps/beacon/test/rss/run.sh
+
   build-and-publish:
-    needs: [unit-test]
+    needs: [unit-test, rss-check]
     runs-on: ubuntu-latest
     permissions:
       contents: read

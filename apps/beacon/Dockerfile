@@ -24,24 +24,31 @@ COPY --from=workspace tsconfig.base.json ./
 # hadolint ignore=DL3022
 COPY --from=workspace libs libs
 COPY ui apps/beacon/ui
-# Nx sees only beacon-ui: a plugin-free nx.json (the repo's plugins need projects
-# this stage does not copy) and no project.json of the copied libraries (their
-# docs apps depend on osw projects). The libraries are compiled from source.
+# Nx sees only beacon-ui and nx-utils (whose gzip-budget executor check-budget
+# runs): a plugin-free nx.json (the repo's plugins need projects this stage does
+# not copy) and no other project.json (the libraries' docs apps depend on osw
+# projects). The libraries are compiled from source.
 RUN echo '{}' > nx.json \
-    && find libs -name project.json -delete \
-    && pnpm exec nx run beacon-ui:build --skip-nx-cache \
-    && node apps/beacon/ui/scripts/check-gzip-budget.mjs apps/beacon/internal/web/dist 250
+    && find libs -name project.json -not -path 'libs/nx-utils/*' -delete \
+    && pnpm exec nx run beacon-ui:check-budget --skip-nx-cache
 
 FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS src
-WORKDIR /src
-COPY go.mod ./
+# The module sits at its repo path: go.mod replaces go-kit with ../../libs/go-kit.
+WORKDIR /src/apps/beacon
+# hadolint ignore=DL3022
+COPY --from=workspace libs/go-kit /src/libs/go-kit
+COPY go.mod go.sum ./
+RUN go mod download
 COPY cmd ./cmd
 COPY internal ./internal
+COPY test ./test
+COPY examples ./examples
 COPY --from=ui /workspace/apps/beacon/internal/web/dist ./internal/web/dist
 
-# Unit tests: docker build --build-context workspace=../.. --target test .
+# Unit tests of Beacon and go-kit: docker build --build-context workspace=../.. --target test .
 FROM src AS test
-RUN go vet ./... && go test ./...
+RUN go vet ./... && go test ./... \
+    && go vet -C /src/libs/go-kit ./... && go test -C /src/libs/go-kit ./...
 
 FROM src AS build
 ARG TARGETOS
@@ -52,6 +59,21 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/beacon ./cmd/beacon \
     && mkdir -p /out/data
 
+# The fake platforms of the RSS check (test/rss), not published:
+#   docker build --build-context workspace=../.. --target fakeplatform -t beacon-fakeplatform .
+FROM src AS fakeplatform-build
+RUN CGO_ENABLED=0 go build -trimpath -o /out/fakeplatform ./test/fakeplatform \
+    && mkdir -p /out/shared
+
+FROM gcr.io/distroless/static-debian12:nonroot AS fakeplatform
+COPY --from=fakeplatform-build /out/fakeplatform /fakeplatform
+# A new named volume mounted here takes this ownership, so the key and the
+# config it writes are readable by Beacon's nonroot user.
+COPY --from=fakeplatform-build --chown=nonroot:nonroot /out/shared /shared
+USER nonroot:nonroot
+ENTRYPOINT ["/fakeplatform"]
+
+# Last stage: what a plain docker build produces.
 FROM gcr.io/distroless/static-debian12:nonroot AS runtime
 COPY --from=build /out/beacon /usr/local/bin/beacon
 COPY --from=build --chown=nonroot:nonroot /out/data /data

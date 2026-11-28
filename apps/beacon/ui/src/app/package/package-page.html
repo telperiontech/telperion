@@ -1,0 +1,62 @@
+<a routerLink="/" class="text-sm text-neutral-500 hover:underline">← Packages</a>
+
+@if (detail(); as d) {
+  <header class="mt-2 mb-4 flex flex-wrap items-baseline gap-3">
+    <h1 class="text-xl font-semibold">{{ d.name }}</h1>
+    <span class="text-neutral-500">{{ d.project }}</span>
+    <span class="text-sm text-neutral-500">chain: {{ d.chain.join(' → ') }}</span>
+  </header>
+
+  <section class="mb-8">
+    <h2 class="mb-2 font-medium">Versions</h2>
+    @if (d.versions.length === 0) {
+      <p class="text-neutral-500">No versions seen yet.</p>
+    } @else {
+      <ul class="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-800">
+        @for (v of d.versions; track v.version) {
+          <li class="flex flex-wrap items-center gap-4 py-2" [class.text-danger]="gapVersions().has(v.version)">
+            <span class="w-32 font-mono">{{ v.version }}</span>
+            <bcn-stage-pipeline [chain]="d.chain" [version]="v" />
+            <span class="ml-auto text-xs text-neutral-500" [title]="v.firstSeen | date: 'medium'">
+              seen {{ v.firstSeen | age: now() }} ago
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section>
+    <h2 class="mb-2 font-medium">Recent events</h2>
+    @if (d.events.length === 0) {
+      <p class="text-neutral-500">No events yet.</p>
+    } @else {
+      <table class="w-full text-left text-sm">
+        <thead class="text-neutral-500">
+          <tr><th class="py-1">When</th><th>Version</th><th>Stage</th><th>State</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          @for (e of d.events; track e.id) {
+            <tr class="border-t border-neutral-200 dark:border-neutral-800">
+              <td class="py-1" [title]="e.at | date: 'medium'">{{ e.at | age: now() }} ago</td>
+              <td class="font-mono">{{ e.version }}</td>
+              <td>{{ e.stage }}@if (e.target) { · {{ e.target }} }</td>
+              <td>
+                @if (e.url) {
+                  <a [href]="e.url" target="_blank" rel="noopener" class="hover:underline">{{ e.state }}</a>
+                } @else {
+                  {{ e.state }}
+                }
+              </td>
+              <td class="text-neutral-500">{{ e.detail }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+} @else if (detail.error()) {
+  <p class="mt-4 text-danger" role="alert">No package named {{ name() }}.</p>
+} @else {
+  <p class="mt-4 text-neutral-500">Loading…</p>
+}
