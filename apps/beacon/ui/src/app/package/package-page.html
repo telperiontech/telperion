@@ -5,7 +5,45 @@
     <h1 class="text-xl font-semibold">{{ d.name }}</h1>
     <span class="text-neutral-500">{{ d.project }}</span>
     <span class="text-sm text-neutral-500">chain: {{ d.chain.join(' → ') }}</span>
+    @if (d.unreleased; as u) {
+      <a [href]="u.url" target="_blank" rel="noopener" class="text-sm hover:underline" [class.text-warning]="u.commits > 0">
+        {{ u.commits }} unreleased {{ u.commits === 1 ? 'commit' : 'commits' }} on {{ u.branch }}
+        @if (u.tag) {
+          since {{ u.tag }}
+        }
+      </a>
+    }
   </header>
+
+  @if (d.activeRun; as a) {
+    <p class="mb-4 rounded-md bg-warning/10 p-2 text-sm">
+      Running: <a [routerLink]="['/runs', a.id]" class="font-medium hover:underline">#{{ a.id }} {{ a.title }}</a>
+    </p>
+  }
+
+  @if (d.actions.release) {
+    <section class="mb-6">
+      <h2 class="mb-2 font-medium">Release</h2>
+      <form
+        class="flex flex-wrap items-center gap-4 text-sm"
+        (tngValidSubmit)="requests.next({ kind: 'release', package: d.name, bump: $event.bump })"
+        [tngValidSubmitShape]="{ bump: 'string' }"
+      >
+        @for (b of ['patch', 'minor', 'major']; track b) {
+          <label class="flex items-center gap-1" [class.text-danger]="b === 'major'">
+            <input type="radio" name="bump" [value]="b" ngModel required /> {{ b }}
+          </label>
+        }
+        <button type="submit" class="rounded-md border border-neutral-300 px-3 py-1 dark:border-neutral-700">Preview release</button>
+      </form>
+    </section>
+  }
+
+  @if (request(); as r) {
+    <div class="mb-6">
+      <bcn-action-preview [request]="r" (closed)="requests.next(null)" />
+    </div>
+  }
 
   <section class="mb-8">
     <h2 class="mb-2 font-medium">Versions</h2>
@@ -17,6 +55,14 @@
           <li class="flex flex-wrap items-center gap-4 py-2" [class.text-danger]="gapVersions().has(v.version)">
             <span class="w-32 font-mono">{{ v.version }}</span>
             <bcn-stage-pipeline [chain]="d.chain" [version]="v" />
+            @if (d.actions.rerun && v.cells.built?.state === 'failed') {
+              <button type="button" class="text-xs hover:underline"
+                (click)="requests.next({ kind: 'rerun', package: d.name, version: v.version })">re-run build</button>
+            }
+            @for (t of deployable().get(v.version) ?? []; track t) {
+              <button type="button" class="text-xs hover:underline"
+                (click)="requests.next({ kind: 'deploy', package: d.name, version: v.version, target: t })">deploy on {{ t }}</button>
+            }
             <span class="ml-auto text-xs text-neutral-500" [title]="v.firstSeen | date: 'medium'">
               seen {{ v.firstSeen | age: now() }} ago
             </span>
@@ -25,6 +71,21 @@
       </ul>
     }
   </section>
+
+  @if (d.runs.length > 0) {
+    <section class="mb-8">
+      <h2 class="mb-2 font-medium">Runs</h2>
+      <ul class="flex flex-col gap-1 text-sm">
+        @for (r of d.runs; track r.id) {
+          <li class="flex items-center gap-3">
+            <bcn-state-badge [state]="r.state" />
+            <a [routerLink]="['/runs', r.id]" class="hover:underline">#{{ r.id }} {{ r.title }}</a>
+            <span class="text-xs text-neutral-500">{{ r.created | age: now() }} ago</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
 
   <section>
     <h2 class="mb-2 font-medium">Recent events</h2>

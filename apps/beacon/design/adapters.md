@@ -130,7 +130,7 @@ turned into observations or into "poll this now" hints. Unknown events are ackno
 
 [CDEvents](https://cdevents.dev) is the CD Foundation's vocabulary for delivery events, carried as
 CloudEvents. `POST /cdevents` accepts structured (`application/cloudevents+json`) and binary
-CloudEvents. Each source has its own bearer token (stored hashed), named in the YAML; a source may be
+CloudEvents. Each source has its own bearer token (referenced in the YAML, never stored); a source may be
 limited to some packages.
 
 | CDEvent type | Becomes |

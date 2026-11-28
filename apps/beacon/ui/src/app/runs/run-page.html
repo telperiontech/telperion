@@ -1,0 +1,76 @@
+<a routerLink="/runs" class="text-sm text-neutral-500 hover:underline">← Runs</a>
+
+@if (run(); as r) {
+  <header class="mt-2 mb-4 flex flex-wrap items-center gap-3">
+    <h1 class="text-xl font-semibold">#{{ r.id }} {{ r.title }}</h1>
+    <bcn-state-badge [state]="r.state" />
+    <span class="text-sm text-neutral-500" [title]="r.created | date: 'medium'">
+      started {{ r.created | age: now() }} ago by {{ r.actor }} ({{ r.source }})
+    </span>
+    @if (r.state === 'running') {
+      <button
+        type="button"
+        class="ml-auto rounded-md border border-neutral-300 px-3 py-1 text-sm disabled:opacity-50 dark:border-neutral-700"
+        [disabled]="cancelling() === 'busy'"
+        (click)="cancels.next()"
+      >
+        Cancel run
+      </button>
+    }
+  </header>
+  @if (cancelling() === 'failed') {
+    <p class="mb-3 text-sm text-danger" role="alert">The run could not be cancelled.</p>
+  }
+
+  <ol class="flex flex-col gap-3">
+    @for (s of r.steps; track s.key) {
+      <li class="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <div class="flex flex-wrap items-center gap-3">
+          <bcn-state-badge [state]="s.state" />
+          <span class="font-medium">{{ s.type }}</span>
+          <a [routerLink]="['/packages', s.package]" class="hover:underline">{{ s.package }}</a>
+          <span class="font-mono">
+            @if (s.from) {
+              {{ s.from }} →
+            }
+            {{ s.version }}
+          </span>
+          @if (s.target) {
+            <span class="text-neutral-500">on {{ s.target }}</span>
+          }
+          @if (s.adopted) {
+            <span class="rounded bg-neutral-100 px-1.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+              title="Its result existed already; nothing was fired">adopted</span>
+          }
+        </div>
+        @if (s.detail) {
+          <p class="mt-2 text-sm" [class.text-danger]="s.state === 'failed'">
+            @if (s.url) {
+              <a [href]="s.url" target="_blank" rel="noopener" class="hover:underline">{{ s.detail }}</a>
+            } @else {
+              {{ s.detail }}
+            }
+          </p>
+        }
+        <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 text-xs text-neutral-500">
+          @if (s.tag) {
+            <dt>tag</dt><dd class="font-mono">{{ s.tag }}</dd>
+          }
+          @if (s.commit) {
+            <dt>commit</dt><dd class="font-mono">{{ s.commit.slice(0, 7) }} on {{ s.branch }}</dd>
+          }
+          @if (s.until) {
+            <dt>done when</dt><dd>{{ s.until }}</dd>
+          }
+          @if (s.fired) {
+            <dt>fired</dt><dd [title]="s.fired | date: 'medium'">{{ s.fired | age: now() }} ago</dd>
+          }
+        </dl>
+      </li>
+    }
+  </ol>
+} @else if (run.error()) {
+  <p class="mt-4 text-danger" role="alert">No run #{{ id() }}.</p>
+} @else {
+  <p class="mt-4 text-neutral-500">Loading…</p>
+}

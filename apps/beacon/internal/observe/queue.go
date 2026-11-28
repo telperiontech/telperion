@@ -49,3 +49,6 @@ func (q queue) peek() *entry {
 	}
 	return q[0]
 }
+
+// fix restores the order after a queued entry's next time changed.
+func (q *queue) fix(e *entry) { heap.Fix(q, e.index) }

@@ -38,9 +38,11 @@ func (r RepoFile) MarshalYAML() (any, error) {
 	return repoFile(r), nil
 }
 
-// CIFile binds the built stage; "none" turns a project default off.
+// CIFile binds the built stage; "none" turns a project default off, and
+// "cdevents" means the stage is only reported by CDEvents.
 type CIFile struct {
 	None          bool               `yaml:"-"`
+	CDEvents      bool               `yaml:"-"`
 	GitHubActions *GitHubActionsFile `yaml:"github-actions,omitempty"`
 }
 
@@ -51,20 +53,27 @@ type GitHubActionsFile struct {
 
 type ciFile CIFile
 
-// UnmarshalYAML accepts "none" or the mapping.
+// UnmarshalYAML accepts "none", "cdevents" or the mapping.
 func (c *CIFile) UnmarshalYAML(n *yaml.Node) error {
 	if n.Kind == yaml.ScalarNode {
-		if n.Value != "none" {
-			return fmt.Errorf("line %d: ci must be none or a mapping, got %q", n.Line, n.Value)
+		switch n.Value {
+		case "none":
+			*c = CIFile{None: true}
+		case "cdevents":
+			*c = CIFile{CDEvents: true}
+		default:
+			return fmt.Errorf("line %d: ci must be none, cdevents or a mapping, got %q", n.Line, n.Value)
 		}
-		*c = CIFile{None: true}
 		return nil
 	}
 	return decodeNode(n, (*ciFile)(c))
 }
 
-// MarshalYAML writes "none" for a disabled CI.
+// MarshalYAML writes "none" or "cdevents" for the scalar forms.
 func (c CIFile) MarshalYAML() (any, error) {
+	if c.CDEvents {
+		return "cdevents", nil
+	}
 	if c.None {
 		return "none", nil
 	}
@@ -128,23 +137,34 @@ func (o OCIFile) MarshalYAML() (any, error) {
 }
 
 // DeployFile is one deployment target of a package, written as a one-key
-// mapping: "<target name>: {app: ...}" for a configured target, or
-// "http-check: {...}".
+// mapping: "<target name>: {app: ...}" for a configured target,
+// "http-check: {...}", or "cdevents: {environment: ...}" for a target that is
+// only reported by CDEvents.
 type DeployFile struct {
-	Target    string          // configured target name ("" for http-check)
+	Target    string          // configured target name ("" for http-check and cdevents)
 	Coolify   *CoolifyAppFile // settings for a configured (Coolify) target
 	HTTPCheck *HTTPCheckFile
+	CDEvents  *CDEventsDeployFile
+}
+
+// CDEventsDeployFile is a deployment reported by service.* CDEvents.
+type CDEventsDeployFile struct {
+	Environment string `yaml:"environment"` // the events' environment id; the target name
 }
 
 // UnmarshalYAML reads the one-key mapping.
 func (d *DeployFile) UnmarshalYAML(n *yaml.Node) error {
 	if n.Kind != yaml.MappingNode || len(n.Content) != 2 {
-		return fmt.Errorf("line %d: a deploy entry is a mapping with one key: a target name or http-check", n.Line)
+		return fmt.Errorf("line %d: a deploy entry is a mapping with one key: a target name, http-check or cdevents", n.Line)
 	}
 	key, val := n.Content[0].Value, n.Content[1]
-	if key == "http-check" {
+	switch key {
+	case "http-check":
 		d.HTTPCheck = &HTTPCheckFile{}
 		return decodeNode(val, d.HTTPCheck)
+	case "cdevents":
+		d.CDEvents = &CDEventsDeployFile{}
+		return decodeNode(val, d.CDEvents)
 	}
 	d.Target, d.Coolify = key, &CoolifyAppFile{}
 	return decodeNode(val, d.Coolify)
@@ -152,8 +172,11 @@ func (d *DeployFile) UnmarshalYAML(n *yaml.Node) error {
 
 // MarshalYAML writes the one-key mapping.
 func (d DeployFile) MarshalYAML() (any, error) {
-	if d.HTTPCheck != nil {
+	switch {
+	case d.HTTPCheck != nil:
 		return map[string]*HTTPCheckFile{"http-check": d.HTTPCheck}, nil
+	case d.CDEvents != nil:
+		return map[string]*CDEventsDeployFile{"cdevents": d.CDEvents}, nil
 	}
 	return map[string]*CoolifyAppFile{d.Target: d.Coolify}, nil
 }

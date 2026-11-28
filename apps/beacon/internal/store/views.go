@@ -66,10 +66,11 @@ func (s *Store) States(ctx context.Context, pkg string) (map[string]*PackageStat
 	return out, rows.Err()
 }
 
-// Pending lists the packages that have a stage in progress, so the poller can
-// watch them closely after a restart.
+// Pending lists the packages that have a stage in progress or an active plan
+// step, so the poller watches them closely (also after a restart).
 func (s *Store) Pending(ctx context.Context) (map[string]bool, error) {
-	rows, err := s.q.QueryContext(ctx, "SELECT DISTINCT package FROM stage_states WHERE state = ?", model.Pending)
+	rows, err := s.q.QueryContext(ctx, `SELECT package FROM stage_states WHERE state = ?
+		UNION SELECT package FROM plan_steps WHERE state NOT IN ('done', 'failed', 'skipped', 'cancelled')`, model.Pending)
 	if err != nil {
 		return nil, err
 	}

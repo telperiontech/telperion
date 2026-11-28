@@ -36,13 +36,14 @@ func OSEnv() Env { return Env{Getenv: os.Getenv, ReadFile: os.ReadFile} }
 // are reported together; on error the catalog is not usable.
 func (f *File) Resolve(env Env) (catalog.Catalog, error) {
 	r := resolver{env: env}
-	c := catalog.Catalog{GitHub: r.github(f.GitHub), Targets: r.targets(f.Targets)}
+	c := catalog.Catalog{GitHub: r.github(f.GitHub), Targets: r.targets(f.Targets), CDEvents: r.cdevents(f.CDEvents)}
 	for i, p := range f.Projects {
 		proj, pkgs := r.project(fmt.Sprintf("projects[%d]", i), p, c)
 		c.Projects = append(c.Projects, proj)
 		c.Packages = append(c.Packages, pkgs...)
 	}
 	r.crossChecks(c)
+	r.cdeventsPackages(c)
 	return c, errors.Join(r.errs...)
 }
 
@@ -81,10 +82,11 @@ func (r *resolver) github(g *GitHubFile) *catalog.GitHubApp {
 		return nil
 	}
 	app := &catalog.GitHubApp{
-		AppID:      g.AppID,
-		PrivateKey: r.secret("github.private_key", g.PrivateKeyEnv, g.PrivateKeyFile, true),
-		APIURL:     strings.TrimSuffix(or(g.APIURL, DefaultGitHubAPI), "/"),
-		WebURL:     strings.TrimSuffix(or(g.WebURL, DefaultGitHubWeb), "/"),
+		AppID:         g.AppID,
+		PrivateKey:    r.secret("github.private_key", g.PrivateKeyEnv, g.PrivateKeyFile, true),
+		WebhookSecret: r.secret("github.webhook_secret", g.WebhookSecretEnv, g.WebhookSecretFile, false),
+		APIURL:        strings.TrimSuffix(or(g.APIURL, DefaultGitHubAPI), "/"),
+		WebURL:        strings.TrimSuffix(or(g.WebURL, DefaultGitHubWeb), "/"),
 	}
 	if g.AppID <= 0 {
 		r.fail("github.app_id", "must be the App's numeric id")
@@ -168,7 +170,15 @@ func (r *resolver) repo(path string, f RepoFile, gh *catalog.GitHubApp) catalog.
 func (r *resolver) pkg(path, name string, p ProjectFile, repo catalog.Repo, tag string, c catalog.Catalog) catalog.Package {
 	r.name(path, name)
 	f := p.Packages[name]
-	out := catalog.Package{Name: name, Project: p.Name, Repo: repo, Tag: or(f.Tag, tag)}
+	out := catalog.Package{
+		Name: name, Project: p.Name, Repo: repo, Tag: or(f.Tag, tag),
+		Branch: r.branch(path+".branch", or(f.Branch, p.Branch)), Path: r.pkgPath(path+".path", f.Path),
+	}
+	release := p.Release
+	if f.Release != nil {
+		release = f.Release
+	}
+	out.Release = r.release(path+".release", release, name, repo, c.GitHub)
 	if !strings.Contains(out.Tag, "{version}") {
 		r.fail(path+".tag", "%q has no {version}", out.Tag)
 	} else if _, err := catalog.NewTagMatcher(out.Tag, name); err != nil {

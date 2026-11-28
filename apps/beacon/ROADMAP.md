@@ -45,6 +45,15 @@ Value: the gaps between tagged, built, published and deployed are visible for ev
 Value: a release of this repo's packages is a button, and its progress to the registry is watched to
 the end.
 
+Built as: `internal/plan` (preview, start, the step state machine, locks and limits; an action is a
+one-step run, so no separate `internal/action`), `internal/bind` (one adapter set and GitHub App per
+catalog, shared by polling and plans), `internal/ingest` (webhooks, CDEvents). Write tokens are
+minted per action and limited to the one repo. Config: `release:`, `branch`, `path` (for unreleased
+changes), `github.webhook_secret_*`, `cdevents.sources`, and `ci: cdevents` / `deploy: - cdevents:`
+for stages that are only reported. Left open: CDEvents `pipelinerun.*` and `service.removed` are
+recorded as unmatched; a `github-dispatch` run is followed through its tag, not identified by id;
+the Coolify deploy endpoints are unverified against a live instance.
+
 ## Phase 3 (0.3 → 1.0): release plans
 
 - DAG plans: recipes in YAML, ad-hoc plans in the UI (template-driven plan builder), saving an ad-hoc

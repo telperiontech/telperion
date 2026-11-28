@@ -11,10 +11,13 @@ import (
 	"time"
 
 	"github.com/telperiontech/telperion/apps/beacon/internal/api"
+	"github.com/telperiontech/telperion/apps/beacon/internal/bind"
 	"github.com/telperiontech/telperion/apps/beacon/internal/catalog"
 	"github.com/telperiontech/telperion/apps/beacon/internal/declare"
+	"github.com/telperiontech/telperion/apps/beacon/internal/ingest"
 	"github.com/telperiontech/telperion/apps/beacon/internal/metrics"
 	"github.com/telperiontech/telperion/apps/beacon/internal/observe"
+	"github.com/telperiontech/telperion/apps/beacon/internal/plan"
 	"github.com/telperiontech/telperion/apps/beacon/internal/platform"
 	"github.com/telperiontech/telperion/apps/beacon/internal/store"
 	"github.com/telperiontech/telperion/apps/beacon/internal/web"
@@ -48,21 +51,35 @@ func serve() error {
 	met := metrics.New(version)
 	broker := &observe.Broker{}
 	client := platform.New("beacon/"+version, 30*time.Second)
+	binds := &bind.Cache{Client: client} // one adapter set (and GitHub App) per catalog, shared
 	sched := &observe.Scheduler{
 		Store: st, Client: client, Log: log, Opt: cfg.Poll, OnPoll: met.Poll, Publish: broker.Publish,
-		Build: func(c catalog.Catalog) ([]observe.Job, error) { return observe.Build(c, client) },
+		Build: func(c catalog.Catalog) ([]observe.Job, error) {
+			set, err := binds.For(c)
+			if err != nil {
+				return nil, err
+			}
+			return observe.Jobs(c, set.Observe()), nil
+		},
 	}
+	plans := plan.Env{
+		Store: st, Wake: sched.WakePackages, Publish: broker.Publish, Log: log,
+		Platform: func(c catalog.Catalog) (plan.Platform, error) { return binds.For(c) },
+	}
+	runner := &plan.Runner{Env: plans}
 	key, err := st.Secret(ctx, "admin_session_key", 32)
 	if err != nil {
 		return err
 	}
 	views := api.Views{Store: st, Now: time.Now}
 
-	ingest := http.NewServeMux()
-	ingest.Handle("GET /healthz", health.Handler(st.Ping))
-	ingest.Handle("GET /metrics", met.Handler(views.Gauges))
+	ingestMux := http.NewServeMux()
+	ingestMux.Handle("GET /healthz", health.Handler(st.Ping))
+	ingestMux.Handle("GET /metrics", met.Handler(views.Gauges))
+	ingestMux.Handle("POST /hooks/github", ingest.GitHub{Store: st, Wake: sched.Wake, Log: log})
+	ingestMux.Handle("POST /cdevents", ingest.CDEvents{Store: st, Ingest: sched.Ingest, Log: log})
 	admin := api.New(api.Options{
-		Views: views, Store: st, Broker: broker, Status: sched.Status, UI: web.Handler(), Log: log,
+		Views: views, Store: st, Broker: broker, Status: sched.Status, Plans: plans, Runner: runner, UI: web.Handler(), Log: log,
 		Auth: &session.Auth{Password: cfg.AdminPassword, Key: key, Cookie: "beacon_session", AllowBasic: true},
 	})
 
@@ -72,11 +89,19 @@ func serve() error {
 			stop()
 		}
 	}()
+	notices, unsubscribe := broker.Subscribe()
+	defer unsubscribe()
+	go func() {
+		if err := runner.Run(ctx, notices); err != nil {
+			log.Error("plan runner stopped", "err", err)
+			stop()
+		}
+	}()
 	go pruneLoop(ctx, st, log)
 	log.Info("beacon started", "version", version, "ingest", cfg.IngestAddr, "admin", cfg.AdminAddr,
 		"db", cfg.DBPath, "config", cfg.ConfigFile)
 	return httpserver.Run(ctx, 10*time.Second,
-		httpserver.New(cfg.IngestAddr, ingest), httpserver.New(cfg.AdminAddr, admin))
+		httpserver.New(cfg.IngestAddr, ingestMux), httpserver.New(cfg.AdminAddr, admin))
 }
 
 // applyAtStart applies BEACON_CONFIG; an invalid file stops the start, so a

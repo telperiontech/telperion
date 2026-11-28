@@ -30,26 +30,26 @@ type Source struct {
 
 var _ adapter.Source = Source{}
 
-// Tags lists the repo's tags.
-func (s Source) Tags(ctx context.Context, repo catalog.Repo) ([]adapter.Tag, error) {
+// Refs reads the repo's ref advertisement.
+func (s Source) Refs(ctx context.Context, repo catalog.Repo) (adapter.Refs, error) {
 	h := http.Header{}
 	h.Set("User-Agent", "git/2.0 (beacon)") // some hosts expect a git client
 	user, pass, err := s.credentials(ctx, repo)
 	if err != nil {
-		return nil, err
+		return adapter.Refs{}, err
 	}
 	if pass != "" {
 		h.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(user+":"+pass)))
 	}
-	var tags []adapter.Tag
+	var refs adapter.Refs
 	err = s.Client.Do(ctx, platform.Request{
 		URL: strings.TrimSuffix(repo.URL, "/") + "/info/refs?service=git-upload-pack", Header: h,
 	}, func(resp *http.Response) error {
 		var err error
-		tags, err = ParseAdvertisement(resp.Body)
+		refs, err = ParseAdvertisement(resp.Body)
 		return err
 	})
-	return tags, err
+	return refs, err
 }
 
 func (s Source) credentials(ctx context.Context, repo catalog.Repo) (user, pass string, err error) {
@@ -66,9 +66,11 @@ func (s Source) credentials(ctx context.Context, repo catalog.Repo) (user, pass 
 }
 
 // ParseAdvertisement reads a smart HTTP ref advertisement (pkt-lines) and
-// returns its tags. Annotated tags report the commit they point at.
-func ParseAdvertisement(r io.Reader) ([]adapter.Tag, error) {
+// returns its tags, branch heads and default branch (the symref=HEAD:
+// capability). Annotated tags report the commit they point at.
+func ParseAdvertisement(r io.Reader) (adapter.Refs, error) {
 	br := bufio.NewReader(r)
+	refs := adapter.Refs{Heads: map[string]string{}}
 	commits := map[string]string{}
 	var order []string
 	for {
@@ -77,13 +79,22 @@ func ParseAdvertisement(r io.Reader) ([]adapter.Tag, error) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return adapter.Refs{}, err
 		}
 		if flush || strings.HasPrefix(line, "#") {
 			continue
 		}
-		line, _, _ = strings.Cut(strings.TrimSuffix(line, "\n"), "\x00") // capabilities after NUL
+		line, caps, _ := strings.Cut(strings.TrimSuffix(line, "\n"), "\x00") // capabilities after NUL
+		for _, c := range strings.Fields(caps) {
+			if target, ok := strings.CutPrefix(c, "symref=HEAD:refs/heads/"); ok {
+				refs.Default = target
+			}
+		}
 		sha, ref, ok := strings.Cut(line, " ")
+		if branch, isHead := strings.CutPrefix(ref, "refs/heads/"); ok && isHead {
+			refs.Heads[branch] = sha
+			continue
+		}
 		name, isTag := strings.CutPrefix(ref, "refs/tags/")
 		if !ok || !isTag {
 			continue
@@ -97,11 +108,11 @@ func ParseAdvertisement(r io.Reader) ([]adapter.Tag, error) {
 		}
 		commits[name] = sha
 	}
-	tags := make([]adapter.Tag, 0, len(order))
+	refs.Tags = make([]adapter.Tag, 0, len(order))
 	for _, n := range order {
-		tags = append(tags, adapter.Tag{Name: n, Commit: commits[n]})
+		refs.Tags = append(refs.Tags, adapter.Tag{Name: n, Commit: commits[n]})
 	}
-	return tags, nil
+	return refs, nil
 }
 
 // readPkt reads one pkt-line: four hex digits of length (including

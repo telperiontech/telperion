@@ -23,6 +23,7 @@ var ErrNotModified = errors.New("not modified")
 
 // StatusError is a non-2xx answer.
 type StatusError struct {
+	Method string
 	Code   int
 	URL    string      // without query
 	Body   string      // the start of the body, for the log
@@ -30,7 +31,7 @@ type StatusError struct {
 }
 
 func (e *StatusError) Error() string {
-	return fmt.Sprintf("GET %s: %d %s", e.URL, e.Code, strings.TrimSpace(e.Body))
+	return fmt.Sprintf("%s %s: %d %s", e.Method, e.URL, e.Code, strings.TrimSpace(e.Body))
 }
 
 // IsStatus reports whether err is a StatusError with one of the codes.
@@ -128,7 +129,7 @@ func (c *Client) Do(ctx context.Context, r Request, read func(resp *http.Respons
 		return ErrNotModified
 	case resp.StatusCode < 200 || resp.StatusCode > 299:
 		snippet, _ := io.ReadAll(io.LimitReader(resp.Body, 300))
-		return &StatusError{Code: resp.StatusCode, URL: stripQuery(r.URL), Body: string(snippet), Header: resp.Header}
+		return &StatusError{Method: method, Code: resp.StatusCode, URL: stripQuery(r.URL), Body: string(snippet), Header: resp.Header}
 	}
 	resp.Body = struct {
 		io.Reader
@@ -198,3 +199,7 @@ func redact(err error) error {
 	}
 	return err
 }
+
+// ForgetETag drops a remembered ETag, so the next conditional request with
+// that key reads the answer in full (a caller whose later step failed).
+func (c *Client) ForgetETag(key string) { c.setETag(key, "") }

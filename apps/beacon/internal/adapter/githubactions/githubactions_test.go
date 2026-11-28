@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/telperiontech/telperion/apps/beacon/internal/adapter"
+	"github.com/telperiontech/telperion/apps/beacon/internal/adapter/githubapi"
 	"github.com/telperiontech/telperion/apps/beacon/internal/catalog"
 	"github.com/telperiontech/telperion/apps/beacon/internal/model"
 	"github.com/telperiontech/telperion/apps/beacon/internal/platform"
@@ -34,7 +35,7 @@ func TestRuns(t *testing.T) {
 		CI: &catalog.CI{GitHubActions: &catalog.GitHubActions{Workflow: "js-utils.publish.yml"}},
 	}
 	m, _ := catalog.NewTagMatcher(catalog.DefaultTag, "js-utils")
-	obs, err := CI{Client: platform.New("t", 5*time.Second), APIURL: srv.URL, Tokens: adapter.Anonymous{}}.Runs(context.Background(), pkg, m)
+	obs, err := CI{API: githubapi.API{Client: platform.New("t", 5*time.Second), URL: srv.URL, Tokens: adapter.Anonymous{}}}.Runs(context.Background(), pkg, m)
 	if err != nil {
 		t.Fatal(err)
 	}

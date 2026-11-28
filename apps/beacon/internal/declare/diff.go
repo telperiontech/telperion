@@ -38,6 +38,8 @@ func Diff(cur, next catalog.Catalog) []Change {
 		byName(next.Projects, func(p catalog.Project) string { return p.Name }))...)
 	out = append(out, diffNamed("package", byName(cur.Packages, func(p catalog.Package) string { return p.Name }),
 		byName(next.Packages, func(p catalog.Package) string { return p.Name }))...)
+	out = append(out, diffNamed("cdevents source", byName(cur.CDEvents, func(s catalog.CDEventsSource) string { return s.Name }),
+		byName(next.CDEvents, func(s catalog.CDEventsSource) string { return s.Name }))...)
 	return out
 }
 

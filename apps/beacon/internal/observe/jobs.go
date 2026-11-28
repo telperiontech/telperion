@@ -1,7 +1,8 @@
 // Package observe is the observation loop: it turns the catalog into poll
-// jobs (one per repo, CI workflow, artifact and deployment target), runs them
-// on an adaptive schedule, writes what they observe to the store, and
-// announces the resulting changes.
+// jobs (one per repo, CI workflow, artifact and deployment target, plus the
+// unreleased changes per repo), runs them on an adaptive schedule, writes
+// what they observe to the store, and announces the resulting changes.
+// Webhooks wake jobs early; CDEvents push observations into the same path.
 package observe
 
 import (
@@ -17,14 +18,22 @@ import (
 // Job is one poll: an adapter call for one or more packages.
 type Job struct {
 	Key      string   // unique, stable across catalog reloads
-	Layer    string   // source, ci, artifact, runtime
+	Layer    string   // source, changes, ci, artifact, runtime
 	Host     string   // the platform host, for its rate-limit budget
+	Repo     string   // the packages' repo URL, for webhook hints
+	Workflow string   // the CI workflow file (ci jobs), for webhook hints
 	Packages []string // the packages it observes
 	Spec     string   // its configuration; a changed Spec is polled again at once
-	Poll     func(ctx context.Context) ([]model.Obs, error)
+	Poll     func(ctx context.Context) (Batch, error)
 }
 
-// Adapters are the implementations jobs call.
+// Batch is what one poll observed.
+type Batch struct {
+	Obs        []model.Obs
+	Unreleased []model.Unreleased
+}
+
+// Adapters are the implementations jobs call. Changes is optional.
 type Adapters struct {
 	Source    adapter.Source
 	CI        adapter.CI
@@ -32,12 +41,13 @@ type Adapters struct {
 	OCI       adapter.Artifact
 	HTTPCheck adapter.Runtime
 	Coolify   adapter.Runtime
+	Changes   adapter.ChangeLister
 }
 
 // Jobs builds the poll jobs of a catalog.
 func Jobs(c catalog.Catalog, a Adapters) []Job {
 	var jobs []Job
-	jobs = append(jobs, sourceJobs(c, a.Source)...)
+	jobs = append(jobs, repoJobs(c, a)...)
 	for _, p := range c.Packages {
 		p := p
 		m, err := catalog.NewTagMatcher(p.Tag, p.Name)
@@ -46,8 +56,9 @@ func Jobs(c catalog.Catalog, a Adapters) []Job {
 		}
 		if p.CI != nil && p.CI.GitHubActions != nil {
 			jobs = append(jobs, Job{
-				Key: "ci/" + p.Name, Layer: "ci", Host: hostOf(apiURL(c)), Packages: []string{p.Name}, Spec: spec(p.CI, p.Repo, p.Tag),
-				Poll: func(ctx context.Context) ([]model.Obs, error) { return a.CI.Runs(ctx, p, m) },
+				Key: "ci/" + p.Name, Layer: "ci", Host: hostOf(apiURL(c)), Repo: p.Repo.URL, Workflow: p.CI.GitHubActions.Workflow,
+				Packages: []string{p.Name}, Spec: spec(p.CI, p.Repo, p.Tag),
+				Poll: obsPoll(func(ctx context.Context) ([]model.Obs, error) { return a.CI.Runs(ctx, p, m) }),
 			})
 		}
 		if art := p.Artifact; art != nil {
@@ -58,46 +69,64 @@ func Jobs(c catalog.Catalog, a Adapters) []Job {
 				impl, host = a.OCI, art.OCI.Registry
 			}
 			jobs = append(jobs, Job{
-				Key: "artifact/" + p.Name, Layer: "artifact", Host: host, Packages: []string{p.Name}, Spec: spec(art),
-				Poll: func(ctx context.Context) ([]model.Obs, error) { return impl.Versions(ctx, p) },
+				Key: "artifact/" + p.Name, Layer: "artifact", Host: host, Repo: p.Repo.URL, Packages: []string{p.Name}, Spec: spec(art),
+				Poll: obsPoll(func(ctx context.Context) ([]model.Obs, error) { return impl.Versions(ctx, p) }),
 			})
 		}
 		for _, d := range p.Deploy {
-			d := d
-			impl, host := a.HTTPCheck, ""
-			if d.HTTPCheck != nil {
-				host = hostOf(d.HTTPCheck.URL)
-			} else {
-				impl = a.Coolify
-				if t, ok := c.Target(d.Target); ok && t.Coolify != nil {
-					host = hostOf(t.Coolify.URL)
-				}
+			if j, ok := runtimeJob(c, a, p, d); ok {
+				jobs = append(jobs, j)
 			}
-			jobs = append(jobs, Job{
-				Key: "runtime/" + p.Name + "/" + d.Target, Layer: "runtime", Host: host, Packages: []string{p.Name}, Spec: spec(d),
-				Poll: func(ctx context.Context) ([]model.Obs, error) {
-					o, err := impl.Running(ctx, p.Name, d)
-					if err != nil {
-						return nil, err
-					}
-					return []model.Obs{o}, nil
-				},
-			})
 		}
 	}
 	return jobs
 }
 
-// sourceJobs: one tag listing per repo, mapped to every package in it.
-func sourceJobs(c catalog.Catalog, src adapter.Source) []Job {
-	type group struct {
-		repo     catalog.Repo
-		matchers []catalog.TagMatcher
-		names    []string
-		specs    []string
+func runtimeJob(c catalog.Catalog, a Adapters, p catalog.Package, d catalog.Deploy) (Job, bool) {
+	if d.CDEvents {
+		return Job{}, false // pushed to /cdevents, nothing to poll
 	}
-	var order []string
-	groups := map[string]*group{}
+	impl, host := a.HTTPCheck, ""
+	if d.HTTPCheck != nil {
+		host = hostOf(d.HTTPCheck.URL)
+	} else {
+		impl = a.Coolify
+		if t, ok := c.Target(d.Target); ok && t.Coolify != nil {
+			host = hostOf(t.Coolify.URL)
+		}
+	}
+	return Job{
+		Key: "runtime/" + p.Name + "/" + d.Target, Layer: "runtime", Host: host, Repo: p.Repo.URL,
+		Packages: []string{p.Name}, Spec: spec(d),
+		Poll: obsPoll(func(ctx context.Context) ([]model.Obs, error) {
+			o, err := impl.Running(ctx, p.Name, d)
+			if err != nil {
+				return nil, err
+			}
+			return []model.Obs{o}, nil
+		}),
+	}, true
+}
+
+func obsPoll(f func(ctx context.Context) ([]model.Obs, error)) func(ctx context.Context) (Batch, error) {
+	return func(ctx context.Context) (Batch, error) {
+		obs, err := f(ctx)
+		return Batch{Obs: obs}, err
+	}
+}
+
+// repoGroup is the packages of one repo.
+type repoGroup struct {
+	repo     catalog.Repo
+	pkgs     []catalog.Package
+	matchers []catalog.TagMatcher
+	names    []string
+	specs    []string
+}
+
+func groupByRepo(c catalog.Catalog) []*repoGroup {
+	var order []*repoGroup
+	groups := map[string]*repoGroup{}
 	for _, p := range c.Packages {
 		m, err := catalog.NewTagMatcher(p.Tag, p.Name)
 		if err != nil {
@@ -105,25 +134,40 @@ func sourceJobs(c catalog.Catalog, src adapter.Source) []Job {
 		}
 		g := groups[p.Repo.URL]
 		if g == nil {
-			g = &group{repo: p.Repo}
+			g = &repoGroup{repo: p.Repo}
 			groups[p.Repo.URL] = g
-			order = append(order, p.Repo.URL)
+			order = append(order, g)
 		}
-		g.matchers, g.names, g.specs = append(g.matchers, m), append(g.names, p.Name), append(g.specs, p.Name+" "+p.Tag)
+		g.pkgs, g.matchers = append(g.pkgs, p), append(g.matchers, m)
+		g.names, g.specs = append(g.names, p.Name), append(g.specs, p.Name+" "+p.Tag+" "+p.Branch+" "+p.Path)
 	}
-	jobs := make([]Job, 0, len(order))
-	for _, u := range order {
-		g := groups[u]
+	return order
+}
+
+// repoJobs: one tag listing per repo, mapped to every package in it; and,
+// with a change lister, one unreleased-changes job per GitHub repo.
+func repoJobs(c catalog.Catalog, a Adapters) []Job {
+	var jobs []Job
+	for _, g := range groupByRepo(c) {
+		g := g
 		jobs = append(jobs, Job{
-			Key: "source/" + u, Layer: "source", Host: hostOf(u), Packages: g.names, Spec: spec(g.repo, g.specs),
-			Poll: func(ctx context.Context) ([]model.Obs, error) {
-				tags, err := src.Tags(ctx, g.repo)
+			Key: "source/" + g.repo.URL, Layer: "source", Host: hostOf(g.repo.URL), Repo: g.repo.URL,
+			Packages: g.names, Spec: spec(g.repo, g.specs),
+			Poll: func(ctx context.Context) (Batch, error) {
+				refs, err := a.Source.Refs(ctx, g.repo)
 				if err != nil {
-					return nil, err
+					return Batch{}, err
 				}
-				return TagObservations(tags, g.names, g.matchers), nil
+				return Batch{Obs: TagObservations(refs.Tags, g.names, g.matchers)}, nil
 			},
 		})
+		if a.Changes != nil && g.repo.GitHub != "" {
+			jobs = append(jobs, Job{
+				Key: "changes/" + g.repo.URL, Layer: "changes", Host: hostOf(apiURL(c)), Repo: g.repo.URL,
+				Packages: g.names, Spec: spec(g.repo, g.specs),
+				Poll: func(ctx context.Context) (Batch, error) { return unreleased(ctx, a, g) },
+			})
+		}
 	}
 	return jobs
 }

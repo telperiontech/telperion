@@ -6,6 +6,7 @@
   @if (loggedIn()) {
     <nav class="flex gap-4 text-sm">
       <a routerLink="/" routerLinkActive="font-medium underline" [routerLinkActiveOptions]="{ exact: true }">Packages</a>
+      <a routerLink="/runs" routerLinkActive="font-medium underline">Runs</a>
       <a routerLink="/status" routerLinkActive="font-medium underline">Polling</a>
       <a routerLink="/audit" routerLinkActive="font-medium underline">Audit</a>
     </nav>

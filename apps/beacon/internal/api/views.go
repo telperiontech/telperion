@@ -33,6 +33,24 @@ type PackageView struct {
 	Latest  *model.VersionCells `json:"latest"` // newest version, if any
 	Gaps    []model.Gap         `json:"gaps"`
 	Links   Links               `json:"links"`
+	Actions Actions             `json:"actions"`
+	// Unreleased is the commits since the latest tag (GitHub repos with the
+	// App); nil when not known.
+	Unreleased *model.Unreleased `json:"unreleased,omitempty"`
+	ActiveRun  *RunRef           `json:"activeRun,omitempty"` // a plan run with an active step on it
+}
+
+// Actions are the one-click actions the package's adapters support.
+type Actions struct {
+	Release bool     `json:"release"` // a release trigger is configured
+	Deploy  []string `json:"deploy"`  // targets Beacon can deploy to
+	Rerun   bool     `json:"rerun"`   // failed builds can be re-run
+}
+
+// RunRef points to a plan run.
+type RunRef struct {
+	ID    int64  `json:"id"`
+	Title string `json:"title"`
 }
 
 // Links point to the package on its platforms.
@@ -54,14 +72,36 @@ type PackageDetail struct {
 	PackageView
 	Versions []model.VersionCells `json:"versions"`
 	Events   []store.Event        `json:"events"`
+	Runs     []model.Run          `json:"runs"` // the newest plan runs with a step on it
 }
 
 // maxVersions bounds the timeline of a package.
 const maxVersions = 200
 
+// viewContext is what every package view reads besides its own observations.
+type viewContext struct {
+	cat        catalog.Catalog
+	unreleased map[string]model.Unreleased
+	active     []model.Run
+	now        time.Time
+}
+
+func (v Views) load(ctx context.Context) (viewContext, error) {
+	vc := viewContext{now: v.Now()}
+	var err error
+	if vc.cat, err = v.Store.LoadCatalog(ctx); err != nil {
+		return vc, err
+	}
+	if vc.unreleased, err = v.Store.Unreleased(ctx); err != nil {
+		return vc, err
+	}
+	vc.active, err = v.Store.ActiveRuns(ctx)
+	return vc, err
+}
+
 // Overview builds the main screen.
 func (v Views) Overview(ctx context.Context) (Overview, error) {
-	c, err := v.Store.LoadCatalog(ctx)
+	vc, err := v.load(ctx)
 	if err != nil {
 		return Overview{}, err
 	}
@@ -69,10 +109,9 @@ func (v Views) Overview(ctx context.Context) (Overview, error) {
 	if err != nil {
 		return Overview{}, err
 	}
-	now := v.Now()
-	out := Overview{Packages: make([]PackageView, 0, len(c.Packages)), At: now}
-	for _, p := range c.Packages {
-		pv, _ := view(p, states[p.Name], now)
+	out := Overview{Packages: make([]PackageView, 0, len(vc.cat.Packages)), At: vc.now}
+	for _, p := range vc.cat.Packages {
+		pv, _ := vc.view(p, states[p.Name])
 		out.Packages = append(out.Packages, pv)
 	}
 	slices.SortFunc(out.Packages, byUrgency)
@@ -81,11 +120,11 @@ func (v Views) Overview(ctx context.Context) (Overview, error) {
 
 // Package builds one package's timeline.
 func (v Views) Package(ctx context.Context, name string) (PackageDetail, error) {
-	c, err := v.Store.LoadCatalog(ctx)
+	vc, err := v.load(ctx)
 	if err != nil {
 		return PackageDetail{}, err
 	}
-	p, ok := c.Package(name)
+	p, ok := vc.cat.Package(name)
 	if !ok {
 		return PackageDetail{}, ErrNotFound
 	}
@@ -93,15 +132,19 @@ func (v Views) Package(ctx context.Context, name string) (PackageDetail, error) 
 	if err != nil {
 		return PackageDetail{}, err
 	}
-	pv, versions := view(p, states[name], v.Now())
+	pv, versions := vc.view(p, states[name])
 	events, err := v.Store.Events(ctx, name, 0, 50)
+	if err != nil {
+		return PackageDetail{}, err
+	}
+	runs, err := v.Store.PackageRuns(ctx, name, 10)
 	if err != nil {
 		return PackageDetail{}, err
 	}
 	if len(versions) > maxVersions {
 		versions = versions[:maxVersions]
 	}
-	return PackageDetail{PackageView: pv, Versions: versions, Events: events}, nil
+	return PackageDetail{PackageView: pv, Versions: versions, Events: events, Runs: runs}, nil
 }
 
 // Gauges counts packages and gaps for /metrics.
@@ -122,7 +165,7 @@ func (v Views) Gauges(ctx context.Context) (metrics.Gauges, error) {
 	return g, nil
 }
 
-func view(p catalog.Package, ps *store.PackageState, now time.Time) (PackageView, []model.VersionCells) {
+func (vc viewContext) view(p catalog.Package, ps *store.PackageState) (PackageView, []model.VersionCells) {
 	if ps == nil {
 		ps = &store.PackageState{}
 	}
@@ -130,7 +173,15 @@ func view(p catalog.Package, ps *store.PackageState, now time.Time) (PackageView
 	versions := model.Cells(chain, targets, ps.Versions, ps.Rows)
 	pv := PackageView{
 		Name: p.Name, Project: p.Project, Chain: chain, Targets: targets,
-		Gaps: model.Gaps(chain, versions, now), Links: links(p),
+		Gaps: model.Gaps(chain, versions, vc.now), Links: links(p), Actions: actions(vc.cat, p),
+	}
+	if u, ok := vc.unreleased[p.Name]; ok {
+		pv.Unreleased = &u
+	}
+	for _, r := range vc.active {
+		if slices.ContainsFunc(r.Steps, func(s model.Step) bool { return s.Package == p.Name && !s.State.Terminal() }) {
+			pv.ActiveRun = &RunRef{ID: r.ID, Title: r.Title}
+		}
 	}
 	if pv.Gaps == nil {
 		pv.Gaps = []model.Gap{}
@@ -182,4 +233,19 @@ func links(p catalog.Package) Links {
 		}
 	}
 	return l
+}
+
+// actions lists what the package's adapters can do (the UI shows only these).
+func actions(c catalog.Catalog, p catalog.Package) Actions {
+	a := Actions{
+		Release: p.Release != nil,
+		Deploy:  []string{},
+		Rerun:   p.CI != nil && p.CI.GitHubActions != nil && c.GitHub != nil,
+	}
+	for _, d := range p.Deploy {
+		if d.Coolify != nil {
+			a.Deploy = append(a.Deploy, d.Target)
+		}
+	}
+	return a
 }

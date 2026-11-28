@@ -179,7 +179,8 @@ frp-gate.
 - **Every other secret stays server-side**: Coolify tokens, registry credentials, webhook secrets,
   CDEvents source tokens. In the YAML they are referenced, never written: `token_env`, `token_file`
   (same convention as frp-gate). The API never returns a secret, the UI never receives one, logs mask
-  them. Inbound tokens (CDEvents sources) are stored as SHA-256 hashes.
+  them. Inbound tokens (CDEvents sources) are referenced like every other secret, never stored, and
+  compared in constant time through their SHA-256.
 - **Panel login** starts as one admin password (`BEACON_ADMIN_PASSWORD[_FILE]`), HMAC-signed session
   cookies (`HttpOnly`, `SameSite=Strict`, `Secure`), Go's `http.CrossOriginProtection` for CSRF, 1 s
   delay on a failed login: the frp-gate model. A later phase adds "Sign in with GitHub" through the

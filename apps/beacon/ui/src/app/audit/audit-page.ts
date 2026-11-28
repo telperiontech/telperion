@@ -4,7 +4,7 @@ import { fetcherSignal } from '@telperion/ng-pack/fetcher-signal';
 
 import { AuditEntry } from '../core/api';
 
-/** Who did what: logins and config applies (later: releases and deploys). */
+/** Who did what: logins, config applies, plan runs and their steps, unmatched CDEvents. */
 @Component({
   selector: 'bcn-audit-page',
   imports: [DatePipe],

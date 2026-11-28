@@ -33,13 +33,16 @@ func advertisement() string {
 }
 
 func TestParseAdvertisement(t *testing.T) {
-	tags, err := ParseAdvertisement(strings.NewReader(advertisement()))
+	refs, err := ParseAdvertisement(strings.NewReader(advertisement()))
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []adapter.Tag{{Name: "js-utils-v1.0.0", Commit: shaTag}, {Name: "js-utils-v1.1.0", Commit: shaTag}}
-	if fmt.Sprint(tags) != fmt.Sprint(want) {
+	if tags := refs.Tags; fmt.Sprint(tags) != fmt.Sprint(want) {
 		t.Errorf("tags = %v, want %v (annotated tags peeled)", tags, want)
+	}
+	if name, sha, ok := refs.Head(""); !ok || name != "main" || sha != shaMain {
+		t.Errorf("default head = %q %q %v", name, sha, ok)
 	}
 	if _, err := ParseAdvertisement(strings.NewReader("<html>")); err == nil {
 		t.Error("an HTML page parsed as refs")
@@ -48,9 +51,10 @@ func TestParseAdvertisement(t *testing.T) {
 
 type fixedToken string
 
-func (f fixedToken) Token(context.Context, string) (string, error) { return string(f), nil }
+func (f fixedToken) Token(context.Context, string) (string, error)      { return string(f), nil }
+func (f fixedToken) WriteToken(context.Context, string) (string, error) { return string(f), nil }
 
-func TestTagsUsesAppToken(t *testing.T) {
+func TestRefsUsesAppToken(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, _ := r.BasicAuth()
 		if r.URL.Path != "/acme/app.git/info/refs" || r.URL.Query().Get("service") != "git-upload-pack" ||
@@ -62,8 +66,8 @@ func TestTagsUsesAppToken(t *testing.T) {
 	}))
 	defer srv.Close()
 	s := Source{Client: platform.New("test", 5*time.Second), GitHub: fixedToken("ghs_x")}
-	tags, err := s.Tags(context.Background(), catalog.Repo{GitHub: "acme/app", URL: srv.URL + "/acme/app.git"})
-	if err != nil || len(tags) != 2 {
-		t.Fatalf("tags = %v %v", tags, err)
+	refs, err := s.Refs(context.Background(), catalog.Repo{GitHub: "acme/app", URL: srv.URL + "/acme/app.git"})
+	if err != nil || len(refs.Tags) != 2 {
+		t.Fatalf("refs = %v %v", refs, err)
 	}
 }

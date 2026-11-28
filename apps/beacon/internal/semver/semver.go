@@ -1,5 +1,4 @@
-// Package semver parses and orders semantic versions (semver.org 2.0.0).
-// Bumping (major/minor/patch) comes with the release actions in Phase 2.
+// Package semver parses, orders and bumps semantic versions (semver.org 2.0.0).
 package semver
 
 import (

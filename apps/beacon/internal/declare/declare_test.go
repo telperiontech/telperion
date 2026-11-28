@@ -15,19 +15,27 @@ const example = `
 github:
   app_id: 123456
   private_key_file: /run/secrets/app.pem
+  webhook_secret_env: HOOK_SECRET
 
 targets:
   coolify-main:
     coolify: { url: https://coolify.example.com, token_env: COOLIFY_TOKEN }
 
+cdevents:
+  sources:
+    - { name: home-ci, token_env: CDEVENTS_TOKEN, packages: [site] }
+
 projects:
   - name: telperion
     repo: telperiontech/telperion
+    release: { github-release: {} }
     ci: { github-actions: { workflow: "{package}.publish.yml" } }
     packages:
-      js-utils: { artifact: { npm: "@telperion/js-utils" } }
-      docs: { ci: none }
+      js-utils: { path: libs/js-utils/, artifact: { npm: "@telperion/js-utils" } }
+      docs: { ci: none, release: none }
       frp-gate:
+        branch: release
+        release: { github-dispatch: { workflow: release.yml, inputs: { what: "{package}@{version}" } } }
         artifact: { oci: ghcr.io/telperiontech/frp-gate }
         deploy:
           - coolify-main: { app: abc123 }
@@ -36,15 +44,20 @@ projects:
   - name: elsewhere
     repo: { git: https://git.example.com/acme/site.git }
     tag: "v{version}"
+    release: { webhook: { url: "https://ci.example.com/hooks/release", secret_env: HOOK_SECRET } }
     packages:
       site:
+        ci: cdevents
         deploy:
           - http-check: { url: "https://docs.example.com/version.json", version: { json: /version } }
+          - cdevents: { environment: staging }
 `
 
 func testEnv() Env {
 	return Env{
-		Getenv: func(k string) string { return map[string]string{"COOLIFY_TOKEN": "t"}[k] },
+		Getenv: func(k string) string {
+			return map[string]string{"COOLIFY_TOKEN": "t", "HOOK_SECRET": "h", "CDEVENTS_TOKEN": "c"}[k]
+		},
 		ReadFile: func(p string) ([]byte, error) {
 			if p == "/run/secrets/app.pem" {
 				return []byte("-----BEGIN RSA PRIVATE KEY-----"), nil
@@ -85,8 +98,24 @@ func TestResolveExample(t *testing.T) {
 		t.Errorf("frp-gate = %+v", gate)
 	}
 	site, _ := c.Package("site")
-	if chain := site.Chain(); len(chain) != 2 || chain[1] != model.Deployed || site.Tag != "v{version}" {
+	if chain := site.Chain(); len(chain) != 3 || chain[2] != model.Deployed || site.Tag != "v{version}" ||
+		!site.CI.CDEvents || !site.Deploy[1].CDEvents || site.Deploy[1].Target != "staging" {
 		t.Errorf("site = %+v chain %v", site, chain)
+	}
+	if js.Release.Kind() != "github-release" || js.Release.GitHubRelease.Notes != "generate" || js.Path != "libs/js-utils" {
+		t.Errorf("js-utils release %+v path %q", js.Release, js.Path)
+	}
+	if docs, _ := c.Package("docs"); docs.Release != nil {
+		t.Error("release: none did not turn the project default off")
+	}
+	if gate.Branch != "release" || gate.Release.GitHubDispatch.Inputs["what"] != "{package}@{version}" {
+		t.Errorf("frp-gate branch %q release %+v", gate.Branch, gate.Release.GitHubDispatch)
+	}
+	if site.Release.Webhook.Secret.Env != "HOOK_SECRET" || c.GitHub.WebhookSecret.Env != "HOOK_SECRET" {
+		t.Errorf("site release %+v", site.Release)
+	}
+	if len(c.CDEvents) != 1 || !c.CDEvents[0].Allows("site") || c.CDEvents[0].Allows("js-utils") {
+		t.Errorf("cdevents = %+v", c.CDEvents)
 	}
 }
 
@@ -96,11 +125,19 @@ func TestResolveErrors(t *testing.T) {
 		"unknown target": `projects: [{name: a, repo: o/r, packages: {a: {deploy: [{nowhere: {app: x}}]}}}]`,
 		"missing secret": `targets: {t: {coolify: {url: "https://c.example.com", token_env: UNSET}}}
 projects: [{name: a, repo: o/r, packages: {a: {}}}]`,
-		"tag clash":         `projects: [{name: a, repo: o/r, tag: "{version}", packages: {x: {}, y: {}}}]`,
-		"duplicate package": `projects: [{name: a, repo: o/r, packages: {x: {}}}, {name: b, repo: o/s, packages: {x: {}}}]`,
-		"image with tag":    `projects: [{name: a, repo: o/r, packages: {x: {artifact: {oci: ghcr.io/o/x:1.0}}}}]`,
-		"bad name":          `projects: [{name: A, repo: o/r, packages: {x: {}}}]`,
-		"ci on git repo":    `projects: [{name: a, repo: {git: "https://git.example.com/x.git"}, ci: {github-actions: {workflow: w.yml}}, packages: {x: {}}}]`,
+		"tag clash":           `projects: [{name: a, repo: o/r, tag: "{version}", packages: {x: {}, y: {}}}]`,
+		"duplicate package":   `projects: [{name: a, repo: o/r, packages: {x: {}}}, {name: b, repo: o/s, packages: {x: {}}}]`,
+		"image with tag":      `projects: [{name: a, repo: o/r, packages: {x: {artifact: {oci: ghcr.io/o/x:1.0}}}}]`,
+		"bad name":            `projects: [{name: A, repo: o/r, packages: {x: {}}}]`,
+		"ci on git repo":      `projects: [{name: a, repo: {git: "https://git.example.com/x.git"}, ci: {github-actions: {workflow: w.yml}}, packages: {x: {}}}]`,
+		"release without app": `projects: [{name: a, repo: o/r, release: {github-release: {}}, packages: {x: {}}}]`,
+		"two triggers":        `projects: [{name: a, repo: o/r, release: {github-release: {}, webhook: {url: "https://x.example.com", secret_env: HOOK_SECRET}}, packages: {x: {}}}]`,
+		"webhook no secret":   `projects: [{name: a, repo: o/r, release: {webhook: {url: "https://x.example.com"}}, packages: {x: {}}}]`,
+		"bad placeholder": `github: {app_id: 1, private_key_file: /run/secrets/app.pem}
+projects: [{name: a, repo: o/r, release: {github-dispatch: {workflow: r.yml, inputs: {v: "{nope}"}}}, packages: {x: {}}}]`,
+		"path outside": `projects: [{name: a, repo: o/r, packages: {x: {path: ../x}}}]`,
+		"cdevents unknown": `cdevents: {sources: [{name: s, token_env: HOOK_SECRET, packages: [nope]}]}
+projects: [{name: a, repo: o/r, packages: {x: {}}}]`,
 	}
 	for name, src := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -139,7 +176,7 @@ func TestApplyExportRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := len(res.Changes); got != 1+1+2+4 { // github, target, 2 projects, 4 packages
+	if got := len(res.Changes); got != 1+1+2+4+1 { // github, target, 2 projects, 4 packages, cdevents source
 		t.Errorf("changes = %v", res.Changes)
 	}
 	if again, _ := Apply(ctx, st, c, false); len(again.Changes) != 0 {

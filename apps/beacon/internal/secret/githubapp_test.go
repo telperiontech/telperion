@@ -43,14 +43,21 @@ func TestGitHubAppToken(t *testing.T) {
 		case "/repos/acme/app/installation":
 			_, _ = w.Write([]byte(`{"id": 42}`))
 		case "/app/installations/42/access_tokens":
-			var body struct{ Permissions map[string]string }
+			var body struct {
+				Permissions  map[string]string
+				Repositories []string
+			}
 			_ = json.NewDecoder(r.Body).Decode(&body)
-			if body.Permissions["contents"] != "read" {
+			tok := "ghs_read"
+			switch {
+			case body.Permissions["contents"] == "write" && len(body.Repositories) == 1 && body.Repositories[0] == "app":
+				tok = "ghs_write"
+			case body.Permissions["contents"] != "read" || len(body.Repositories) != 0:
 				http.Error(w, "unexpected permissions", http.StatusUnprocessableEntity)
 				return
 			}
 			mints++
-			_ = json.NewEncoder(w).Encode(map[string]any{"token": "ghs_test", "expires_at": time.Now().Add(time.Hour)})
+			_ = json.NewEncoder(w).Encode(map[string]any{"token": tok, "expires_at": time.Now().Add(time.Hour)})
 		default:
 			http.NotFound(w, r)
 		}
@@ -58,18 +65,22 @@ func TestGitHubAppToken(t *testing.T) {
 	defer srv.Close()
 
 	app, err := NewGitHubApp(catalog.GitHubApp{AppID: 7, APIURL: srv.URL, PrivateKey: catalog.SecretRef{File: keyFile}},
-		platform.New("test", 5*time.Second), ReadPermissions)
+		platform.New("test", 5*time.Second))
 	if err != nil {
 		t.Fatal(err)
 	}
 	for range 3 {
 		tok, err := app.Token(context.Background(), "acme/app")
-		if err != nil || tok != "ghs_test" {
+		if err != nil || tok != "ghs_read" {
 			t.Fatalf("token = %q %v", tok, err)
 		}
+		tok, err = app.WriteToken(context.Background(), "acme/app")
+		if err != nil || tok != "ghs_write" {
+			t.Fatalf("write token = %q %v", tok, err)
+		}
 	}
-	if mints != 1 {
-		t.Errorf("minted %d tokens, want 1 (cached)", mints)
+	if mints != 2 {
+		t.Errorf("minted %d tokens, want 2 (one read, one write; cached)", mints)
 	}
 }
 

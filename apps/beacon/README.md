@@ -1,12 +1,13 @@
 # Beacon
 
 A small self-hosted panel for the release lifecycle of packages across repos: where each version
-stands (tagged, built, published, deployed), and which versions are stuck between two stages. See
-the [design](DESIGN.md) and the [roadmap](ROADMAP.md).
+stands (tagged, built, published, deployed), which versions are stuck between two stages, and
+buttons to release, deploy and re-run. See the [design](DESIGN.md) and the [roadmap](ROADMAP.md).
 
-**Status: Phase 1 (read-only overview).** Beacon observes tags, CI runs, registries and
-deployments and shows the gaps between them, live. Releasing and deploying from Beacon come in
-Phase 2.
+**Status: Phase 2 (single actions).** Beacon observes tags, CI runs, registries and deployments and
+shows the gaps between them, live. A release, a deploy or a re-run of a failed build is a button
+with a preview, and Beacon follows it to the end of the chain. Chained release plans come in
+Phase 3.
 
 ## Quick start
 
@@ -25,7 +26,7 @@ Open <http://localhost:7701> and log in with the admin password.
 
 | Port | Listener | Serves |
 | --- | --- | --- |
-| 7700 | ingest | `/healthz`, `/metrics` (later: GitHub webhooks, CDEvents). The only part that may face the internet. |
+| 7700 | ingest | `/healthz`, `/metrics`, `POST /hooks/github` (App webhooks), `POST /cdevents`. The only part that may face the internet, and only if push events are wanted. |
 | 7701 | admin | The UI, the JSON API and its SSE stream. Keep it behind a reverse proxy such as Caddy. |
 
 The image is distroless (`static-debian12:nonroot`), multi-arch (amd64, arm64), keeps its SQLite
@@ -53,27 +54,45 @@ applied in one transaction. Secrets are never in the file: `token_env`, `token_f
 `private_key_file` name where they are.
 
 ```yaml
-github:                     # a GitHub App with Metadata, Contents and Actions: read
+github:                     # a GitHub App (permissions below)
   app_id: 123456
   private_key_file: /run/secrets/beacon-github-app.pem
+  webhook_secret_env: BEACON_GITHUB_WEBHOOK_SECRET   # optional: App webhooks
 
 targets:
   coolify-main:
     coolify: { url: https://coolify.example.com, token_env: COOLIFY_TOKEN }
+    limit: 1                # deploys at a time (default 1)
+
+cdevents:                   # optional: who may POST CDEvents to /cdevents
+  sources:
+    - { name: home-ci, token_env: BEACON_CDEVENTS_HOME_CI, packages: [site] }
 
 projects:
   - name: telperion
     repo: telperiontech/telperion         # or { git: https://git.example.com/x/y.git, token_env: ... }
     tag: "{package}-v{version}"           # the default
+    branch: main                          # releases tag its head; default: the repo's default branch
+    release: { github-release: { notes: generate } }
     ci: { github-actions: { workflow: "{package}.publish.yml" } }
     packages:
-      js-utils: { artifact: { npm: "@telperion/js-utils" } }
-      docs: { ci: none }
+      js-utils: { path: libs/js-utils, artifact: { npm: "@telperion/js-utils" } }
+      docs: { ci: none, release: none }
       frp-gate:
+        path: libs/frp-gate
         artifact: { oci: { image: ghcr.io/telperiontech/frp-gate, platforms: [linux/amd64, linux/arm64] } }
         deploy:
           - coolify-main: { app: "<application uuid>" }
           - http-check: { url: "https://gate.example.com/healthz", version: { header: X-Version } }
+
+  - name: elsewhere
+    repo: { git: https://git.example.com/acme/site.git }
+    release: { webhook: { url: https://ci.example.com/hooks/release, secret_env: SITE_HOOK_SECRET } }
+    packages:
+      site:
+        ci: cdevents                      # built is only reported, by CDEvents
+        deploy:
+          - cdevents: { environment: staging }
 ```
 
 - A package's **chain** is its configured stages: `tagged` always, `built` with `ci`, `published`
@@ -85,10 +104,62 @@ projects:
 - A **gap** is a version whose stage is ok while the next one is missing or failed. It counts as
   stuck when it failed, or after 10 min (built), 45 min (published) or 24 h (deployed). Versions
   older than the newest one that completed its chain are not reported.
+- **Release triggers** (`release:`, project default, package override, `none` to turn it off):
+  `github-release` (a GitHub release, or with `tag_only: true` only the tag, at the branch head;
+  `notes: generate | none`), `github-dispatch` (`workflow: release.yml`, `inputs:` with
+  `{package}`, `{version}`, `{tag}`, `{bump}`; default `package` and `version`) and `webhook`
+  (`url`, `secret_env`/`secret_file`; see [Actions](#actions)).
+- `path` is the package's folder: the unreleased-changes count only includes commits that touch
+  it. Without it every commit on the branch counts.
 - Without a `github` block GitHub is read anonymously (60 requests an hour; polling slows down to
-  fit).
-- **Not verified yet:** the Coolify adapter follows the v4 API docs (`docker_registry_image_tag`,
-  `status`) and has not run against a live instance.
+  fit), unreleased changes are not counted, and nothing can be written to GitHub.
+- **GitHub App permissions:** Metadata read, Contents and Actions read (observing) or read and
+  write (releases, dispatches, re-runs). Beacon mints read-only tokens for polling and, for each
+  action, a write token limited to that one repo. Webhook events: `push`, `create`, `release`,
+  `workflow_run`, `registry_package`.
+- **Not verified yet:** the Coolify adapter (running version and deploys) follows the v4 API docs
+  (`docker_registry_image_tag`, `status`, `/deploy?uuid=`, `/deployments/{uuid}`) and has not run
+  against a live instance.
+
+## Actions
+
+The package page offers what the package's adapters support: **release** (patch, minor or major
+from the latest `{package}-v{version}` tag), **deploy** a published version on a Coolify target
+that does not run it, and **re-run** the failed jobs of a failed GitHub Actions build. Each action:
+
+1. **Preview.** The exact version change, the tag and the commit it will point at, the unreleased
+   commits, what the trigger will do, and what it would wait for. Nothing is written. A major
+   version change needs its own tick.
+2. **Start.** Beacon computes the preview again; if anything moved (a new tag, a new commit on the
+   branch), it shows the new preview instead of starting.
+3. **Run.** An action is a one-step plan run: it takes the package's lock (one active step per
+   package), for a deploy a slot on its target (`limit`), and a repo lock only while it writes.
+   Before writing it checks whether the result exists already (the tag, the running version) and
+   then follows it instead of firing again. Restarts are safe: the intent is stored before the
+   write, and a dispatch or webhook is never sent twice.
+4. **Done when the chain says so.** A release is done when its last stage (e.g. `published`) is ok
+   for the new version, and failed when a stage on the way fails, when the tag does not appear
+   within 30 minutes, or after 2 hours without progress. A deploy is done when the target reports
+   the version. The **Runs** page and the package page follow it live; a running action can be
+   cancelled (what it started, such as a CI run, goes on).
+
+Every start, step outcome and cancel is in the audit log, with who did it (`ui` or `api`).
+
+The `webhook` trigger POSTs `{"event": "release", "package", "version", "tag", "bump", "branch",
+"commit", "plan"}` with `X-Beacon-Signature-256: sha256=<hex HMAC-SHA256 of the body>` (GitHub's
+scheme) and `X-Beacon-Delivery`, which is the same for a retried step.
+
+### Push events
+
+- **GitHub App webhooks** (`POST /hooks/github`, checked with the webhook secret) make Beacon poll
+  the concerned jobs at once: tags, CI runs, packages. They never write state themselves.
+- **CDEvents** (`POST /cdevents`, `Authorization: Bearer <source token>`; structured, batched or
+  binary CloudEvents) become observations: `build.started/finished` → built, `artifact.packaged/
+  published` → published, `service.deployed/upgraded/rolledback` → deployed on the event's
+  environment. The package comes from the artifact's purl: `pkg:npm/...` and `pkg:oci/...` by the
+  artifact coordinates in the config, `pkg:generic/<package>@<version>` by Beacon's package name.
+  Events that map to no package are recorded in the audit log as `cdevents.unmatched`. A poll that
+  disagrees wins at its next run.
 
 ## Commands
 
@@ -108,12 +179,16 @@ the admin password):
 
 | Endpoint | Returns |
 | --- | --- |
-| `GET /api/overview` | Packages with their newest version and gaps; stuck gaps first |
-| `GET /api/packages/{name}` | Every version with its chain, and recent events |
+| `GET /api/overview` | Packages with their newest version, gaps, unreleased changes, possible actions and active run; stuck gaps first |
+| `GET /api/packages/{name}` | Every version with its chain, recent events and runs |
 | `GET /api/packages/{name}/events?before=&limit=` | Older events |
+| `POST /api/actions/preview` | `{"kind": "release", "package", "bump"}` (or `"version"`), `{"kind": "deploy", "package", "version", "target"}`, `{"kind": "rerun", "package", "version"}` → the preview; writes nothing |
+| `POST /api/actions` | The same request plus `"confirm": {"fingerprint", "major"}` from the preview → `201 {"run": id}`; `409` (moved), `422` (errors) or `428` (major not ticked) with the current preview |
+| `GET /api/runs?before=&limit=`, `GET /api/runs/{id}` | Plan runs and their steps |
+| `POST /api/runs/{id}/cancel` | Cancels a running run |
 | `GET /api/status` | The poll jobs: tier, last and next poll, last error |
-| `GET /api/audit?before=&limit=` | Logins and config applies |
-| `GET /api/events` | Server-sent events: `{"packages": [...]}` whenever packages change |
+| `GET /api/audit?before=&limit=` | Logins, config applies, runs, unmatched CDEvents |
+| `GET /api/events` | Server-sent events: `{"packages": [...], "runs": [...]}` whenever packages or runs change |
 
 `/metrics` on the ingest listener: `beacon_packages`, `beacon_gaps{stage}`,
 `beacon_gaps_stuck{stage}`, `beacon_polls_total{layer,result}`.

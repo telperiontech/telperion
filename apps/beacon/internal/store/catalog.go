@@ -13,23 +13,24 @@ import (
 
 const (
 	keyGitHub     = "catalog.github"
+	keyCDEvents   = "catalog.cdevents"
 	keyCatalogRev = "catalog.rev"
 )
 
 // LoadCatalog reads the stored configuration.
 func (s *Store) LoadCatalog(ctx context.Context) (catalog.Catalog, error) {
 	var c catalog.Catalog
-	var gh []byte
-	switch err := s.q.QueryRowContext(ctx, "SELECT value FROM settings WHERE key = ?", keyGitHub).Scan(&gh); {
-	case err == nil:
-		c.GitHub = &catalog.GitHubApp{}
-		if err := json.Unmarshal(gh, c.GitHub); err != nil {
-			return c, err
-		}
-	case !errors.Is(err, sql.ErrNoRows):
+	var gh catalog.GitHubApp
+	found, err := s.setting(ctx, keyGitHub, &gh)
+	if err != nil {
 		return c, err
 	}
-	var err error
+	if found {
+		c.GitHub = &gh
+	}
+	if _, err := s.setting(ctx, keyCDEvents, &c.CDEvents); err != nil {
+		return c, err
+	}
 	if c.Targets, err = loadSpecs[catalog.Target](ctx, s.q, "SELECT spec FROM targets ORDER BY name"); err != nil {
 		return c, err
 	}
@@ -38,6 +39,19 @@ func (s *Store) LoadCatalog(ctx context.Context) (catalog.Catalog, error) {
 	}
 	c.Packages, err = loadSpecs[catalog.Package](ctx, s.q, "SELECT spec FROM packages ORDER BY name")
 	return c, err
+}
+
+// setting decodes the JSON setting key into out; false if it is not set.
+func (s *Store) setting(ctx context.Context, key string, out any) (bool, error) {
+	var b []byte
+	err := s.q.QueryRowContext(ctx, "SELECT value FROM settings WHERE key = ?", key).Scan(&b)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, json.Unmarshal(b, out)
 }
 
 func loadSpecs[T any](ctx context.Context, q querier, query string) ([]T, error) {
@@ -71,7 +85,8 @@ func (s *Store) SaveCatalog(ctx context.Context, c catalog.Catalog) error {
 	}
 	for _, stmt := range []string{
 		"DELETE FROM packages WHERE managed = 1", "DELETE FROM projects WHERE managed = 1",
-		"DELETE FROM targets WHERE managed = 1", "DELETE FROM settings WHERE key = '" + keyGitHub + "'",
+		"DELETE FROM targets WHERE managed = 1",
+		"DELETE FROM settings WHERE key IN ('" + keyGitHub + "', '" + keyCDEvents + "')",
 	} {
 		if _, err := s.q.ExecContext(ctx, stmt); err != nil {
 			return err
@@ -79,6 +94,11 @@ func (s *Store) SaveCatalog(ctx context.Context, c catalog.Catalog) error {
 	}
 	if c.GitHub != nil {
 		if err := s.putJSON(ctx, "INSERT INTO settings (key, value) VALUES (?, ?)", keyGitHub, c.GitHub); err != nil {
+			return err
+		}
+	}
+	if len(c.CDEvents) > 0 {
+		if err := s.putJSON(ctx, "INSERT INTO settings (key, value) VALUES (?, ?)", keyCDEvents, c.CDEvents); err != nil {
 			return err
 		}
 	}
@@ -102,7 +122,7 @@ func (s *Store) SaveCatalog(ctx context.Context, c catalog.Catalog) error {
 		}
 	}
 	for _, name := range gone {
-		for _, table := range []string{"versions", "stage_states"} {
+		for _, table := range []string{"versions", "stage_states", "unreleased"} {
 			if _, err := s.q.ExecContext(ctx, "DELETE FROM "+table+" WHERE package = ?", name); err != nil {
 				return err
 			}

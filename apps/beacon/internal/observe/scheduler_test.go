@@ -60,19 +60,19 @@ func TestRunPollsStoresAndPublishes(t *testing.T) {
 	defer st.Close()
 
 	var polls atomic.Int32
-	published := make(chan []store.Change, 4)
+	published := make(chan Notice, 4)
 	s := &Scheduler{
 		Store: st, Client: platform.New("t", time.Second), Log: slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Opt:     Options{Hot: time.Hour, Warm: time.Hour, Cold: time.Hour, WarmFor: time.Hour, Workers: 2, Reload: time.Hour, Timeout: time.Second},
-		Publish: func(cs []store.Change) { published <- cs },
+		Publish: func(n Notice) { published <- n },
 		Build: func(catalog.Catalog) ([]Job, error) {
 			return []Job{
-				{Key: "ok", Packages: []string{"p"}, Poll: func(context.Context) ([]model.Obs, error) {
+				{Key: "ok", Packages: []string{"p"}, Poll: func(context.Context) (Batch, error) {
 					polls.Add(1)
-					return []model.Obs{{Package: "p", Version: "1.0.0", Stage: model.Tagged, State: model.OK}}, nil
+					return Batch{Obs: []model.Obs{{Package: "p", Version: "1.0.0", Stage: model.Tagged, State: model.OK}}}, nil
 				}},
-				{Key: "broken", Packages: []string{"q"}, Poll: func(context.Context) ([]model.Obs, error) {
-					return nil, errors.New("down")
+				{Key: "broken", Packages: []string{"q"}, Poll: func(context.Context) (Batch, error) {
+					return Batch{}, errors.New("down")
 				}},
 			}, nil
 		},
@@ -81,9 +81,9 @@ func TestRunPollsStoresAndPublishes(t *testing.T) {
 	go func() { done <- s.Run(ctx) }()
 
 	select {
-	case cs := <-published:
-		if len(cs) != 1 || cs[0].Package != "p" || cs[0].To != model.OK {
-			t.Errorf("published %+v", cs)
+	case n := <-published:
+		if len(n.Packages) != 1 || n.Packages[0] != "p" {
+			t.Errorf("published %+v", n)
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("nothing was published")
@@ -105,5 +105,49 @@ func TestRunPollsStoresAndPublishes(t *testing.T) {
 	}
 	if polls.Load() != 1 {
 		t.Errorf("polled %d times within an hour-long interval", polls.Load())
+	}
+}
+
+// TestWakeAndIngest: a wake-up polls a job before its time; pushed
+// observations are stored and announced like polled ones.
+func TestWakeAndIngest(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	st, err := store.Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	polled := make(chan struct{}, 4)
+	published := make(chan Notice, 4)
+	s := &Scheduler{
+		Store: st, Client: platform.New("t", time.Second), Log: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Opt:     Options{Hot: time.Hour, Warm: time.Hour, Cold: time.Hour, WarmFor: time.Hour, Workers: 1, Reload: time.Hour, Timeout: time.Second},
+		Publish: func(n Notice) { published <- n },
+		Build: func(catalog.Catalog) ([]Job, error) {
+			return []Job{{Key: "ci/x", Layer: "ci", Packages: []string{"x"}, Poll: func(context.Context) (Batch, error) {
+				polled <- struct{}{}
+				return Batch{}, platform.ErrNotModified
+			}}}, nil
+		},
+	}
+	go func() { _ = s.Run(ctx) }()
+	<-polled // the first poll after start
+	s.WakePackages("x")
+	select {
+	case <-polled:
+	case <-time.After(5 * time.Second):
+		t.Fatal("a wake-up did not poll the job")
+	}
+	if err := s.Ingest([]model.Obs{{Package: "x", Version: "1.0.0", Stage: model.Built, State: model.OK}}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case n := <-published:
+		if len(n.Packages) != 1 || n.Packages[0] != "x" {
+			t.Errorf("notice = %+v", n)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("pushed observations were not announced")
 	}
 }

@@ -12,10 +12,11 @@ import (
 
 // Catalog is the whole configuration.
 type Catalog struct {
-	GitHub   *GitHubApp `json:"github,omitempty"`
-	Targets  []Target   `json:"targets"`
-	Projects []Project  `json:"projects"`
-	Packages []Package  `json:"packages"`
+	GitHub   *GitHubApp       `json:"github,omitempty"`
+	Targets  []Target         `json:"targets"`
+	Projects []Project        `json:"projects"`
+	Packages []Package        `json:"packages"`
+	CDEvents []CDEventsSource `json:"cdevents,omitempty"`
 }
 
 // SecretRef names where a secret comes from: an environment variable or a file.
@@ -33,6 +34,9 @@ type GitHubApp struct {
 	PrivateKey SecretRef `json:"privateKey"`
 	APIURL     string    `json:"apiUrl"` // https://api.github.com, or GHES / a test server
 	WebURL     string    `json:"webUrl"` // https://github.com; git and links
+	// WebhookSecret checks the X-Hub-Signature-256 of App webhooks; unset:
+	// /hooks/github refuses every delivery.
+	WebhookSecret SecretRef `json:"webhookSecret,omitzero"`
 }
 
 // Project groups repos' packages with shared defaults (already applied to its
@@ -58,15 +62,20 @@ type Package struct {
 	Name     string    `json:"name"`
 	Project  string    `json:"project"`
 	Repo     Repo      `json:"repo"`
-	Tag      string    `json:"tag"` // tag pattern, e.g. "{package}-v{version}"
+	Tag      string    `json:"tag"`              // tag pattern, e.g. "{package}-v{version}"
+	Branch   string    `json:"branch,omitempty"` // releases tag its head; "" = the repo's default branch
+	Path     string    `json:"path,omitempty"`   // the package's folder, for unreleased changes; "" = the whole repo
+	Release  *Release  `json:"release,omitempty"`
 	CI       *CI       `json:"ci,omitempty"`
 	Artifact *Artifact `json:"artifact,omitempty"`
 	Deploy   []Deploy  `json:"deploy,omitempty"`
 }
 
-// CI binds the built stage.
+// CI binds the built stage: GitHub Actions runs are polled; with CDEvents the
+// stage is only reported (build events pushed to /cdevents).
 type CI struct {
 	GitHubActions *GitHubActions `json:"githubActions,omitempty"`
+	CDEvents      bool           `json:"cdevents,omitempty"`
 }
 
 // GitHubActions watches the runs of one workflow file.
@@ -98,11 +107,13 @@ type OCI struct {
 }
 
 // Deploy binds one deployment target of a package: exactly one of Coolify
-// (a configured target) or HTTPCheck.
+// (a configured target), HTTPCheck, or CDEvents (only reported: Target is the
+// CDEvents environment id).
 type Deploy struct {
 	Target    string      `json:"target"` // target name; for http-check a name derived from the URL host
 	Coolify   *CoolifyApp `json:"coolify,omitempty"`
 	HTTPCheck *HTTPCheck  `json:"httpCheck,omitempty"`
+	CDEvents  bool        `json:"cdevents,omitempty"`
 }
 
 // CoolifyApp is an application on a Coolify target.
@@ -126,7 +137,7 @@ type VersionSource struct {
 // Target is a runtime that several packages deploy to.
 type Target struct {
 	Name    string   `json:"name"`
-	Limit   int      `json:"limit"` // concurrent deploys (used from Phase 2)
+	Limit   int      `json:"limit"` // concurrent deploys
 	Coolify *Coolify `json:"coolify,omitempty"`
 }
 
@@ -168,6 +179,15 @@ func (c Catalog) Package(name string) (Package, bool) {
 		return Package{}, false
 	}
 	return c.Packages[i], true
+}
+
+// DeployTo returns the package's binding of a target.
+func (p Package) DeployTo(target string) (Deploy, bool) {
+	i := slices.IndexFunc(p.Deploy, func(d Deploy) bool { return d.Target == target })
+	if i < 0 {
+		return Deploy{}, false
+	}
+	return p.Deploy[i], true
 }
 
 // Target returns the target named name.

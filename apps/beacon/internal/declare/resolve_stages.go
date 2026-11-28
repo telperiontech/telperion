@@ -15,8 +15,11 @@ func (r *resolver) ci(path string, f *CIFile, pkg string, repo catalog.Repo) *ca
 	if f == nil || f.None {
 		return nil
 	}
+	if f.CDEvents {
+		return &catalog.CI{CDEvents: true}
+	}
 	if f.GitHubActions == nil {
-		r.fail(path, "needs github-actions (or none)")
+		r.fail(path, "needs github-actions (or none, or cdevents)")
 		return nil
 	}
 	if repo.GitHub == "" {
@@ -74,6 +77,10 @@ func splitImage(ref string) (registry, name string, err error) {
 }
 
 func (r *resolver) deploy(path string, d DeployFile, c catalog.Catalog) catalog.Deploy {
+	if d.CDEvents != nil {
+		r.name(path+".cdevents.environment", d.CDEvents.Environment)
+		return catalog.Deploy{Target: d.CDEvents.Environment, CDEvents: true}
+	}
 	if d.HTTPCheck != nil {
 		h := d.HTTPCheck
 		u, err := url.Parse(h.URL)

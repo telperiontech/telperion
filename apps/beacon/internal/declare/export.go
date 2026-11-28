@@ -1,6 +1,7 @@
 package declare
 
 import (
+	"maps"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -12,7 +13,7 @@ import (
 // output applies back with no changes; package settings are written per
 // package (the project-level defaults of the original file are not kept).
 func Export(c catalog.Catalog) ([]byte, error) {
-	f := File{GitHub: exportGitHub(c.GitHub)}
+	f := File{GitHub: exportGitHub(c.GitHub), CDEvents: exportCDEvents(c.CDEvents)}
 	if len(c.Targets) > 0 {
 		f.Targets = map[string]TargetFile{}
 	}
@@ -44,8 +45,42 @@ func exportGitHub(g *catalog.GitHubApp) *GitHubFile {
 	}
 	return &GitHubFile{
 		AppID: g.AppID, PrivateKeyFile: g.PrivateKey.File, PrivateKeyEnv: g.PrivateKey.Env,
+		WebhookSecretEnv: g.WebhookSecret.Env, WebhookSecretFile: g.WebhookSecret.File,
 		APIURL: unlessDefault(g.APIURL, DefaultGitHubAPI), WebURL: unlessDefault(g.WebURL, DefaultGitHubWeb),
 	}
+}
+
+func exportCDEvents(sources []catalog.CDEventsSource) *CDEventsFile {
+	if len(sources) == 0 {
+		return nil
+	}
+	f := &CDEventsFile{}
+	for _, s := range sources {
+		f.Sources = append(f.Sources, CDEventsSourceFile{
+			Name: s.Name, TokenEnv: s.Token.Env, TokenFile: s.Token.File, Packages: s.Packages,
+		})
+	}
+	return f
+}
+
+func exportRelease(r *catalog.Release) *ReleaseFile {
+	switch {
+	case r == nil:
+		return nil
+	case r.GitHubRelease != nil:
+		return &ReleaseFile{GitHubRelease: &GitHubReleaseFile{
+			Notes: unlessDefault(r.GitHubRelease.Notes, catalog.NotesGenerate), TagOnly: r.GitHubRelease.TagOnly,
+		}}
+	case r.GitHubDispatch != nil:
+		d := &GitHubDispatchFile{Workflow: r.GitHubDispatch.Workflow}
+		if !maps.Equal(r.GitHubDispatch.Inputs, defaultDispatchInputs) {
+			d.Inputs = r.GitHubDispatch.Inputs
+		}
+		return &ReleaseFile{GitHubDispatch: d}
+	}
+	return &ReleaseFile{Webhook: &WebhookFile{
+		URL: r.Webhook.URL, SecretEnv: r.Webhook.Secret.Env, SecretFile: r.Webhook.Secret.File,
+	}}
 }
 
 func exportRepo(r catalog.Repo) RepoFile {
@@ -56,9 +91,14 @@ func exportRepo(r catalog.Repo) RepoFile {
 }
 
 func exportPackage(p catalog.Package) PackageFile {
-	pf := PackageFile{Tag: unlessDefault(p.Tag, catalog.DefaultTag)}
-	if p.CI != nil && p.CI.GitHubActions != nil {
+	pf := PackageFile{
+		Tag: unlessDefault(p.Tag, catalog.DefaultTag), Branch: p.Branch, Path: p.Path, Release: exportRelease(p.Release),
+	}
+	switch {
+	case p.CI != nil && p.CI.GitHubActions != nil:
 		pf.CI = &CIFile{GitHubActions: &GitHubActionsFile{Workflow: p.CI.GitHubActions.Workflow}}
+	case p.CI != nil && p.CI.CDEvents:
+		pf.CI = &CIFile{CDEvents: true}
 	}
 	if a := p.Artifact; a != nil && a.NPM != nil {
 		pf.Artifact = &ArtifactFile{NPM: &NPMFile{
@@ -77,13 +117,16 @@ func exportPackage(p catalog.Package) PackageFile {
 		}}
 	}
 	for _, d := range p.Deploy {
-		if d.HTTPCheck != nil {
+		switch {
+		case d.HTTPCheck != nil:
 			pf.Deploy = append(pf.Deploy, DeployFile{HTTPCheck: &HTTPCheckFile{
 				Name: d.Target, URL: d.HTTPCheck.URL, Version: VersionFile(d.HTTPCheck.Version),
 			}})
-			continue
+		case d.CDEvents:
+			pf.Deploy = append(pf.Deploy, DeployFile{CDEvents: &CDEventsDeployFile{Environment: d.Target}})
+		default:
+			pf.Deploy = append(pf.Deploy, DeployFile{Target: d.Target, Coolify: &CoolifyAppFile{App: d.Coolify.App}})
 		}
-		pf.Deploy = append(pf.Deploy, DeployFile{Target: d.Target, Coolify: &CoolifyAppFile{App: d.Coolify.App}})
 	}
 	return pf
 }

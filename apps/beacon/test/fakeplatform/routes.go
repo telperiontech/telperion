@@ -28,6 +28,7 @@ func routeGit(mux *http.ServeMux, w world) {
 		var b strings.Builder
 		b.WriteString(pkt("# service=git-upload-pack\n") + "0000")
 		b.WriteString(pkt(strings.Repeat("a", 40) + " HEAD\x00multi_ack symref=HEAD:refs/heads/main\n"))
+		b.WriteString(pkt(strings.Repeat("a", 40) + " refs/heads/main\n"))
 		for _, p := range catalog() {
 			if (p.kind == site) != sites {
 				continue

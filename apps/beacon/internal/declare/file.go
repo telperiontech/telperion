@@ -18,16 +18,32 @@ import (
 type File struct {
 	GitHub   *GitHubFile           `yaml:"github,omitempty"`
 	Targets  map[string]TargetFile `yaml:"targets,omitempty"`
+	CDEvents *CDEventsFile         `yaml:"cdevents,omitempty"`
 	Projects []ProjectFile         `yaml:"projects"`
 }
 
-// GitHubFile is the GitHub App Beacon reads GitHub through.
+// GitHubFile is the GitHub App Beacon reads (and releases) through.
 type GitHubFile struct {
-	AppID          int64  `yaml:"app_id"`
-	PrivateKeyFile string `yaml:"private_key_file,omitempty"`
-	PrivateKeyEnv  string `yaml:"private_key_env,omitempty"`
-	APIURL         string `yaml:"api_url,omitempty"` // default https://api.github.com
-	WebURL         string `yaml:"web_url,omitempty"` // default https://github.com
+	AppID             int64  `yaml:"app_id"`
+	PrivateKeyFile    string `yaml:"private_key_file,omitempty"`
+	PrivateKeyEnv     string `yaml:"private_key_env,omitempty"`
+	WebhookSecretEnv  string `yaml:"webhook_secret_env,omitempty"`
+	WebhookSecretFile string `yaml:"webhook_secret_file,omitempty"`
+	APIURL            string `yaml:"api_url,omitempty"` // default https://api.github.com
+	WebURL            string `yaml:"web_url,omitempty"` // default https://github.com
+}
+
+// CDEventsFile lists who may push CDEvents to /cdevents.
+type CDEventsFile struct {
+	Sources []CDEventsSourceFile `yaml:"sources"`
+}
+
+// CDEventsSourceFile is one sender with its own bearer token.
+type CDEventsSourceFile struct {
+	Name      string   `yaml:"name"`
+	TokenEnv  string   `yaml:"token_env,omitempty"`
+	TokenFile string   `yaml:"token_file,omitempty"`
+	Packages  []string `yaml:"packages,omitempty"` // what it may report on; default every package
 }
 
 // TargetFile is a runtime target.
@@ -47,7 +63,9 @@ type CoolifyFile struct {
 type ProjectFile struct {
 	Name     string                 `yaml:"name"`
 	Repo     RepoFile               `yaml:"repo"`
-	Tag      string                 `yaml:"tag,omitempty"` // default {package}-v{version}
+	Tag      string                 `yaml:"tag,omitempty"`    // default {package}-v{version}
+	Branch   string                 `yaml:"branch,omitempty"` // default: the repo's default branch
+	Release  *ReleaseFile           `yaml:"release,omitempty"`
 	CI       *CIFile                `yaml:"ci,omitempty"`
 	Packages map[string]PackageFile `yaml:"packages"`
 }
@@ -55,6 +73,9 @@ type ProjectFile struct {
 // PackageFile is one package; it states only what differs from its project.
 type PackageFile struct {
 	Tag      string        `yaml:"tag,omitempty"`
+	Branch   string        `yaml:"branch,omitempty"`
+	Path     string        `yaml:"path,omitempty"` // the package's folder, for unreleased changes
+	Release  *ReleaseFile  `yaml:"release,omitempty"`
 	CI       *CIFile       `yaml:"ci,omitempty"`
 	Artifact *ArtifactFile `yaml:"artifact,omitempty"`
 	Deploy   []DeployFile  `yaml:"deploy,omitempty"`

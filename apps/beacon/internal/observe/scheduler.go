@@ -22,13 +22,62 @@ type Scheduler struct {
 	Store   *store.Store
 	Client  *platform.Client // for the rate-limit budgets
 	Build   func(catalog.Catalog) ([]Job, error)
-	Publish func([]store.Change)
+	Publish func(Notice)
 	OnPoll  func(layer, result string) // metrics; result ok, not_modified, error
 	Log     *slog.Logger
 	Opt     Options
 
 	mu     sync.Mutex
 	status map[string]JobStatus
+
+	once  sync.Once
+	wakes chan func(Job) bool
+	inbox chan []model.Obs
+}
+
+// ErrBusy: pushed observations arrive faster than the loop stores them.
+var ErrBusy = errors.New("the observation loop is busy; retry later")
+
+func (s *Scheduler) init() {
+	s.once.Do(func() {
+		s.wakes = make(chan func(Job) bool, 32)
+		s.inbox = make(chan []model.Obs, 32)
+	})
+}
+
+// Wake polls the jobs that match soon (a webhook said something changed, a
+// plan step started), and re-reads which packages are hot. It never blocks;
+// a wake-up that does not fit is dropped (polling catches up).
+func (s *Scheduler) Wake(match func(Job) bool) {
+	s.init()
+	select {
+	case s.wakes <- match:
+	default:
+	}
+}
+
+// WakePackages wakes every job of the named packages.
+func (s *Scheduler) WakePackages(names ...string) {
+	s.Wake(func(j Job) bool {
+		for _, p := range j.Packages {
+			if slices.Contains(names, p) {
+				return true
+			}
+		}
+		return false
+	})
+}
+
+// Ingest records pushed observations (CDEvents) through the loop, like polled
+// ones. It does not wait for them to be stored.
+func (s *Scheduler) Ingest(obs []model.Obs) error {
+	s.init()
+	select {
+	case s.inbox <- obs:
+		return nil
+	default:
+		return ErrBusy
+	}
 }
 
 // JobStatus is a job's schedule and last result, for the status page.
@@ -44,9 +93,9 @@ type JobStatus struct {
 }
 
 type result struct {
-	e   *entry
-	obs []model.Obs
-	err error
+	e     *entry
+	batch Batch
+	err   error
 }
 
 // loop is the state Run owns.
@@ -62,6 +111,7 @@ type loop struct {
 // Run polls until ctx ends. It reloads the jobs when the catalog revision
 // changes (beacon apply from another process).
 func (s *Scheduler) Run(ctx context.Context) error {
+	s.init()
 	l := &loop{Scheduler: s, entries: map[string]*entry{}, changed: map[string]time.Time{}}
 	if err := l.reload(ctx, true); err != nil {
 		return err
@@ -82,8 +132,8 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			go func() {
 				pctx, cancel := context.WithTimeout(ctx, s.Opt.Timeout)
 				defer cancel()
-				obs, err := poll(pctx)
-				results <- result{e: e, obs: obs, err: err}
+				batch, err := poll(pctx)
+				results <- result{e: e, batch: batch, err: err}
 			}()
 		}
 		wait := time.Hour
@@ -106,6 +156,25 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			if err := l.reload(ctx, false); err != nil {
 				s.Log.Error("catalog reload failed; keeping the current jobs", "err", err)
 			}
+		case match := <-s.wakes:
+			l.wake(ctx, match, now)
+		case obs := <-s.inbox:
+			if err := l.record(ctx, Batch{Obs: obs}, now); err != nil {
+				s.Log.Error("storing pushed observations failed", "err", err)
+			}
+		}
+	}
+}
+
+// wake moves matching jobs to now and re-reads the hot packages.
+func (l *loop) wake(ctx context.Context, match func(Job) bool, now time.Time) {
+	if p, err := l.Store.Pending(ctx); err == nil {
+		l.pending = p
+	}
+	for _, e := range l.entries {
+		if !e.running && e.index >= 0 && e.next.After(now) && match(e.job) {
+			e.next = now
+			l.q.fix(e)
 		}
 	}
 }
@@ -173,7 +242,7 @@ func (l *loop) handle(ctx context.Context, r result) {
 	default:
 		e.failures = 0
 		l.count(e.job.Layer, "ok")
-		if err := l.record(ctx, r.obs, now); err != nil {
+		if err := l.record(ctx, r.batch, now); err != nil {
 			e.failures++
 			errMsg = "store: " + err.Error()
 			l.Log.Error("storing observations failed", "job", e.job.Key, "err", err)
@@ -186,23 +255,33 @@ func (l *loop) handle(ctx context.Context, r result) {
 	l.setStatus(e, tier, now, errMsg)
 }
 
-// record stores observations and announces the changes they caused.
-func (l *loop) record(ctx context.Context, obs []model.Obs, now time.Time) error {
-	if len(obs) == 0 {
-		return nil
+// record stores a batch and announces the packages it changed.
+func (l *loop) record(ctx context.Context, b Batch, now time.Time) error {
+	var names []string
+	if len(b.Obs) > 0 {
+		changes, err := l.Store.Observe(ctx, b.Obs)
+		if err != nil {
+			return err
+		}
+		for _, c := range changes {
+			l.changed[c.Package] = now
+			names = append(names, c.Package)
+		}
+		if len(changes) > 0 {
+			if l.pending, err = l.Store.Pending(ctx); err != nil {
+				return err
+			}
+		}
 	}
-	changes, err := l.Store.Observe(ctx, obs)
-	if err != nil || len(changes) == 0 {
-		return err
+	if len(b.Unreleased) > 0 {
+		changed, err := l.Store.SetUnreleased(ctx, b.Unreleased)
+		if err != nil {
+			return err
+		}
+		names = append(names, changed...)
 	}
-	for _, c := range changes {
-		l.changed[c.Package] = now
-	}
-	if l.pending, err = l.Store.Pending(ctx); err != nil {
-		return err
-	}
-	if l.Publish != nil {
-		l.Publish(changes)
+	if len(names) > 0 && l.Publish != nil {
+		l.Publish(PackagesNotice(names))
 	}
 	return nil
 }

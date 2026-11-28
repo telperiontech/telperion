@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/telperiontech/telperion/apps/beacon/internal/observe"
+	"github.com/telperiontech/telperion/apps/beacon/internal/plan"
 	"github.com/telperiontech/telperion/apps/beacon/internal/store"
 	"github.com/telperiontech/telperion/libs/go-kit/session"
 )
@@ -23,6 +24,8 @@ type Options struct {
 	Auth   *session.Auth
 	Broker *observe.Broker
 	Status func() []observe.JobStatus
+	Plans  plan.Env
+	Runner Runner
 	UI     http.Handler
 	Log    *slog.Logger
 }
@@ -39,6 +42,11 @@ func New(o Options) http.Handler {
 	api.HandleFunc("GET /api/audit", s.audit)
 	api.HandleFunc("GET /api/status", s.status)
 	api.HandleFunc("GET /api/events", s.stream)
+	api.HandleFunc("POST /api/actions/preview", s.preview)
+	api.HandleFunc("POST /api/actions", s.start)
+	api.HandleFunc("GET /api/runs", s.runs)
+	api.HandleFunc("GET /api/runs/{id}", s.run)
+	api.HandleFunc("POST /api/runs/{id}/cancel", s.cancel)
 	api.HandleFunc("/api/", func(w http.ResponseWriter, _ *http.Request) {
 		writeError(w, http.StatusNotFound, "no such endpoint")
 	})

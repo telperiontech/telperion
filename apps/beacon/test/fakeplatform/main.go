@@ -39,6 +39,7 @@ func main() {
 	mux.HandleFunc("GET /healthz", func(rw http.ResponseWriter, _ *http.Request) { _, _ = rw.Write([]byte("ok\n")) })
 	routeGit(mux, w)
 	routeGitHub(mux, w)
+	routeCompare(mux)
 	routeNPM(mux, w)
 	routeOCI(mux, w)
 	routeRuntime(mux, w)

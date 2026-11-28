@@ -16,6 +16,7 @@ import (
 	"github.com/telperiontech/telperion/apps/beacon/internal/catalog"
 	"github.com/telperiontech/telperion/apps/beacon/internal/model"
 	"github.com/telperiontech/telperion/apps/beacon/internal/observe"
+	"github.com/telperiontech/telperion/apps/beacon/internal/plan"
 	"github.com/telperiontech/telperion/apps/beacon/internal/store"
 	"github.com/telperiontech/telperion/libs/go-kit/session"
 )
@@ -31,7 +32,8 @@ func newServer(t *testing.T) (*httptest.Server, *store.Store, *observe.Broker) {
 	c := catalog.Catalog{
 		Projects: []catalog.Project{{Name: "p", Repo: catalog.Repo{GitHub: "acme/p", URL: "https://github.com/acme/p.git"}}},
 		Packages: []catalog.Package{
-			{Name: "calm", Project: "p", Tag: catalog.DefaultTag, Repo: catalog.Repo{GitHub: "acme/p", URL: "https://github.com/acme/p.git"}},
+			{Name: "calm", Project: "p", Tag: catalog.DefaultTag, Repo: catalog.Repo{GitHub: "acme/p", URL: "https://github.com/acme/p.git"},
+				Release: &catalog.Release{GitHubRelease: &catalog.GitHubRelease{Notes: catalog.NotesGenerate}}},
 			{Name: "stuck", Project: "p", Tag: catalog.DefaultTag, Repo: catalog.Repo{GitHub: "acme/p", URL: "https://github.com/acme/p.git"},
 				CI: &catalog.CI{GitHubActions: &catalog.GitHubActions{Workflow: "stuck.publish.yml"}}},
 		},
@@ -53,6 +55,8 @@ func newServer(t *testing.T) (*httptest.Server, *store.Store, *observe.Broker) {
 		Status: func() []observe.JobStatus { return nil },
 		UI:     http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte("ui")) }),
 		Log:    slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Plans:  plan.Env{Store: st, Platform: func(catalog.Catalog) (plan.Platform, error) { return fakePlatform{}, nil }},
+		Runner: fakeRunner{st},
 	})
 	srv := httptest.NewServer(h)
 	t.Cleanup(srv.Close)
@@ -126,7 +130,7 @@ func TestStream(t *testing.T) {
 
 	go func() {
 		time.Sleep(50 * time.Millisecond)
-		broker.Publish([]store.Change{{Package: "b"}, {Package: "a"}, {Package: "b"}})
+		broker.Publish(observe.PackagesNotice([]string{"b", "a", "b"}))
 	}()
 	line, err := r.ReadString('\n')
 	if err != nil || strings.TrimSpace(line) != `data: {"packages":["a","b"]}` {

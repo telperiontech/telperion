@@ -14,6 +14,18 @@ export const routes: Routes = [
     title: 'Package · Beacon',
   },
   {
+    path: 'runs',
+    canActivate: [authGuard],
+    loadComponent: () => import('./runs/runs-page').then(m => m.RunsPage),
+    title: 'Runs · Beacon',
+  },
+  {
+    path: 'runs/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./runs/run-page').then(m => m.RunPage),
+    title: 'Run · Beacon',
+  },
+  {
     path: 'status',
     canActivate: [authGuard],
     loadComponent: () => import('./status/status-page').then(m => m.StatusPage),

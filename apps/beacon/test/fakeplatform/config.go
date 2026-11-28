@@ -29,7 +29,8 @@ projects:
 	for _, p := range catalog() {
 		switch p.kind {
 		case npmLib:
-			fmt.Fprintf(&b, "      %s: { artifact: { npm: { name: \"@telperion/%s\", registry: %s/npm } } }\n", p.name, p.name, base)
+			fmt.Fprintf(&b, "      %s: { path: libs/%s, artifact: { npm: { name: \"@telperion/%s\", registry: %s/npm } } }\n",
+				p.name, p.name, p.name, base)
 		case image:
 			fmt.Fprintf(&b, "      %s:\n        artifact: { oci: { image: %s/telperiontech/%s, insecure: true, platforms: [linux/amd64, linux/arm64] } }\n",
 				p.name, host, p.name)
